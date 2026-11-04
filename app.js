@@ -442,6 +442,9 @@ function afterDone(k, before, s, kind) {
   openDetails(k, s.id, false); if (ui.ov) { ui.ov.done = { gain: gain, kind: kind, gn: gn }; render(); }
 }
 /* 4.1: guanto dello stesso sport oggi, ancora da chiudere */
+/* 4.5.2: «Sto per iniziare» non dà punti: lo sport va in programma (tratteggiato) e si segna quando rispondi Fatto */
+function planToday(k, sp, g, as) { var old = planOf(k); plans()[k] = { sp: sp, g: g || null, diff: 'solo', at: old && !old.miss ? old.at : Date.now() }; if (as) S.plan[k].as = 1; save(); ui.ov = null; ding('open');
+  toast(as ? 'In programma per oggi. Quando hai finito, ritocca oggi e segna i dati: saranno il tuo punto di partenza.' : 'In programma per oggi. Quando hai finito, ritocca oggi e rispondi Fatto.'); }
 function gloveFor(k, sp) { if (k !== todayKey()) return null; return activeGloves().filter(function (c) { return !c.gang && (c.sp === sp || (sp === 'bon' && S.profile.sports.indexOf(c.sp) < 0)); })[0] || null; }
 /* dopo aver segnato: se c'è un guanto per quello sport chiede com'è andata, poi il solito seguito */
 function postLog(k, b, s, kind) { var c = gloveFor(k, s.sport); if (c) { ui.ov = { t: 'gask', id: c.id, k: k, sid: s.id, b: b, kind: kind }; ding('open'); render(); return; } afterDone(k, b, s, kind); }
@@ -699,7 +702,7 @@ var A = {
       toast(SPORTS[s].name + (k === t ? ' segnato oggi' : ' segnato il ' + niceDate(k)) + '. Gesta N° ' + gestaN() + badge); return;
     }
     var qt0 = qType(s);
-    if (!ui.ov.skipAsk && !ui.ov.when && qt0 !== 'bon' && qt0 !== 'none' && qt0 !== 'sat') { ding('open'); open({ t: 'when', k: k, sport: s, noSoc: ui.ov.noSoc }); return; }
+    if (!ui.ov.skipAsk && !ui.ov.when) { ding('open'); open({ t: 'when', k: k, sport: s, noSoc: ui.ov.noSoc }); return; }
     if (!ui.ov.skipAsk && !ui.ov.noSoc && partyLive() && qt0 !== 'bon' && qt0 !== 'none' && qt0 !== 'sat' && (activeGloves().length || gangActive().filter(function (c) { return c.from === 'me' || c.myAcc; }).length)) { ding('open'); open({ t: 'qask', k: k, sport: s }); return; }
     if (s === 'gym') { ding('open'); open({ t: 'group', k: k }); return; }
     if (qt === 'ex') { ding('open'); open({ t: 'quest', k: k, sport: s, group: defGroup(s), diff: null }); return; }
@@ -712,7 +715,7 @@ var A = {
   },
   group: function (g) { if (ui.ov.done) { logDone(ui.ov.k, 'gym', g); return; } ding('open'); open({ t: 'quest', k: ui.ov.k, sport: 'gym', group: g, diff: null }); },
   whenDone: function () { var o = ui.ov, s = o.sport; whenLog('d'); save(); if (s === 'gym') { ding('open'); open({ t: 'group', k: o.k, done: 1 }); return; } logDone(o.k, s, qType(s) === 'ex' ? defGroup(s) : null); },
-  whenStart: function () { var o = ui.ov; whenLog('s'); save(); ui.ov = { t: 'pick', k: o.k, when: 1, noSoc: o.noSoc }; A.pick(o.sport); },
+  whenStart: function () { var o = ui.ov, q0 = qType(o.sport); whenLog('s'); save(); if (q0 === 'bon' || q0 === 'none' || q0 === 'sat') { planToday(o.k, o.sport, null); return; } ui.ov = { t: 'pick', k: o.k, when: 1, noSoc: o.noSoc }; A.pick(o.sport); },
   gaskWin: function () { var o = ui.ov, t = { k: o.k, sid: o.sid, b: o.b, kind: o.kind }; A.gWin(o.id); if (ui.ov && ui.ov.t === 'gwin') ui.ov.then = t; },
   gaskLose: function () { var o = ui.ov, c = chById(o.id); if (c) { c.myNo = true; if (c.to === 'me') { c.st = 'over'; if (c.real) chAct(chPatch(c.id, { status: 'over' })); } save(); } var s = findSession(o.k, o.sid); if (s) afterDone(o.k, o.b, s, o.kind); else close(); },
   gwNext: function () { var t = ui.ov && ui.ov.then; if (!t) { close(); return; } var s = findSession(t.k, t.sid); if (s) afterDone(t.k, t.b, s, t.kind); else close(); },
@@ -765,11 +768,12 @@ var A = {
     ding('open'); ui.ov = null; toast('Quest accettata. Quando hai finito, ritocca oggi sul calendario.');
   },
   decline: function () {
-    var o = ui.ov, b = addSession(o.k, { sport: o.sport, group: o.group || null, d: null, star: false });
+    var o = ui.ov; if (o.k === todayKey()) { planToday(o.k, o.sport, o.group); return; }
+    var b = addSession(o.k, { sport: o.sport, group: o.group || null, d: null, star: false });
     rewardAfter(o.k, b, 'Giorno segnato', 10, 'Niente quest oggi, il giorno conta lo stesso.');
   },
   assess: function () {
-    var o = ui.ov;
+    var o = ui.ov; if (o.k === todayKey()) { planToday(o.k, o.sport, o.group, 1); return; }
     addSession(o.k, { sport: o.sport, group: o.group || null, assess: true, d: null, star: false });
     ding('open'); ui.ov = null; toast('Allenati. A fine sessione segna i dati: saranno il tuo punto di partenza.');
   },
@@ -790,7 +794,9 @@ var A = {
   remove: function (id) { var k = ui.ov.k; var sx = findSession(k, id); if (sx && sx.ph) phRemove(k, id); S.del = S.del || {}; S.del[id] = Date.now(); S.days[k] = sessions(k).filter(function (s) { return s.id !== id; }); if (!S.days[k].length) delete S.days[k]; undoAfterRemove(k); save(); ui.ov.confirm = null; toast('Sessione rimossa, con tutto quello che aveva sbloccato.'); if (!sessions(k).length) close(); },
   /* 3.6: piani */
   planYes: function (k) {
-    var p = planAt(k); if (!p) return; planQ(k, p);
+    var p = planAt(k); if (!p) return;
+    if (p.as) { delete S.plan[k]; addSession(k, { sport: p.sp, group: p.g || null, assess: true, d: null, star: false }); ding('open'); openDetails(k, lastSess(k).id, true); return; }
+    planQ(k, p);
     var q = p.diff !== 'solo' && p.q, g = p.g || (qType(p.sp) === 'ex' ? defGroup(p.sp) : null), ses = { sport: p.sp, group: g, d: p.jsp ? { name: SPORTS[p.jsp].name, note: '' } : null, star: false };
     if (q) ses.quest = { diff: p.diff, t: p.q.t, label: p.q.label, done: true };
     delete S.plan[k];
@@ -1098,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.5.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.5.2</span>';
   return h;
 }
 
@@ -1249,7 +1255,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Rango del mese</span><p>Contano soprattutto i giorni: ogni giorno con almeno uno sport vale <b>3 Punti Rango</b>, fino a 16 giorni. Se quel giorno completi una quest media vale <b>+0,5</b>, una difficile <b>+1</b>, fino a <b>8 punti</b> al mese. La facile serve a prendere il ritmo e non dà Punti Rango. Per gli sport senza quest (yoga, pilates, danza, boxe, crossfit, sci, golf, jolly…) una sessione <b>Top</b> vale come una quest media: per le lezioni il voto Top o almeno un’ora, per gli altri la stella.</p><p>Guanti vinti, obiettivi Gang e piani rispettati hanno uno spazio a parte, fino a <b>6 punti</b>: così quest e amici non si rubano posto. Per <b>S</b> serve anche una stella nel mese, da una sessione top.</p><p>Un guanto accettato e non chiuso toglie mezzo punto: se scendi sotto la soglia torni al rango prima. Si risale con le sessioni.</p>' +
       '<div class="rtab">' + RANKS.slice(0, 5).map(function (r) { return '<span' + (r[2] ? ' style="grid-column:1/-1"' : '') + '><b>' + r[0] + '</b>' + r[1] + ' Punti Rango' + (r[2] ? ' · ' + r[2] + (r[2] === 1 ? ' stella' : ' stelle') : '') + '</span>'; }).join('') + '</div><p class="hint">Dalla seconda settimana Stato ti dice dove chiudi il mese al tuo ritmo.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Rango di ogni sport</span><p>Ogni sessione vale <b>2 Punti Rango</b> (fino a 6 al mese). Una quest media riuscita <b>+0,5</b>, una difficile <b>+1</b>. B a 10 Punti Rango, A a 14, S a 16.</p></div>' +
-      '<div class="fld"><span class="lbl" style="font-size:11px">Quest</span><p>Tocca oggi sul calendario e scegli lo sport. Se hai già finito, tocca <b>Fatto</b>: si segna subito, senza quest. Se stai per iniziare, Gesta propone tre sfide partendo dalla tua ultima volta. Quando hai finito ritocca oggi e rispondi <b>Superata</b> o <b>Non questa volta</b>: il giorno conta in tutti e due i casi. Se per quello sport hai un guanto, Gesta ti chiede anche com’è andata la sfida.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Quest</span><p>Tocca oggi sul calendario e scegli lo sport. Se hai già finito, tocca <b>Fatto</b>: si segna subito, senza quest. Se stai per iniziare, lo sport va in programma (tratteggiato) e Gesta propone tre sfide partendo dalla tua ultima volta: il giorno e i punti arrivano quando rispondi com’è andata. Quando hai finito ritocca oggi e rispondi <b>Superata</b> o <b>Non questa volta</b>: il giorno conta in tutti e due i casi. Se per quello sport hai un guanto, Gesta ti chiede anche com’è andata la sfida.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Pianificare</span><p>Tocca un giorno da domani fino alla prima settimana piena del mese dopo (col tasto › del calendario passi al mese successivo): scegli lo sport e, se vuoi, la quest. Il numero preciso lo fissa Gesta quella mattina, partendo dalla tua ultima volta. Quel giorno la trovi in alto e rispondi <b>Fatta?</b>.</p><p>Puoi toglierla o cambiarla quando vuoi: un piano saltato non costa niente, sparisce e basta. Se invece quel giorno fai sport (anche uno diverso), è una <b>parola mantenuta</b>: <b>+¼ di Punto Rango</b>, fino a 4 volte al mese.</p><p>Puoi pianificare anche uno sport che non è tra i tuoi (tocca <b>Altro</b>): vale come <b>jolly</b>, senza quest.</p><p>Se ti scordi di rispondere, nessun problema: il giorno dopo Gesta te lo chiede appena apri l’app, per guanti e quest.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Titolo del mese</span><p>Viene dallo sport che hai fatto di più. Diventa doppio se un secondo sport arriva al 70% del primo, oppure se lo fai almeno 3 volte nel mese.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Badge della settimana</span><p>Uno per ogni giorno di sport da lunedì a domenica. Le frasi cambiano ogni settimana. Oltre i 5 giorni Gesta ti consiglia di riposare.</p></div>' +
@@ -3269,7 +3275,7 @@ var PA3 = {
     if (c.to === 'me' && !c.gang && c.st === 'accepted' && !c.me && c.day >= todayKey() && (c.day > todayKey() || new Date().getHours() < 12)) { A.gDrop(id); return; }
     c.myNo = true; if (c.to === 'me' && !c.gang) c.st = 'over'; if (c.real && c.to === 'me') chAct(chPatch(c.id, { status: 'over' })); save(); ui.ov = null; ding('tap'); toast(c.gang ? 'Va bene: la Gang può farcela anche senza di te.' : 'Segnata come non riuscita. ' + (c.to === 'me' ? '−0,5 Punti Rango, ci si rifà.' : 'Nessuna penalità.')); },
   qYes: function () { var o = ui.ov; ui.ov = { t: 'pick', k: o.k, skipAsk: true }; A.pick(o.sport); },
-  qNo: function () { var o = ui.ov, bb = addSession(o.k, { sport: o.sport, d: null, star: false }); rewardAfter(o.k, bb, 'Sessione segnata', 10, 'Niente quest personale oggi. Ora puoi chiudere la quest social dalla home.'); },
+  qNo: function () { var o = ui.ov; if (o.k === todayKey()) { planToday(o.k, o.sport, null); return; } var bb = addSession(o.k, { sport: o.sport, d: null, star: false }); rewardAfter(o.k, bb, 'Sessione segnata', 10, 'Niente quest personale oggi. Ora puoi chiudere la quest social dalla home.'); },
   goOpen: function (id) { ui.ov = { t: 'gobj', id: id }; ding('open'); render(); },
   goYes: function (id) { var c = chById(id); c.myAcc = true; if (c.real) cmUp(c.id, { accepted: true }); save(); ui.ov = null; ding('ok'); toast('Accettato: lo trovi in home tra le quest.'); },
   goNo: function (id) { var c = chById(id); c.myAcc = false; if (c.real) cmUp(c.id, { accepted: false }); save(); ui.ov = null; ding('tap'); toast('Non oggi. La Gang può farcela anche senza di te.'); },
@@ -3855,7 +3861,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.5.1';
+var APP_V = 'gesta-v4.5.2';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
