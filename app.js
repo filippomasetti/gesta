@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.6.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.6.2</span>';
   return h;
 }
 
@@ -3424,6 +3424,38 @@ function seenPing() {
 }
 /* 4.6: Oggi (prova per i tester). Le notizie le legge la funzione news su Supabase; qui si mostrano solo titolo, immagine e link */
 var NEWS_IC = '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>', newsT = null;
+/* 4.6.1: l'elenco delle fonti vive qui. Quando Gesta si apre sull'account di Filippo, lo copia su Supabase: aggiunge le nuove e spegne quelle tolte */
+var NEWS_SRC = [
+  ['gym', 'Project inVictus', 'news', 'https://www.projectinvictus.it/'],
+  ['gym', 'Project inVictus', 'video', 'https://www.youtube.com/@ProjectInVictus'],
+  ['gym', 'Jeff Nippard', 'video', 'https://www.youtube.com/@JeffNippard'],
+  ['bld', 'Planetmountain', 'news', 'https://www.planetmountain.com/it/'],
+  ['bld', 'Montagna.tv · climbing', 'news', 'https://www.montagna.tv/tag/climbing/feed/'],
+  ['bld', 'Hooper’s Beta', 'video', 'https://www.youtube.com/@HoopersBeta'],
+  ['bld', 'World Climbing', 'top', 'https://www.youtube.com/channel/UC2MGuhIaOP6YLpUx106kTQw'],
+  ['run', 'The Running Club', 'news', 'https://www.therunningclub.it/'],
+  ['run', 'Correre', 'news', 'https://www.correre.it/'],
+  ['run', 'World Athletics', 'top', 'https://www.youtube.com/@WorldAthletics'],
+  ['bch', 'Volleynews · beach', 'news', 'https://www.volleynews.it/category/beach-volley/feed/'],
+  ['bch', 'Volleyball World', 'top', 'https://www.youtube.com/@volleyballworld'],
+  ['pad', 'Padel Magazine Italia', 'news', 'https://padelmagazine.it/'],
+  ['pad', 'The Padel School', 'video', 'https://www.youtube.com/@ThePadelSchool'],
+  ['pad', 'Premier Padel', 'top', 'https://www.youtube.com/@PremierPadel'],
+  ['swm', 'Nuoto.com', 'news', 'https://www.nuoto.com/'],
+  ['swm', 'Effortless Swimming', 'video', 'https://www.youtube.com/@EffortlessSwimming'],
+  ['swm', 'World Aquatics', 'top', 'https://www.youtube.com/@WorldAquaticsOfficial']
+];
+function newsSync(rows) {
+  var key = JSON.stringify(NEWS_SRC).length + ':' + NEWS_SRC.length; try { if (localStorage.getItem('gesta.nsync') === key) return; } catch (e) {}
+  var by = {}; (rows || []).forEach(function (r) { by[r.url] = r; });
+  var up = NEWS_SRC.filter(function (x) { var r = by[x[3]]; return !r || r.active === false || r.name !== x[1] || r.sport !== x[0] || r.kind !== x[2]; }).map(function (x) { return { sport: x[0], name: x[1], kind: x[2], url: x[3], active: true }; });
+  var off = (rows || []).filter(function (r) { return r.active !== false && !NEWS_SRC.some(function (x) { return x[3] === r.url; }); });
+  var jobs = [];
+  if (up.length) jobs.push(sbFetch('/rest/v1/news_sources?on_conflict=url', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: up }));
+  off.forEach(function (r) { jobs.push(sbFetch('/rest/v1/news_sources?id=eq.' + r.id, { method: 'PATCH', prefer: 'return=minimal', body: { active: false } })); });
+  if (!jobs.length) { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} return; }
+  Promise.all(jobs).then(function () { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} newsLoad(true); }).catch(function () {});
+}
 function newsOn() { if (newsT === null) { try { newsT = localStorage.getItem('gesta.news') === '1'; } catch (e) { newsT = false; } } return !!(newsT && cauth); }
 function newsCheck() { if (!cauth) return; rpc('is_news_tester').then(function (r) { var v = r === true || (r && r[0] === true); newsT = v; try { localStorage.setItem('gesta.news', v ? '1' : '0'); } catch (e) {} if (v) newsLoad(false); render(); }).catch(function () {}); }
 function newsSeenAt() { try { return +localStorage.getItem('gesta.newsSeen') || 0; } catch (e) { return 0; } }
@@ -3433,24 +3465,32 @@ function newsLoad(refresh) {
   var pull = function () { return sbFetch('/rest/v1/news_items?select=id,sport,kind,title,link,image,published_at,created_at,news_sources(name)&order=published_at.desc&limit=150').then(function (r) { ui.news = Array.isArray(r) ? r : []; ui.newsErr = null; render(); }); };
   authFresh().then(pull).catch(function () { ui.newsErr = 'Non riesco a caricare le notizie: controlla la connessione.'; render(); })
     .then(function () { if (!refresh) return; ui.newsBusy = true; render(); return sbFetch('/functions/v1/news', { method: 'POST', body: {} }).then(pull, function () {}).then(function () { ui.newsBusy = false; render(); }); });
-  if (numAdmin()) sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,ok,n,err,checked_at&order=sport').then(function (r) { ui.newsSrc = Array.isArray(r) ? r : []; render(); }).catch(function () {});
+  if (numAdmin()) sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,active,ok,n,err,checked_at&order=sport').then(function (r) { r = Array.isArray(r) ? r : []; ui.newsSrc = r.filter(function (x) { return x.active !== false; }); render(); newsSync(r); }).catch(function () {});
 }
-function agoTxt(iso) { var d = (Date.now() - Date.parse(iso)) / 36e5; if (d < 1) return 'ora'; if (d < 24) return Math.round(d) + ' h'; var g = Math.round(d / 24); return g === 1 ? 'ieri' : g + ' gg'; }
+function agoTxt(iso) { var d = (Date.now() - Date.parse(iso)) / 36e5; if (d < 1) return 'ora'; if (d < 24) return Math.round(d) + ' h'; var g = Math.round(d / 24); if (g === 1) return 'ieri'; if (g < 30) return g + ' gg'; var m = Math.round(g / 30); return m < 12 ? m + (m === 1 ? ' mese' : ' mesi') : Math.round(g / 365) + (g < 548 ? ' anno' : ' anni'); }
 function viewOggi() {
   var n = new Date(), f = ui.newsF || 'all', mine = S.profile.sports.filter(function (x) { return x !== 'bon'; });
   var h = '<div class="top"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="lbl kick">[ Gesta · ' + DAYS_LONG[n.getDay()].toLowerCase() + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()].toLowerCase() + ' ]</span><h1>Oggi</h1></div>' + (ui.newsBusy ? '<span class="hint" style="font-size:11px">aggiorno…</span>' : '') + '</div>';
   var have = {}; newsMine().forEach(function (x) { have[x.sport] = 1; });
   h += '<div class="nchips">' + [['all', 'Tutti']].concat(mine.filter(function (x) { return have[x]; }).map(function (x) { return [x, SPORTS[x].name]; })).map(function (c) { return '<button class="chip' + (f === c[0] ? ' on' : '') + '" data-a="newsF" data-v="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   /* gli highlights dei campioni: al massimo 2 per sport a settimana, così restano un regalo */
-  /* 4.6.1: al massimo 3 per fonte in «Tutti» (6 filtrando uno sport), così nessuna fonte copre le altre */
-  var topN = {}, perS = {}, cap = f === 'all' ? 3 : 6, wk = Date.now() - 7 * 864e5, list = newsMine().filter(function (x) { if (f !== 'all' && x.sport !== f) return false; if (x.kind === 'top') { if (Date.parse(x.published_at) < wk) return false; topN[x.sport] = (topN[x.sport] || 0) + 1; if (topN[x.sport] > 2) return false; } var sk = (x.news_sources && x.news_sources.name) + x.kind; perS[sk] = (perS[sk] || 0) + 1; return perS[sk] <= cap; }).slice(0, 40);
+  /* 4.6.1: prima il nuovo (ultime 2 settimane), con al massimo 3 per fonte in «Tutti» (6 filtrando uno sport).
+     Ogni 3 novità, un pezzo dall'archivio (tecnica e highlights non invecchiano), che cambia ogni giorno */
+  var topN = {}, perS = {}, cap = f === 'all' ? 3 : 6, wk = Date.now() - 7 * 864e5, two = Date.now() - 14 * 864e5;
+  var pool = newsMine().filter(function (x) { return f === 'all' || x.sport === f; });
+  var fresh = pool.filter(function (x) { if (Date.parse(x.published_at) < two || (x.kind === 'top' && Date.parse(x.published_at) < wk)) return false; if (x.kind === 'top') { topN[x.sport] = (topN[x.sport] || 0) + 1; if (topN[x.sport] > 2) return false; } var sk = (x.news_sources && x.news_sources.name) + x.kind; perS[sk] = (perS[sk] || 0) + 1; return perS[sk] <= cap; });
+  var old = pool.filter(function (x) { return fresh.indexOf(x) < 0 && x.kind !== 'news'; }), day = Math.floor(Date.now() / 864e5);
+  old = old.map(function (x, i) { return [((x.id * 2654435761 + day * 40503) >>> 0) % 1000, x]; }).sort(function (a, b) { return a[0] - b[0]; }).map(function (a) { return a[1]; });
+  var list = [], oi = 0; fresh.forEach(function (x, i) { list.push(x); if (i % 3 === 2 && old[oi]) { old[oi].arc = 1; list.push(old[oi++]); } });
+  while (list.length < 8 && old[oi]) { old[oi].arc = 1; list.push(old[oi++]); }
+  list = list.slice(0, 40);
   if (!ui.news) h += '<p class="hint" style="text-align:center;padding:40px 0">' + (ui.newsErr ? esc(ui.newsErr) : 'Carico le notizie…') + '</p>';
   else if (!list.length) h += '<p class="hint" style="text-align:center;padding:40px 0">' + (ui.newsBusy ? 'Sto leggendo le fonti…' : 'Ancora niente per i tuoi sport. Riprova più tardi.') + '</p>';
   else h += '<div style="display:flex;flex-direction:column;gap:8px">' + list.map(function (x) {
     var sp = SPORTS[x.sport], tag = x.kind === 'video' ? '<span class="nbadge">VIDEO</span>' : x.kind === 'top' ? '<span class="nbadge top">TOP</span>' : '';
     var src = (x.news_sources && x.news_sources.name) || '';
     return '<a class="card nitem" href="' + esc(x.link) + '" target="_blank" rel="noopener"><span class="nth" style="background:linear-gradient(150deg,' + sp.c + '33,#0E1A30 70%);border-color:' + sp.c + '44">' + sportIc(x.sport, 26) + (x.image ? '<img alt="" loading="lazy" src="' + esc(x.image) + '" onerror="this.remove()">' : '') + tag + '</span>' +
-      '<span class="nmeta"><span class="nkick"><i style="background:' + sp.c + '"></i><span style="color:' + sp.c + '">' + sp.name + '</span>' + (src ? '<span>·</span><span class="nsrc">' + esc(src) + '</span>' : '') + '<span class="nago">' + agoTxt(x.published_at) + '</span></span><span class="ntit">' + esc(x.title) + '</span></span></a>';
+      '<span class="nmeta"><span class="nkick"><i style="background:' + sp.c + '"></i><span style="color:' + sp.c + '">' + sp.name + '</span>' + (src ? '<span>·</span><span class="nsrc">' + esc(src) + '</span>' : '') + '<span class="nago">' + (x.arc ? 'dall’archivio' : agoTxt(x.published_at)) + '</span></span><span class="ntit">' + esc(x.title) + '</span></span></a>';
   }).join('') + '</div>';
   if (numAdmin() && ui.newsSrc) h += '<div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:var(--sysl)">Fonti · solo per te</span>' + ui.newsSrc.map(function (x) { return '<span style="display:flex;align-items:center;gap:8px;font:500 12px/16px var(--fb)"><i style="display:block;width:8px;height:8px;border-radius:4px;flex:0 0 auto;background:' + (x.ok ? '#9BE15D' : x.ok === false ? '#FF6B6B' : '#5A6B88') + '"></i><span style="flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (SPORTS[x.sport] ? SPORTS[x.sport].name : x.sport) + ' · ' + esc(x.name) + ' · ' + x.kind + '</span><span style="color:var(--mut);flex:0 0 auto">' + (x.ok ? (x.n || 0) : x.ok === false ? esc((x.err || 'errore').slice(0, 22)) : 'mai letta') + '</span></span>'; }).join('') + '<button class="btn sm" data-a="newsForce">Rileggi tutte le fonti</button></div>';
   return h;
@@ -3901,7 +3941,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.6.1';
+var APP_V = 'gesta-v4.6.2';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
