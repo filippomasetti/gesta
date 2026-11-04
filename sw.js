@@ -1,6 +1,6 @@
 // Gesta — service worker: l'app funziona anche offline (palestra senza campo).
-const VERSION = 'gesta-v4.5.0';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './fonts/exo2.woff', './fonts/manrope.woff', './app.js?v=4.0.0'];
+const VERSION = 'gesta-v4.5.1';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './fonts/exo2.woff', './fonts/manrope.woff', './app.js?v=4.5.1'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
@@ -24,12 +24,12 @@ self.addEventListener('fetch', (e) => {
   // Pagina: subito la copia salvata (apertura istantanea), intanto si aggiorna dalla rete.
   // Le versioni nuove arrivano col service worker nuovo, che ricarica la pagina una volta.
   if (req.mode === 'navigate') {
-    const net = fetch(req, { cache: 'no-cache' }).then((res) => {
-      if (res && res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('./index.html', copy)); }
-      return res;
-    });
-    e.respondWith(caches.match('./index.html').then((hit) => hit || net).catch(() => net));
-    e.waitUntil(net.catch(() => {}));
+    // 4.5.1: prima la rete (per al massimo 2 secondi, coperti dalla splash), così la versione nuova arriva alla prima apertura.
+    // Senza rete o se è lenta, la copia salvata. La copia si aggiorna sempre, e il service worker aspetta che sia salvata.
+    const net = fetch(req, { cache: 'no-cache' });
+    e.waitUntil(net.then((res) => { if (res && res.ok) { const copy = res.clone(); return caches.open(VERSION).then((c) => c.put('./index.html', copy)); } }).catch(() => {}));
+    const late = new Promise((r) => setTimeout(() => r(null), 2000));
+    e.respondWith(Promise.race([net.catch(() => null), late]).then((res) => (res && res.ok) ? res : caches.match('./index.html').then((hit) => hit || net)));
     return;
   }
   // Tutto il resto (icone, font): prima la copia salvata, poi la rete.

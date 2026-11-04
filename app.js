@@ -1098,7 +1098,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.5.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.5.1</span>';
   return h;
 }
 
@@ -2927,14 +2927,17 @@ function viewGOut(o, cls) {
     '<div style="display:flex;align-items:center;gap:12px;justify-content:center"><span style="width:46px;height:46px;border-radius:12px;border:1.5px dashed ' + PGOLD + ';display:flex;align-items:center;justify-content:center;flex:0 0 auto">' + sportIc(c.sp, 26) + '</span><span style="font:700 20px/24px var(--fd);min-width:0;color:var(--rew)">' + esc(chLabel(c)) + '</span></div>' +
     '<p class="wtitle" style="margin-top:-4px">Com’è andata?</p>' + menu3([['gWinLog', c.id, 'Superata', PGOLD], ['gNoQ', c.id, 'Persa'], ['gStart', c.id, 'Devo ancora iniziare · + quest', 0, 1]]) +
     '<div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;column-gap:20px;row-gap:6px;margin-top:-4px"><button class="mlink" ' + sl + ' data-a="gOther" data-v="' + c.id + '">Altro sport</button>' + (gEarly(c) ? '<button class="mlink" ' + sl + ' data-a="gDrop" data-v="' + c.id + '">Togli</button>' : '') + (sessions(o.k).length || hasMark(o.k) ? '<button class="mlink" ' + sl + ' data-a="planDay" data-v="' + o.k + '">La giornata</button>' : '') + '</div>' +
-    (c.to === 'me' ? '<p class="hint" style="margin:-8px 0 0;text-align:center">' + (gEarly(c) ? 'Prima delle 12 lo togli gratis.' : 'Persa: −0,5 Punti Rango.')+'</p>' : '') + '</div>';
+    (c.to === 'me' ? '<p class="hint" style="margin:-8px 0 0;text-align:center">' + (gEarly(c) ? 'Prima delle 12 lo togli gratis. ' : '') + lostTxt(c.day)+'</p>' : '') + '</div>';
 }
+/* 4.5.1: cosa vale perdere un guanto. Il giorno conta lo stesso (+3), il guanto −0,5; se il giorno era già contato, solo −0,5 */
+function lostTxt(k, long) { var d0 = parseKey(k), dayOn = sessions(k).length > 0 || monthKeys(d0.getFullYear(), d0.getMonth()).length >= 16;
+  return dayOn ? 'Persa: −0,5 Punti Rango.' : long ? 'Il giorno vale +3, il guanto −0,5.' : 'Persa: il giorno vale comunque, il guanto −0,5.'; }
 function viewGNo(o, cls) {
   var c = chById(o.id); if (!c) { ui.ov = null; return ''; }
   var op = function (a, t1, t2) { return '<button class="card" data-a="' + a + '" data-v="' + c.id + '" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px;text-align:left;color:var(--ink);width:100%"><span style="font:600 15px/20px var(--fd)">' + t1 + '</span><span class="hint">' + t2 + '</span></button>'; };
   var pen = c.to === 'me' ? '−0,5 Punti Rango, ci si rifà.' : 'Nessuna penalità.';
   return '<div class="' + cls + ' gold" style="gap:12px;border-color:' + PGOLD + '"><div class="whead"><span class="mark" style="border-color:' + PGOLD + ';color:' + PGOLD + '">!</span><span class="wlabel" style="color:' + PGOLD + '">' + esc(chLabel(c)) + '</span><span class="rule"></span><button class="x" data-a="close" aria-label="Chiudi">' + svg(IC.close, null, 20) + '</button></div>' + '<p class="wtitle" style="margin-top:-4px">Com’è andata?</p>' +
-    op('gNoQ', 'Ho fatto ' + SPORTS[c.sp].name.toLowerCase() + ', la sfida no', 'Il giorno conta lo stesso. ' + pen) +
+    op('gNoQ', 'Ho fatto ' + SPORTS[c.sp].name.toLowerCase() + ', la sfida no', c.to === 'me' ? lostTxt(c.day, 1) : 'Il giorno conta lo stesso.') +
     op('gOther', 'Ho fatto un altro sport', 'Lo segni; il guanto resta aperto fino a stasera.') +
     op('gLose', 'Oggi niente sport', gEarly(c) ? 'Fino alle 12 lo togli senza costi.' : pen) +
     '<button class="btn" data-a="close">Annulla</button></div>';
@@ -3852,13 +3855,15 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.5.0';
+var APP_V = 'gesta-v4.5.1';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
   var swPending = false;
   /* 4.0.0: niente ricariche automatiche, neanche in sottofondo: la versione nuova si apre la volta dopo */
-  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (r) { swReg = r; }).catch(function () {}); });
+  /* 4.5.1: lo script parte dopo il primo fotogramma, quando la pagina può essere già tutta caricata: se il 'load' è già passato si registra subito (prima a volte non si registrava mai, e gli aggiornamenti restavano indietro) */
+  var swGo = function () { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (r) { swReg = r; try { r.update(); } catch (e) {} }).catch(function () {}); };
+  if (document.readyState === 'complete') swGo(); else window.addEventListener('load', swGo);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && swReg) { try { swReg.update(); } catch (e) {} } });
   /* il service worker nuovo dice la sua versione: se è diversa da questa pagina, ricarica (mai mentre scrivi o hai una finestra aperta) */
   navigator.serviceWorker.addEventListener('message', function (e) {
