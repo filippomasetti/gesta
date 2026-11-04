@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.6.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.6.1</span>';
   return h;
 }
 
@@ -3442,7 +3442,8 @@ function viewOggi() {
   var have = {}; newsMine().forEach(function (x) { have[x.sport] = 1; });
   h += '<div class="nchips">' + [['all', 'Tutti']].concat(mine.filter(function (x) { return have[x]; }).map(function (x) { return [x, SPORTS[x].name]; })).map(function (c) { return '<button class="chip' + (f === c[0] ? ' on' : '') + '" data-a="newsF" data-v="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div>';
   /* gli highlights dei campioni: al massimo 2 per sport a settimana, così restano un regalo */
-  var topN = {}, wk = Date.now() - 7 * 864e5, list = newsMine().filter(function (x) { if (f !== 'all' && x.sport !== f) return false; if (x.kind === 'top') { if (Date.parse(x.published_at) < wk) return false; topN[x.sport] = (topN[x.sport] || 0) + 1; if (topN[x.sport] > 2) return false; } return true; }).slice(0, 40);
+  /* 4.6.1: al massimo 3 per fonte in «Tutti» (6 filtrando uno sport), così nessuna fonte copre le altre */
+  var topN = {}, perS = {}, cap = f === 'all' ? 3 : 6, wk = Date.now() - 7 * 864e5, list = newsMine().filter(function (x) { if (f !== 'all' && x.sport !== f) return false; if (x.kind === 'top') { if (Date.parse(x.published_at) < wk) return false; topN[x.sport] = (topN[x.sport] || 0) + 1; if (topN[x.sport] > 2) return false; } var sk = (x.news_sources && x.news_sources.name) + x.kind; perS[sk] = (perS[sk] || 0) + 1; return perS[sk] <= cap; }).slice(0, 40);
   if (!ui.news) h += '<p class="hint" style="text-align:center;padding:40px 0">' + (ui.newsErr ? esc(ui.newsErr) : 'Carico le notizie…') + '</p>';
   else if (!list.length) h += '<p class="hint" style="text-align:center;padding:40px 0">' + (ui.newsBusy ? 'Sto leggendo le fonti…' : 'Ancora niente per i tuoi sport. Riprova più tardi.') + '</p>';
   else h += '<div style="display:flex;flex-direction:column;gap:8px">' + list.map(function (x) {
@@ -3900,7 +3901,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.6.0';
+var APP_V = 'gesta-v4.6.1';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

@@ -96,6 +96,7 @@ Deno.serve(async (req) => {
       await sb.from("news_sources").update({ checked_at: new Date().toISOString(), ok: false, err: String((e as Error).message || e).slice(0, 200), feed: null }).eq("id", s.id);
     }
   }));
-  await sb.from("news_items").delete().lt("published_at", new Date(now - 45 * 864e5).toISOString());
+  // si tolgono solo le notizie lette più di 60 giorni fa: i video di tecnica restano anche se pubblicati da tempo
+  await sb.from("news_items").delete().lt("created_at", new Date(now - 60 * 864e5).toISOString());
   return json({ ok: true, letti: res.length });
 });
