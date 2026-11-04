@@ -397,6 +397,24 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 @keyframes fxtxt{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.fx.run *,.rkst *,.rk-tip,.fx-ha{animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}}
 
+/* 4.6 · Oggi */
+.nav:has(button:nth-child(4)){padding-left:12px;padding-right:12px}
+.nav:has(button:nth-child(4)) button{min-width:64px}
+.nchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}
+.nchips::-webkit-scrollbar{display:none}
+.nchips .chip{flex:0 0 auto}
+.nitem{display:flex;gap:12px;align-items:center;padding:10px;text-decoration:none;color:var(--ink)}
+.nth{position:relative;flex:0 0 auto;width:76px;height:76px;border-radius:9px;border:1px solid;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.nth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.8)}
+.nbadge{position:absolute;left:5px;bottom:5px;font:700 9px/12px var(--fd);letter-spacing:1px;color:#04070D;background:#EAF3FF;border-radius:4px;padding:1px 4px}
+.nbadge.top{background:var(--rew)}
+.nmeta{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+.nkick{display:flex;align-items:center;gap:6px;font:600 11px/14px var(--fb);color:var(--mut);white-space:nowrap;min-width:0}
+.nkick i{display:block;width:8px;height:8px;border-radius:4px;flex:0 0 auto}
+.nkick>span:nth-child(2){flex:0 0 auto}
+.nsrc{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nago{margin-left:auto;flex:0 0 auto}
+.ntit{font:600 14px/19px var(--fb);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 /* 4.2 · Gesta in numeri */
 .numw{display:flex;flex-direction:column;gap:12px;width:100%;max-width:1240px;margin:0 auto}
 .numseg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;border-radius:12px;border:1px solid var(--line);background:var(--surface);max-width:420px;width:100%;align-self:center;box-sizing:border-box}
@@ -486,6 +504,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.5.2" defer></script>
+<script src="app.js?v=4.6.0" defer></script>
 </body>
 </html>
