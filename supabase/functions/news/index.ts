@@ -1,5 +1,5 @@
-// Gesta · funzione "news": legge le fonti di Oggi (siti e canali YouTube) e salva titoli, immagini e link.
-// La chiama l'app di un tester quando apre Oggi; ogni fonte si rilegge al massimo ogni 3 ore.
+// Gesta · funzione "news": legge le fonti della Taverna (siti e canali YouTube) e salva titoli, immagini e link.
+// La chiama l'app di un tester quando apre la Taverna; ogni fonte si rilegge al massimo ogni 3 ore.
 // Non servono segreti: SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY li mette Supabase da solo.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -17,6 +17,13 @@ const isFeed = (t: string) => /<(rss|feed|rdf:RDF)[\s>]/i.test(t.slice(0, 3000))
 
 // trova il feed: canali YouTube, siti con <link rel="alternate">, oppure /feed/ di WordPress
 async function discover(url: string): Promise<string> {
+  if (url.startsWith("yt:")) {
+    const q = url.slice(3).trim();
+    const { text } = await get("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&sp=EgIQAg%253D%253D");
+    const m = text.match(/"channelRenderer":\{"channelId":"(UC[\w-]{22})"/) || text.match(/"channelId":"(UC[\w-]{22})"/);
+    if (!m) throw new Error("canale non trovato");
+    return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
+  }
   if (/youtube\.com\/(@|channel\/|c\/|user\/)/.test(url)) {
     const m0 = url.match(/channel\/(UC[\w-]{22})/); if (m0) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m0[1];
     const { text } = await get(url);
@@ -67,14 +74,17 @@ async function readSource(s: any) {
   let feed = s.feed as string | null;
   if (!feed) feed = await discover(s.url);
   const { text } = await get(feed);
-  let items = parse(text);
-  if (s.kind === "top") items = items.filter((x) => TOP.test(x.title)).slice(0, 4); else items = items.slice(0, 8);
+  const head = text.replace(/<(item|entry)[\s>][\s\S]*$/i, "");
+  const title = tag(head, ["title"]).slice(0, 120);
+  let items = parse(text).filter((x) => !/\/shorts\//.test(x.link));
+  if (s.kind === "top") { const hi = items.filter((x) => TOP.test(x.title)); items = (hi.length ? hi : items).slice(0, 4); }
+  else items = items.slice(0, s.kind === "video" ? 15 : 8);
   const rows = items.map((x) => {
     const d = Date.parse(x.date);
     return { source_id: s.id, sport: s.sport, kind: s.kind, title: x.title.slice(0, 300), link: x.link.slice(0, 1000), image: x.image ? x.image.slice(0, 1000) : null, published_at: new Date(isNaN(d) ? Date.now() : Math.min(d, Date.now())).toISOString() };
   });
-  if (rows.length) { const { error } = await sb.from("news_items").upsert(rows, { onConflict: "link", ignoreDuplicates: true }); if (error) throw new Error(error.message); }
-  return { feed, n: rows.length };
+  if (rows.length) { const { error } = await sb.from("news_items").upsert(rows, { onConflict: "sport,link", ignoreDuplicates: true }); if (error) throw new Error(error.message); }
+  return { feed, n: rows.length, title };
 }
 
 Deno.serve(async (req) => {
@@ -88,14 +98,16 @@ Deno.serve(async (req) => {
   const { data: srcs } = await sb.from("news_sources").select("*").eq("active", true);
   const now = Date.now();
   const due = (srcs || []).filter((s: any) => body.force || !s.checked_at || now - Date.parse(s.checked_at) > 3 * 3600e3);
-  const res = await Promise.allSettled(due.map(async (s: any) => {
+  const one = async (s: any) => {
     try {
       const r = await readSource(s);
-      await sb.from("news_sources").update({ feed: r.feed, checked_at: new Date().toISOString(), ok: true, n: r.n, err: null }).eq("id", s.id);
+      await sb.from("news_sources").update({ feed: r.feed, title: r.title, checked_at: new Date().toISOString(), ok: true, n: r.n, err: null }).eq("id", s.id);
     } catch (e) {
       await sb.from("news_sources").update({ checked_at: new Date().toISOString(), ok: false, err: String((e as Error).message || e).slice(0, 200), feed: null }).eq("id", s.id);
     }
-  }));
+  };
+  const queue = due.slice(), res: unknown[] = [];
+  await Promise.all(Array.from({ length: 8 }, async () => { while (queue.length) { const s = queue.shift(); await one(s); res.push(1); } }));
   // si tolgono solo le notizie lette più di 60 giorni fa: i video di tecnica restano anche se pubblicati da tempo
   await sb.from("news_items").delete().lt("created_at", new Date(now - 60 * 864e5).toISOString());
   return json({ ok: true, letti: res.length });
