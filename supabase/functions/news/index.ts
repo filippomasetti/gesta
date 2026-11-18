@@ -129,9 +129,13 @@ async function ytApi(path: string) {
 async function readPopular(s: any) {
   const ch = String(s.feed || "").match(/channel_id=(UC[\w-]{22})/);
   if (!ch) throw new Error("canale senza id");
-  const sr = await ytApi("search?part=id&type=video&order=viewCount&maxResults=50&channelId=" + ch[1]);
+  // ogni ricerca costa 100 unità della quota, l'elenco dei video 1: si segna per la dashboard
+  let used = 100;
+  const log = () => sb.from("yt_usage").insert({ source_id: s.id, sport: s.sport, units: used }).then(() => {}, () => {});
+  let sr: any; try { sr = await ytApi("search?part=id&type=video&order=viewCount&maxResults=50&channelId=" + ch[1]); } catch (e) { await log(); throw e; }
   const ids = (sr.items || []).map((x: any) => x.id && x.id.videoId).filter(Boolean);
-  if (!ids.length) return 0;
+  if (!ids.length) { await log(); return 0; }
+  used += 1; await log();
   const vr = await ytApi("videos?part=snippet,statistics&maxResults=50&id=" + ids.join(","));
   const rows = (vr.items || []).map((v: any) => {
     const t = v.snippet.thumbnails || {}, im = t.high || t.medium || t.default;
