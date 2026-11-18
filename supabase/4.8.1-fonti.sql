@@ -1,5 +1,5 @@
--- Gesta 4.8.1 · l'elenco completo delle fonti della Taverna (101)
--- Niente da cambiare: incolla tutto e premi Run. Accende queste fonti e spegne tutte le altre.
+-- Gesta 4.8.1 · l'elenco completo delle fonti della Taverna (102)
+-- Niente da cambiare: incolla tutto e premi Run. Accende queste fonti e spegne tutte le altre. Si può rilanciare.
 insert into public.news_sources (sport, name, kind, url, active) values
   ('gym', 'Project inVictus', 'video', 'yt:Project inVictus', true),
   ('gym', 'Jeff Nippard', 'video', 'yt:Jeff Nippard', true),
@@ -93,6 +93,7 @@ insert into public.news_sources (sport, name, kind, url, active) values
   ('ski', 'FIS Alpine', 'top', 'yt:FIS Alpine', true),
   ('ski', 'Sportface · sci', 'news', 'https://www.sportface.it/sci/', true),
   ('ski', 'Neveitalia', 'local', 'https://www.neveitalia.it/', true),
+  ('bld', 'That’s Much Beta', 'video', 'https://www.youtube.com/@thatsmuchbeta', true),
   ('bld', 'Hooper’s Beta', 'video', 'yt:Hooper''s Beta', true),
   ('bld', 'Lattice Training', 'video', 'yt:Lattice Training', true),
   ('bld', 'World Climbing', 'top', 'yt:World Climbing', true),
@@ -196,6 +197,7 @@ update public.news_sources set active = false where (sport, url) not in (values
   ('ski', 'yt:FIS Alpine'),
   ('ski', 'https://www.sportface.it/sci/'),
   ('ski', 'https://www.neveitalia.it/'),
+  ('bld', 'https://www.youtube.com/@thatsmuchbeta'),
   ('bld', 'yt:Hooper''s Beta'),
   ('bld', 'yt:Lattice Training'),
   ('bld', 'yt:World Climbing'),

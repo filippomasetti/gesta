@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.2</span>';
   return h;
 }
 
@@ -3523,6 +3523,7 @@ var NEWS_SRC = [
   ['ski', 'FIS Alpine', 'top', 'yt:FIS Alpine'],
   ['ski', 'Sportface · sci', 'news', 'https://www.sportface.it/sci/'],
   ['ski', 'Neveitalia', 'local', 'https://www.neveitalia.it/'],
+  ['bld', 'That’s Much Beta', 'video', 'https://www.youtube.com/@thatsmuchbeta'],
   ['bld', 'Hooper’s Beta', 'video', 'yt:Hooper\'s Beta'],
   ['bld', 'Lattice Training', 'video', 'yt:Lattice Training'],
   ['bld', 'World Climbing', 'top', 'yt:World Climbing'],
@@ -3551,13 +3552,16 @@ function newsCheck() { if (!cauth) return; rpc('is_news_tester').then(function (
 function newsSeenAt() { try { return +localStorage.getItem('gesta.newsSeen') || 0; } catch (e) { return 0; } }
 function newsMine() { var mine = S.profile.sports; return (ui.news || []).filter(function (x) { return mine.indexOf(x.sport) >= 0 && !(x.news_sources && x.news_sources.active === false); }); }
 /* 4.7: ogni giorno, per ogni sport: 2 video di tecnica, 1 highlight, 1 notizia, 1 notizia per chi pratica. Il nuovo prima, poi l'archivio che gira ogni giorno */
+/* fonti in prima fila: almeno un loro video ogni giorno, nuovo o dall'archivio (scelte da Filippo) */
+var NEWS_PRI = { 'bld|That’s Much Beta': 1 };
 function newsDay(x) { return ((x.id * 2654435761 + Math.floor(Date.now() / 864e5) * 40503) >>> 0) % 1000; }
 function newsPick(sp, full) {
   var all = newsMine().filter(function (x) { return x.sport === sp; }), now = Date.now(), out = [];
   var take = function (kind, n, freshDays, archive) {
     var L = all.filter(function (x) { return x.kind === kind; }), fr = L.filter(function (x) { return now - Date.parse(x.published_at) < freshDays * 864e5; });
     var ar = archive ? L.filter(function (x) { return fr.indexOf(x) < 0; }).sort(function (a, b) { return newsDay(a) - newsDay(b); }) : [];
-    var pool = fr.concat(ar), seen = {}, got = [], nm = function (x) { return x.news_sources && x.news_sources.name; };
+    var pri = function (x) { return NEWS_PRI[x.sport + '|' + (x.news_sources && x.news_sources.name)] ? 0 : 1; };
+    var pool = fr.filter(function (x) { return !pri(x); }).concat(ar.filter(function (x) { return !pri(x); }), fr.filter(pri), ar.filter(pri)), seen = {}, got = [], nm = function (x) { return x.news_sources && x.news_sources.name; };
     pool.forEach(function (x) { if (got.length < n && !seen[nm(x)]) { seen[nm(x)] = 1; got.push(x); } }); /* prima una per fonte, poi si riempie */
     pool.forEach(function (x) { if (got.length < n && got.indexOf(x) < 0) got.push(x); });
     got.forEach(function (x) { out.push({ x: x, arc: fr.indexOf(x) < 0 }); });
@@ -4045,7 +4049,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.8.1';
+var APP_V = 'gesta-v4.8.2';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
