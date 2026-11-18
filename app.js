@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.2</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.3</span>';
   return h;
 }
 
@@ -3439,17 +3439,17 @@ var NEWS_SRC = [
   ['cal', 'Calisthenicmovement', 'video', 'yt:Calisthenicmovement'],
   ['cal', 'Battle of the Bars', 'top', 'yt:Battle of the Bars calisthenics'],
   ['cfx', 'WODprep', 'video', 'yt:WODprep'],
-  ['cfx', 'CrossFit', 'video', 'yt:CrossFit'],
+  ['cfx', 'CrossFit', 'video', 'https://www.youtube.com/@CrossFit'],
   ['cfx', 'CrossFit Games', 'top', 'yt:CrossFit Games'],
   ['cfx', 'Morning Chalk Up', 'news', 'https://morningchalkup.com/'],
   ['box', 'Precision Striking', 'video', 'yt:Precision Striking'],
   ['box', 'Tony Jeffries', 'video', 'yt:Tony Jeffries'],
   ['box', 'Matchroom Boxing', 'top', 'yt:Matchroom Boxing'],
-  ['box', 'Sportface · boxe', 'news', 'https://www.sportface.it/boxe/'],
+  ['box', 'Sportface · pugilato', 'news', 'https://www.sportface.it/pugilato/'],
   ['run', 'The Running Channel', 'video', 'yt:The Running Channel'],
   ['run', 'Ben Parkes', 'video', 'yt:Ben Parkes running'],
   ['run', 'World Athletics', 'top', 'yt:World Athletics'],
-  ['run', 'Sportface · atletica', 'news', 'https://www.sportface.it/atletica/'],
+  ['run', 'Queen Atletica', 'news', 'https://www.atleticalive.it/'],
   ['run', 'Podisti.net', 'local', 'https://www.podisti.net/'],
   ['swm', 'Effortless Swimming', 'video', 'yt:Effortless Swimming'],
   ['swm', 'Swim Smooth', 'video', 'yt:Swim Smooth'],
@@ -3467,7 +3467,7 @@ var NEWS_SRC = [
   ['trk', 'Homemade Wanderlust', 'video', 'yt:Homemade Wanderlust'],
   ['trk', 'REI', 'video', 'yt:REI'],
   ['trk', 'Salomon TV', 'top', 'yt:Salomon TV'],
-  ['trk', 'Montagna.tv', 'news', 'https://www.montagna.tv/'],
+  ['trk', 'Lo Scarpone · CAI', 'news', 'https://loscarpone.cai.it/'],
   ['trk', 'Gognablog', 'local', 'https://gognablog.sherpa-gate.com/'],
   ['bch', 'Better at Beach', 'video', 'yt:Better at Beach'],
   ['bch', 'Riley McKibbin', 'video', 'yt:Riley McKibbin beach volleyball'],
@@ -3498,7 +3498,6 @@ var NEWS_SRC = [
   ['ten', 'Tennis TV', 'top', 'yt:Tennis TV'],
   ['ten', 'Ubitennis', 'news', 'https://www.ubitennis.com/'],
   ['sqs', 'SquashSkills', 'video', 'yt:SquashSkills'],
-  ['sqs', 'Squash Coaching', 'video', 'yt:Squash Coaching'],
   ['sqs', 'SquashTV', 'top', 'yt:SquashTV'],
   ['sqs', 'PSA World Tour', 'news', 'https://www.psaworldtour.com/'],
   ['pkb', 'Third Shot Sports', 'video', 'yt:Third Shot Sports'],
@@ -3507,13 +3506,12 @@ var NEWS_SRC = [
   ['pkb', 'The Dink', 'news', 'https://www.thedinkpickleball.com/'],
   ['yog', 'Yoga With Adriene', 'video', 'yt:Yoga With Adriene'],
   ['yog', 'Yoga With Kassandra', 'video', 'yt:Yoga With Kassandra'],
-  ['yog', 'Yoga Journal', 'news', 'https://www.yogajournal.com/'],
   ['pil', 'Move With Nicole', 'video', 'yt:Move With Nicole'],
   ['pil', 'Blogilates', 'video', 'yt:blogilates'],
   ['dnc', 'STEEZY', 'video', 'yt:STEEZY'],
   ['dnc', 'Matt Steffanina', 'video', 'yt:Matt Steffanina'],
   ['dnc', 'World of Dance', 'top', 'yt:World of Dance'],
-  ['dnc', 'Giornale della Danza', 'news', 'https://www.giornaledelladanza.com/'],
+  ['dnc', 'Danza&Danza', 'news', 'https://www.danzaedanzaweb.com/'],
   ['wsf', 'Peter Hart', 'video', 'yt:Peter Hart windsurfing'],
   ['wsf', 'Starboard Windsurfing', 'video', 'yt:Starboard Windsurfing'],
   ['wsf', 'PWA World Tour', 'top', 'yt:PWA World Tour windsurfing'],
@@ -3521,14 +3519,14 @@ var NEWS_SRC = [
   ['ski', 'Stomp It Tutorials', 'video', 'yt:Stomp It Tutorials'],
   ['ski', 'Carv', 'video', 'yt:Carv ski'],
   ['ski', 'FIS Alpine', 'top', 'yt:FIS Alpine'],
-  ['ski', 'Sportface · sci', 'news', 'https://www.sportface.it/sci/'],
+  ['ski', 'Sportface · sci alpino', 'news', 'https://www.sportface.it/sci-alpino/'],
   ['ski', 'Neveitalia', 'local', 'https://www.neveitalia.it/'],
   ['bld', 'That’s Much Beta', 'video', 'https://www.youtube.com/@thatsmuchbeta'],
   ['bld', 'Hooper’s Beta', 'video', 'yt:Hooper\'s Beta'],
   ['bld', 'Lattice Training', 'video', 'yt:Lattice Training'],
   ['bld', 'World Climbing', 'top', 'yt:World Climbing'],
-  ['bld', 'Montagna.tv · climbing', 'news', 'https://www.montagna.tv/tag/climbing/feed/'],
-  ['bld', 'Planetmountain', 'local', 'https://www.planetmountain.com/'],
+  ['bld', 'Gripped', 'news', 'https://gripped.com/'],
+  ['bld', 'Up-Climbing', 'local', 'https://www.up-climbing.com/'],
   ['glf', 'Me and My Golf', 'video', 'yt:Me and My Golf'],
   ['glf', 'Rick Shiels', 'video', 'yt:Rick Shiels Golf'],
   ['glf', 'PGA TOUR', 'top', 'yt:PGA TOUR'],
@@ -4049,7 +4047,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.8.2';
+var APP_V = 'gesta-v4.8.3';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

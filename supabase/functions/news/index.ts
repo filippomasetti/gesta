@@ -8,8 +8,13 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const UA = "Mozilla/5.0 (compatible; GestaOggi/1.0; +https://getgesta.app)";
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
+// YouTube in Europa rimanda alla pagina dei cookie: con questo cookie la salta. E le ricerche vanno una alla volta, sennò YouTube blocca
+const YT_COOKIE = "SOCS=CAI; CONSENT=YES+cb";
+let ytLock: Promise<unknown> = Promise.resolve();
+function ytGet(url: string) { const p = ytLock.then(() => new Promise((r) => setTimeout(r, 1500))).then(() => get(url)); ytLock = p.catch(() => {}); return p; }
 async function get(url: string) {
-  const r = await fetch(url, { headers: { "User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5", "Accept-Language": "it-IT,it;q=0.9,en;q=0.6" }, redirect: "follow", signal: AbortSignal.timeout(10000) });
+  const yt = /youtube\.com/.test(url);
+  const r = await fetch(url, { headers: { ...(yt ? { "Cookie": YT_COOKIE } : {}), "User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5", "Accept-Language": "it-IT,it;q=0.9,en;q=0.6" }, redirect: "follow", signal: AbortSignal.timeout(10000) });
   if (!r.ok) throw new Error("HTTP " + r.status);
   return { text: await r.text(), url: r.url };
 }
@@ -19,14 +24,14 @@ const isFeed = (t: string) => /<(rss|feed|rdf:RDF)[\s>]/i.test(t.slice(0, 3000))
 async function discover(url: string): Promise<string> {
   if (url.startsWith("yt:")) {
     const q = url.slice(3).trim();
-    const { text } = await get("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&sp=EgIQAg%253D%253D");
+    const { text } = await ytGet("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&sp=EgIQAg%253D%253D");
     const m = text.match(/"channelRenderer":\{"channelId":"(UC[\w-]{22})"/) || text.match(/"channelId":"(UC[\w-]{22})"/);
     if (!m) throw new Error("canale non trovato");
     return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
   }
   if (/youtube\.com\/(@|channel\/|c\/|user\/)/.test(url)) {
     const m0 = url.match(/channel\/(UC[\w-]{22})/); if (m0) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m0[1];
-    const { text } = await get(url);
+    const { text } = await ytGet(url);
     const m = text.match(/"(?:channelId|externalId)":"(UC[\w-]{22})"/) || text.match(/channel_id=(UC[\w-]{22})/) || text.match(/itemprop="(?:channelId|identifier)" content="(UC[\w-]{22})"/);
     if (!m) throw new Error("canale non trovato");
     return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
@@ -76,7 +81,8 @@ async function readSource(s: any) {
   const { text } = await get(feed);
   const head = text.replace(/<(item|entry)[\s>][\s\S]*$/i, "");
   const title = tag(head, ["title"]).slice(0, 120);
-  let items = parse(text).filter((x) => !/\/shorts\//.test(x.link));
+  let items = parse(text);
+  if (s.kind === "top") items = items.filter((x) => !/\/shorts\//.test(x.link));
   if (s.kind === "top") { const hi = items.filter((x) => TOP.test(x.title)); items = (hi.length ? hi : items).slice(0, 4); }
   else items = items.slice(0, s.kind === "video" ? 15 : 8);
   const rows = items.map((x) => {
@@ -103,7 +109,7 @@ Deno.serve(async (req) => {
       const r = await readSource(s);
       await sb.from("news_sources").update({ feed: r.feed, title: r.title, checked_at: new Date().toISOString(), ok: true, n: r.n, err: null }).eq("id", s.id);
     } catch (e) {
-      await sb.from("news_sources").update({ checked_at: new Date().toISOString(), ok: false, err: String((e as Error).message || e).slice(0, 200), feed: null }).eq("id", s.id);
+      await sb.from("news_sources").update({ checked_at: new Date().toISOString(), ok: false, err: String((e as Error).message || e).slice(0, 200), feed: /404|feed non trovato/.test(String((e as Error).message)) ? null : s.feed }).eq("id", s.id);
     }
   };
   const queue = due.slice(), res: unknown[] = [];
