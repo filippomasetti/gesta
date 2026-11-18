@@ -12,11 +12,21 @@ const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: 
 const YT_COOKIE = "SOCS=CAI; CONSENT=YES+cb";
 let ytLock: Promise<unknown> = Promise.resolve();
 function ytGet(url: string) { const p = ytLock.then(() => new Promise((r) => setTimeout(r, 1500))).then(() => get(url)); ytLock = p.catch(() => {}); return p; }
-async function get(url: string) {
-  const yt = /youtube\.com/.test(url);
-  const r = await fetch(url, { headers: { ...(yt ? { "Cookie": YT_COOKIE } : {}), "User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5", "Accept-Language": "it-IT,it;q=0.9,en;q=0.6" }, redirect: "follow", signal: AbortSignal.timeout(10000) });
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return { text: await r.text(), url: r.url };
+// i redirect si seguono a mano tenendo i cookie: YouTube a volte rimbalza tra pagine finché non li riceve indietro
+async function get(url: string, ms = 12000) {
+  const jar: Record<string, string> = {};
+  if (/youtube\.com/.test(url)) for (const c of YT_COOKIE.split("; ")) { const [k, v] = c.split("="); jar[k] = v; }
+  let u = url;
+  for (let i = 0; i < 8; i++) {
+    const cookie = Object.entries(jar).map(([k, v]) => k + "=" + v).join("; ");
+    const r = await fetch(u, { headers: { ...(cookie ? { "Cookie": cookie } : {}), "User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.8, */*;q=0.5", "Accept-Language": "it-IT,it;q=0.9,en;q=0.6" }, redirect: "manual", signal: AbortSignal.timeout(ms) });
+    for (const sc of r.headers.getSetCookie?.() || []) { const m = sc.match(/^([^=;\s]+)=([^;]*)/); if (m) jar[m[1]] = m[2]; }
+    const loc = r.headers.get("location");
+    if (r.status >= 300 && r.status < 400 && loc) { await r.body?.cancel(); u = new URL(loc, u).href; continue; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return { text: await r.text(), url: u };
+  }
+  throw new Error("troppi rimbalzi");
 }
 const isFeed = (t: string) => /<(rss|feed|rdf:RDF)[\s>]/i.test(t.slice(0, 3000));
 
@@ -24,10 +34,11 @@ const isFeed = (t: string) => /<(rss|feed|rdf:RDF)[\s>]/i.test(t.slice(0, 3000))
 async function discover(url: string): Promise<string> {
   if (url.startsWith("yt:")) {
     const q = url.slice(3).trim();
-    const { text } = await ytGet("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&sp=EgIQAg%253D%253D");
-    const m = text.match(/"channelRenderer":\{"channelId":"(UC[\w-]{22})"/) || text.match(/"channelId":"(UC[\w-]{22})"/);
-    if (!m) throw new Error("canale non trovato");
-    return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
+    // prima la ricerca per nome; se YouTube non risponde, la pagina @nomecanale
+    const r1 = await ytGet("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&sp=EgIQAg%253D%253D").catch(() => null);
+    const m = r1 && (r1.text.match(/"channelRenderer":\{"channelId":"(UC[\w-]{22})"/) || r1.text.match(/"channelId":"(UC[\w-]{22})"/));
+    if (m) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
+    return discover("https://www.youtube.com/@" + q.replace(/[^\w.-]/g, ""));
   }
   if (/youtube\.com\/(@|channel\/|c\/|user\/)/.test(url)) {
     const m0 = url.match(/channel\/(UC[\w-]{22})/); if (m0) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m0[1];
@@ -36,7 +47,13 @@ async function discover(url: string): Promise<string> {
     if (!m) throw new Error("canale non trovato");
     return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
   }
-  const { text, url: fin } = await get(url);
+  const home = await get(url).catch((e) => e as Error);
+  if (home instanceof Error) {
+    const t = await get(url.replace(/\/+$/, "") + "/feed/", 20000).catch(() => null);
+    if (t && isFeed(t.text)) return t.url;
+    throw home;
+  }
+  const { text, url: fin } = home;
   if (isFeed(text)) return fin;
   const links = [...text.matchAll(/<link\b[^>]*>/gi)].map((x) => x[0]).filter((l) => /rel=["']?alternate/i.test(l) && /type=["']?application\/(rss|atom)\+xml/i.test(l));
   for (const l of links) { const h = l.match(/href=["']([^"']+)["']/i); if (h && !/comments/i.test(h[1])) return new URL(h[1], fin).href; }
@@ -78,12 +95,12 @@ const TOP = /highlight|best of|best moments|finale?|final[s]?\b|semifinal|recap|
 async function readSource(s: any) {
   let feed = s.feed as string | null;
   if (!feed) feed = await discover(s.url);
-  const { text } = await get(feed);
+  const { text } = await get(feed, 20000);
   const head = text.replace(/<(item|entry)[\s>][\s\S]*$/i, "");
   const title = tag(head, ["title"]).slice(0, 120);
   let items = parse(text);
   if (s.kind === "top") items = items.filter((x) => !/\/shorts\//.test(x.link));
-  if (s.kind === "top") { const hi = items.filter((x) => TOP.test(x.title)); items = (hi.length ? hi : items).slice(0, 4); }
+  if (s.kind === "top") { const hi = items.filter((x) => TOP.test(x.title)); items = [...hi, ...items.filter((x) => !TOP.test(x.title))].slice(0, 4); }
   else items = items.slice(0, s.kind === "video" ? 15 : 8);
   const rows = items.map((x) => {
     const d = Date.parse(x.date);

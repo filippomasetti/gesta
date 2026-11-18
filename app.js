@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.3</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.4</span>';
   return h;
 }
 
@@ -3441,7 +3441,7 @@ var NEWS_SRC = [
   ['cfx', 'WODprep', 'video', 'yt:WODprep'],
   ['cfx', 'CrossFit', 'video', 'https://www.youtube.com/@CrossFit'],
   ['cfx', 'CrossFit Games', 'top', 'yt:CrossFit Games'],
-  ['cfx', 'Morning Chalk Up', 'news', 'https://morningchalkup.com/'],
+  ['cfx', 'BoxRox', 'news', 'https://www.boxrox.com/'],
   ['box', 'Precision Striking', 'video', 'yt:Precision Striking'],
   ['box', 'Tony Jeffries', 'video', 'yt:Tony Jeffries'],
   ['box', 'Matchroom Boxing', 'top', 'yt:Matchroom Boxing'],
@@ -3454,7 +3454,7 @@ var NEWS_SRC = [
   ['swm', 'Effortless Swimming', 'video', 'yt:Effortless Swimming'],
   ['swm', 'Swim Smooth', 'video', 'yt:Swim Smooth'],
   ['swm', 'World Aquatics', 'top', 'yt:World Aquatics'],
-  ['swm', 'Nuoto.com', 'news', 'https://www.nuoto.com/'],
+  ['swm', 'Sportface · nuoto', 'news', 'https://www.sportface.it/nuoto/'],
   ['bik', 'GCN Italia', 'video', 'yt:GCN Italia'],
   ['bik', 'GCN Tech', 'video', 'yt:GCN Tech'],
   ['bik', 'GCN Racing', 'top', 'yt:GCN Racing'],
@@ -3467,7 +3467,7 @@ var NEWS_SRC = [
   ['trk', 'Homemade Wanderlust', 'video', 'yt:Homemade Wanderlust'],
   ['trk', 'REI', 'video', 'yt:REI'],
   ['trk', 'Salomon TV', 'top', 'yt:Salomon TV'],
-  ['trk', 'Lo Scarpone · CAI', 'news', 'https://loscarpone.cai.it/'],
+  ['trk', 'Mountainblog', 'news', 'https://www.mountainblog.it/'],
   ['trk', 'Gognablog', 'local', 'https://gognablog.sherpa-gate.com/'],
   ['bch', 'Better at Beach', 'video', 'yt:Better at Beach'],
   ['bch', 'Riley McKibbin', 'video', 'yt:Riley McKibbin beach volleyball'],
@@ -3511,7 +3511,7 @@ var NEWS_SRC = [
   ['dnc', 'STEEZY', 'video', 'yt:STEEZY'],
   ['dnc', 'Matt Steffanina', 'video', 'yt:Matt Steffanina'],
   ['dnc', 'World of Dance', 'top', 'yt:World of Dance'],
-  ['dnc', 'Danza&Danza', 'news', 'https://www.danzaedanzaweb.com/'],
+  ['dnc', 'Dance Magazine', 'news', 'https://www.dancemagazine.com/'],
   ['wsf', 'Peter Hart', 'video', 'yt:Peter Hart windsurfing'],
   ['wsf', 'Starboard Windsurfing', 'video', 'yt:Starboard Windsurfing'],
   ['wsf', 'PWA World Tour', 'top', 'yt:PWA World Tour windsurfing'],
@@ -4047,7 +4047,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.8.3';
+var APP_V = 'gesta-v4.8.4';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
