@@ -19,7 +19,7 @@ var SPORTS = {
   pil: { name: 'Pilates', c: '#FFA8D2', q: 'sat', ic: '<circle cx="12" cy="12" r="7.6"/><path d="M9.5 3.6h5M9.5 20.4h5"/>' },
   wsf: { name: 'Windsurf', c: '#6FA8FF', q: 'none', ic: '<path d="M11.5 3.5v13"/><path d="M11.5 3.5c4.5 3 6.8 7.4 6.3 13h-6.3"/><path d="M4.5 19.5h15"/>' },
   ski: { name: 'Sci', c: '#C3D4FF', q: 'none', ic: '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><path d="M9.6 4.6 12 6.6l2.4-2M9.6 19.4 12 17.4l2.4 2"/>' },
-  bld: { name: 'Boulder', c: '#B98CFF', q: 'bld', ic: '<path d="M5.2 15.4C3.7 12.4 5 8.1 8.9 6.5c3.6-1.4 7.5-.6 9.5 2.4 1.8 2.8.8 6.5-2 8.5-3.1 2.2-9.2 1.6-11.2-2z"/><circle cx="12" cy="11.6" r="1.8"/>' },
+  bld: { name: 'Arrampicata', c: '#B98CFF', q: 'bld', ic: '<path d="M5.2 15.4C3.7 12.4 5 8.1 8.9 6.5c3.6-1.4 7.5-.6 9.5 2.4 1.8 2.8.8 6.5-2 8.5-3.1 2.2-9.2 1.6-11.2-2z"/><circle cx="12" cy="11.6" r="1.8"/>' },
   vol: { name: 'Pallavolo', c: '#4D7CFF', q: 'focus', ic: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c-1.5 3.1-1 5.9 0 8.5M12 12c2.8 1.6 5.8 1.8 8.3.6M12 12c-2.6 1.7-4.5 4.2-5.3 7"/>' },
   bsk: { name: 'Basket', c: '#F08A24', q: 'focus', ic: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5v17M6.2 6c2.4 2.7 2.4 9.3 0 12M17.8 6c-2.4 2.7-2.4 9.3 0 12"/>' },
   rug: { name: 'Rugby', c: '#D9A066', q: 'focus', ic: '<ellipse cx="12" cy="12" rx="9" ry="5.3" transform="rotate(-35 12 12)"/><path d="M9.6 14.4l4.8-4.8"/>' },
@@ -553,7 +553,7 @@ function questsFor(sport, group) {
     out.easy = { t: { ci: b.ci, n: Math.max(1, b.n - 1) }, label: 'Chiudi ' + Math.max(1, b.n - 1) + ' ' + col.name.toLowerCase() };
     out.med = { t: { ci: b.ci, n: b.n }, label: 'Chiudi ' + b.n + ' ' + col.name.toLowerCase() };
     out.hard = { t: { ci: b.ci, n: b.n + 1 }, label: 'Chiudi ' + (b.n + 1) + ' ' + col.name.toLowerCase() + (nxt ? ' o un ' + nxt.name.toLowerCase() + ' in WIP' : '') };
-    out.title = 'Boulder'; out.last = 'Ultima volta: ' + b.n + ' ' + col.name.toLowerCase() + ' chiusi';
+    out.title = 'Arrampicata'; out.last = 'Ultima volta: ' + b.n + ' ' + col.name.toLowerCase() + ' chiusi';
   } else if (qt === 'dist') {
     var cf = DIST[sport], r = cf.rnd, v = b.v;
     var e = Math.max(r, Math.floor(v * 0.9 / r) * r), hh = Math.max(v + r, Math.ceil(v * 1.1 / r) * r);
@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.7.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.0</span>';
   return h;
 }
 
@@ -1269,6 +1269,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Un applauso a un amico, uno a settimana per amico: nel suo calendario tocchi un giorno di sport e glielo dai per quella sessione. Se lui lo ricambia entro 7 giorni (o tu ricambi il suo) è un <b>cinque battuto</b>, e in Bacheca c’è una medaglia apposta. Non dà Punti Rango: fa solo piacere.</p></div>' +
       (VAPID_PUB ? '<div class="fld"><span class="lbl" style="font-size:11px">Notifiche</span><p>Con Gesta aggiunta alla schermata Home possono arrivarti sul telefono guanti, sfide chiuse, richieste di amicizia, obiettivi della Gang e cinque. Scegli tu quali nelle impostazioni del Party. Una sola notifica per ogni cosa: pianificare non avvisa nessuno.</p></div>' : '') +
       '<div class="fld"><span class="lbl" style="font-size:11px">Foto</span><p>Una foto per sessione, se ti va: nei dettagli della sessione o toccando il giorno sul calendario, anche settimane dopo. Se la scatti da Gesta il giorno stesso è <b>verificata</b>; dalla galleria va benissimo lo stesso. È tua: la vedono gli amici solo se accendi l’interruttore, foto per foto. Quando vinci un guanto puoi aggiungere la prova per chi te l’ha lanciato.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Le tue Gesta</span><p>Ogni giorno con almeno uno sport è una <b>Gesta</b>. Le conti da quando hai iniziato e non si azzerano mai: le vedi in alto, accanto al nome dell’app. Le soglie tonde (10, 25, 50, 100, 200, 365, 500) sono una medaglia in Bacheca.</p></div>' +
       '</div><div class="acts"><button class="btn" data-a="guideAgain" style="font-size:12px;letter-spacing:1px">Rivedi la guida</button><button class="btn main" data-a="close">Ho capito</button></div></div>';
   } else if (o.t === 'when') {
@@ -1598,7 +1599,7 @@ SX('flash', 'Flash', ['bld'], SPI('bld'), SPC('bld'), 'Blocchi chiusi al primo t
 SX('colore', 'Nuovo colore', ['bld'], SPI('bld'), SPC('bld'), 'Il colore più alto che hai chiuso: sale dal bianco fino al nero.', [1, 2, 3, 4, 5, 6], function (c) { var b = 0; bySport(c, 'bld').forEach(function (e) { var d = e.s.d; if (d && d.colors) COLORS.forEach(function (col, i) { var v = d.colors[col.k]; if (v && v.c + v.f > 0) b = Math.max(b, i + 1); }); }); return b; }, '', COLORS.map(function (x) { return [x.name, x.c]; }));
 SX('arcobaleno', 'Arcobaleno', ['bld'], SPI('bld'), SPC('bld'), 'Blocchi di 4 colori diversi nella stessa sessione.', [1], function (c) { return bySport(c, 'bld').some(function (e) { var d = e.s.d; return d && d.colors && Object.keys(d.colors).filter(function (k) { return d.colors[k].c + d.colors[k].f > 0; }).length >= 4; }) ? 1 : 0; });
 SX('testadura', 'Testa dura', ['bld'], SPI('bld'), SPC('bld'), 'Un WIP chiuso nella sessione successiva.', N60, function (c) { var l = bySport(c, 'bld'), n = 0; for (var i = 1; i < l.length; i++) { var a = l[i - 1].s.d, b = l[i].s.d; if (a && b && a.colors && b.colors) Object.keys(a.colors).forEach(function (k) { if (a.colors[k].w > 0 && b.colors[k] && b.colors[k].c + b.colors[k].f > 0) n++; }); } return n; }, 'volte');
-SX('ragnocasa', 'Ragno di casa', ['bld'], SPI('bld'), SPC('bld'), 'Boulder 3 volte nella stessa settimana.', WK, function (c) { return weeksWith(c, function (w) { return (w.sd.bld || 0) >= 3; }); }, 'settimane');
+SX('ragnocasa', 'Ragno di casa', ['bld'], SPI('bld'), SPC('bld'), 'Arrampicata 3 volte nella stessa settimana.', WK, function (c) { return weeksWith(c, function (w) { return (w.sd.bld || 0) >= 3; }); }, 'settimane');
 ['bch', 'soc', 'pad', 'ten', 'vol', 'bsk', 'rug', 'sqs', 'pkb'].forEach(function (sp) { SX('felice_' + sp, 'Giornata felice · ' + SPORTS[sp].name, [sp], SPI(sp), SPC(sp), 'Belle giornate di ' + SPORTS[sp].name.toLowerCase() + '.', N100, function (c) { return bySport(c, sp).filter(function (e) { return e.s.d && e.s.d.face === 'g'; }).length; }, 'giornate'); });
 SX('torneo', 'Torneo', ['bch'], SPI('bch'), SPC('bch'), 'Tornei di beach giocati.', [1, 2, 4, 8, 12, 20, 30], function (c) { return bySport(c, 'bch').filter(function (e) { return e.s.d && e.s.d.type === 'torneo'; }).length; }, 'tornei');
 SX('coach', 'Appunti da coach', ['bch'], SPI('bch'), SPC('bch'), 'Sessioni di beach con appunti sui fondamentali.', N100, function (c) { return bySport(c, 'bch').filter(function (e) { return e.s.d && e.s.d.n && Object.keys(e.s.d.n).length; }).length; }, 'sessioni');
@@ -2226,6 +2227,7 @@ function guideMark(scr) { if (!S.seen.guide || S.seen.guide.v !== GUIDE_V) S.see
 var TIPS = [
   ['plan', 'home', '.cell.plan:not(.today)', 'Parola mantenuta', 'Se quel giorno fai sport, +¼ di Punto Rango. Se salta, nessun problema: il piano sparisce e basta.'],
   ['plus', 'home', '.top button[data-v="stato"] .rplus, .top button[data-v="stato"]', 'Il + del rango', 'Hai vinto una quest social quando eri già in questo rango: il gradino in più è tuo per tutto il mese.', function () { var n = new Date(); return monthStats(n.getFullYear(), n.getMonth()).plus; }],
+  ['taverna', 'home', '.nav [data-a="oggiOpen"]', 'La Taverna', 'Ogni giorno, per i tuoi sport: due video di tecnica, un highlight dei campioni e le notizie. Passaci anche nei giorni senza allenamento.'],
   ['fcal', 'friend', '[data-a="fCal"]', 'Il cinque', 'Apri il suo calendario e tocca un giorno di sport: gli dai il cinque per quella sessione. Se lo ricambia, è battuto.'],
   ['ggoal', 'gang', '.gbar', 'Due su tre', 'L’obiettivo è superato quando lo completano 2 membri su 3. Gli esagoni accesi sono quelli che l’hanno già fatto.']
 ];
@@ -2830,7 +2832,8 @@ function gEnd() {
   if (g.d > 90) {
     el.style.transition = 'transform .18s ease-in, opacity .18s ease-in';
     el.style.transform = g.on === 'x' ? 'translateX(110%)' : 'translateY(110%)'; el.style.opacity = '0';
-    setTimeout(function () { if (g.k === 'ov') { if (document.body.contains(g.cl)) g.cl.click(); else { ui.ov = null; render(); } } else goBack(); }, 170);
+    /* 4.7.1: il clic sulla X non va «mangiato» dal blocco anti-clic dello swipe; e se la finestra resta aperta, si chiude comunque */
+    setTimeout(function () { gSwallow = false; if (g.k === 'ov') { var was = ui.ov; if (document.body.contains(g.cl)) g.cl.click(); if (ui.ov && ui.ov === was) { ui.ov = null; render(); } } else goBack(); }, 170);
   } else snap();
 }
 document.addEventListener('touchstart', function (e) { gSwallow = false; var t = e.touches[0]; if (e.touches.length === 1) gStart(t.clientX, t.clientY, e.target); else gs = null; }, { passive: true });
@@ -3543,7 +3546,7 @@ function newsSync(rows) {
   if (!jobs.length) { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} return; }
   Promise.all(jobs).then(function () { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} newsLoad(true); }).catch(function () {});
 }
-function newsOn() { if (newsT === null) { try { newsT = localStorage.getItem('gesta.news') === '1'; } catch (e) { newsT = false; } } return !!(newsT && cauth); }
+function newsOn() { return !!S; } /* 4.8: la Taverna è per tutti */
 function newsCheck() { if (!cauth) return; rpc('is_news_tester').then(function (r) { var v = r === true || (r && r[0] === true); newsT = v; try { localStorage.setItem('gesta.news', v ? '1' : '0'); } catch (e) {} if (v) newsLoad(false); render(); }).catch(function () {}); }
 function newsSeenAt() { try { return +localStorage.getItem('gesta.newsSeen') || 0; } catch (e) { return 0; } }
 function newsMine() { var mine = S.profile.sports; return (ui.news || []).filter(function (x) { return mine.indexOf(x.sport) >= 0 && !(x.news_sources && x.news_sources.active === false); }); }
@@ -3562,12 +3565,12 @@ function newsPick(sp, full) {
   take('video', full ? 4 : 2, 10, true); take('top', full ? 2 : 1, 14, true); take('news', full ? 3 : 1, 7, false); take('local', full ? 2 : 1, 45, false);
   return out;
 }
-function newsFresh() { var t = newsSeenAt(), mine = S.profile.sports; return mine.some(function (sp) { return newsPick(sp, false).some(function (o) { return Date.parse(o.x.created_at) > t && !o.arc; }); }); }
+function newsFresh() { if (!ui.news && !ui.newsReq) { ui.newsReq = 1; setTimeout(function () { newsLoad(false); }, 1500); } var t = newsSeenAt(), mine = S.profile.sports; return mine.some(function (sp) { return newsPick(sp, false).some(function (o) { return Date.parse(o.x.created_at) > t && !o.arc; }); }); }
 function newsLoad(refresh) {
   var sps = S.profile.sports.filter(function (x) { return x !== 'bon'; }).join(',');
-  var pull = function () { return sbFetch('/rest/v1/news_items?select=id,sport,kind,title,link,image,published_at,created_at,news_sources(name,active)&sport=in.(' + sps + ')&order=published_at.desc&limit=800').then(function (r) { ui.news = Array.isArray(r) ? r : []; ui.newsErr = null; render(); }); };
-  authFresh().then(pull).catch(function () { ui.newsErr = 'Non riesco a caricare la Taverna: controlla la connessione.'; render(); })
-    .then(function () { if (!refresh) return; ui.newsBusy = true; render(); return sbFetch('/functions/v1/news', { method: 'POST', body: {} }).then(pull, function () {}).then(function () { ui.newsBusy = false; render(); newsSrcLoad(); }); });
+  var pull = function () { return sbFetch('/rest/v1/news_items?select=id,sport,kind,title,link,image,published_at,created_at,news_sources(name,active)&sport=in.(' + sps + ')&order=published_at.desc&limit=800', cauth ? {} : { anon: true }).then(function (r) { ui.news = Array.isArray(r) ? r : []; ui.newsErr = null; render(); }); };
+  (cauth ? authFresh() : Promise.resolve()).then(pull).catch(function () { ui.newsErr = 'Non riesco a caricare la Taverna: controlla la connessione.'; render(); })
+    .then(function () { if (!refresh || !cauth) return; ui.newsBusy = true; render(); return sbFetch('/functions/v1/news', { method: 'POST', body: {} }).then(pull, function () {}).then(function () { ui.newsBusy = false; render(); newsSrcLoad(); }); });
   newsSrcLoad(true);
 }
 function newsSrcLoad(sync) { if (!numAdmin()) return; sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,active,ok,n,err,title,checked_at&order=sport').then(function (r) { r = Array.isArray(r) ? r : []; ui.newsSrc = r.filter(function (x) { return x.active !== false; }); render(); if (sync) newsSync(r); }).catch(function () {}); }
@@ -4042,7 +4045,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.7.0';
+var APP_V = 'gesta-v4.8.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
