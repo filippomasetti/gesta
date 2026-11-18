@@ -438,6 +438,19 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 .ck{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .ck.on{background:var(--sys);border-color:var(--sys)}
 .ck .i{stroke-width:2.6}
+.nmine{flex:0 0 auto;font:700 9px/12px var(--fd);letter-spacing:1px;color:#06101F;background:var(--sysl);border-radius:4px;padding:1px 4px}
+.nkick .nmine+.nsrc{flex:0 1 auto}
+.fadd{display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto}
+.slist{display:flex;flex-direction:column;padding:2px 4px 2px 12px}
+.srow{display:flex;align-items:center;gap:12px;min-height:54px;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:none}
+.srow.off .frwt,.srow.off .sic{opacity:.45}
+.srn{display:flex;align-items:center;gap:6px;min-width:0;font:600 14px/19px var(--fb)}
+.srn>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sic{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.eye{width:44px;height:44px;padding:0;border:none;background:none;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer}
+.found{display:flex;align-items:center;gap:12px;padding:10px;border-color:#9BE15D55;background:rgba(155,225,93,.06);flex:0 0 auto}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
 /* 4.2 · Gesta in numeri */
 .numw{display:flex;flex-direction:column;gap:12px;width:100%;max-width:1240px;margin:0 auto}
 .numseg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;border-radius:12px;border:1px solid var(--line);background:var(--surface);max-width:420px;width:100%;align-self:center;box-sizing:border-box}
@@ -527,6 +540,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.10.0" defer></script>
+<script src="app.js?v=4.11.0" defer></script>
 </body>
 </html>

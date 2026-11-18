@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.10.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.11.0</span>';
   return h;
 }
 
@@ -1250,6 +1250,7 @@ function viewOverlay() {
   } else if (o.t === 'privacy') { h = viewPrivacy(o, cls);
   } else if (o.t === 'fb') { h = viewFb(o, cls);
   } else if (o.t === 'manda') { h = viewManda(o, cls);
+  } else if (o.t === 'fadd') { h = viewFAdd(o, cls);
   } else if (o.t === 'delacc') { h = viewDelAcc(o, cls);
   } else if (o.t === 'rules') {
     h = '<div class="' + cls + ' tall" style="gap:12px">' + whead('Regole del gioco', true) + '<div class="wbody rules" data-keep>' +
@@ -1270,7 +1271,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Un applauso a un amico, uno a settimana per amico: nel suo calendario tocchi un giorno di sport e glielo dai per quella sessione. Se lui lo ricambia entro 7 giorni (o tu ricambi il suo) è un <b>cinque battuto</b>, e in Bacheca c’è una medaglia apposta. Non dà Punti Rango: fa solo piacere.</p></div>' +
       (VAPID_PUB ? '<div class="fld"><span class="lbl" style="font-size:11px">Notifiche</span><p>Con Gesta aggiunta alla schermata Home possono arrivarti sul telefono guanti, sfide chiuse, richieste di amicizia, obiettivi della Gang e cinque. Scegli tu quali nelle impostazioni del Party. Una sola notifica per ogni cosa: pianificare non avvisa nessuno.</p></div>' : '') +
       '<div class="fld"><span class="lbl" style="font-size:11px">Foto</span><p>Una foto per sessione, se ti va: nei dettagli della sessione o toccando il giorno sul calendario, anche settimane dopo. Se la scatti da Gesta il giorno stesso è <b>verificata</b>; dalla galleria va benissimo lo stesso. È tua: la vedono gli amici solo se accendi l’interruttore, foto per foto. Quando vinci un guanto puoi aggiungere la prova per chi te l’ha lanciato.</p></div>' +
-      '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p><p>Con l’<b>aeroplanino</b> mandi un contenuto a uno o più amici, con una riga se vuoi. Lo trovano in cima alla loro Taverna, in <b>Condivisi con te</b>: resta 7 giorni, oppure fino a fine giornata dopo che l’hanno aperto.</p><p>Un contenuto non ti interessa? <b>Trascinalo verso sinistra</b>: sparisce e al suo posto arriva il prossimo. L’archivio dei video di tecnica va per visualizzazioni: ogni giorno il successivo tra i più visti di ogni canale.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p><p>Con l’<b>aeroplanino</b> mandi un contenuto a uno o più amici, con una riga se vuoi. Lo trovano in cima alla loro Taverna, in <b>Condivisi con te</b>: resta 7 giorni, oppure fino a fine giornata dopo che l’hanno aperto.</p><p>Un contenuto non ti interessa? <b>Trascinalo verso sinistra</b>: sparisce e al suo posto arriva il prossimo. L’archivio dei video di tecnica va per visualizzazioni: ogni giorno il successivo tra i più visti di ogni canale.</p><p>Con il tasto in alto a destra apri <b>Le tue fonti</b>: nascondi quelle che non ti interessano e aggiungi fino a 10 canali YouTube o siti tuoi, che stanno in prima fila. Se la proponi a tutti e chi fa Gesta la approva, entra nella Taverna di chi fa quello sport.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Le tue Gesta</span><p>Ogni giorno con almeno uno sport è una <b>Gesta</b>. Le conti da quando hai iniziato e non si azzerano mai: le vedi in alto, accanto al nome dell’app. Le soglie tonde (10, 25, 50, 100, 200, 365, 500) sono una medaglia in Bacheca.</p></div>' +
       '</div><div class="acts"><button class="btn" data-a="guideAgain" style="font-size:12px;letter-spacing:1px">Rivedi la guida</button><button class="btn main" data-a="close">Ho capito</button></div></div>';
   } else if (o.t === 'when') {
@@ -2779,10 +2780,11 @@ var PA2 = {
 for (var pk2 in PA2) A[pk2] = PA2[pk2];
 /* gesti: tira via le schermate secondarie e le finestre, scorri le quest */
 var gs = null, gSwallow = false;
-var SECSCR = ['friend', 'letters', 'psettings', 'gang', 'sfide', 'settings', 'bacheca', 'pfriends', 'pgangs', 'numeri'];
+var SECSCR = ['fonti', 'friend', 'letters', 'psettings', 'gang', 'sfide', 'settings', 'bacheca', 'pfriends', 'pgangs', 'numeri'];
 function goBack() {
   if (ui.screen === 'settings' || ui.screen === 'bacheca') ui.screen = 'stato';
   else if (ui.screen === 'numeri') ui.screen = 'psettings';
+  else if (ui.screen === 'fonti') ui.screen = 'oggi';
   else if (['friend', 'letters', 'psettings', 'gang', 'sfide', 'pfriends', 'pgangs'].indexOf(ui.screen) >= 0) ui.screen = 'party';
   ding('tap'); render();
 }
@@ -3544,11 +3546,12 @@ var NEWS_SRC = [
 /* quando Gesta si apre sull'account di Filippo, copia l'elenco su Supabase: aggiunge le fonti nuove e spegne quelle tolte */
 function newsSync(rows) {
   var key = 'v47:' + JSON.stringify(NEWS_SRC).length + ':' + NEWS_SRC.length; try { if (localStorage.getItem('gesta.nsync') === key) return; } catch (e) {}
-  var by = {}; (rows || []).forEach(function (r) { by[r.sport + '|' + r.url] = r; });
+  rows = (rows || []).filter(function (r) { return !r.owner && !r.shared; }); /* 4.11: solo le fonti di Gesta; quelle degli utenti e le approvate non si toccano */
+  var by = {}; rows.forEach(function (r) { by[r.sport + '|' + r.url] = r; });
   var up = NEWS_SRC.filter(function (x) { var r = by[x[0] + '|' + x[3]]; return !r || r.active === false || r.name !== x[1] || r.kind !== x[2]; }).map(function (x) { return { sport: x[0], name: x[1], kind: x[2], url: x[3], active: true }; });
   var off = (rows || []).filter(function (r) { return r.active !== false && !NEWS_SRC.some(function (x) { return x[0] === r.sport && x[3] === r.url; }); });
   var jobs = [];
-  if (up.length) jobs.push(sbFetch('/rest/v1/news_sources?on_conflict=sport,url', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: up }));
+  if (up.length) jobs.push(sbFetch('/rest/v1/news_sources?on_conflict=sport,url,owner', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: up }));
   off.forEach(function (r) { jobs.push(sbFetch('/rest/v1/news_sources?id=eq.' + r.id, { method: 'PATCH', prefer: 'return=minimal', body: { active: false } })); });
   if (!jobs.length) { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} return; }
   Promise.all(jobs).then(function () { try { localStorage.setItem('gesta.nsync', key); } catch (e) {} newsLoad(true); }).catch(function (e) { toast('Fonti non aggiornate: ' + String((e && e.message) || e).slice(0, 80)); });
@@ -3556,7 +3559,9 @@ function newsSync(rows) {
 function newsOn() { return !!S; } /* 4.8: la Taverna è per tutti */
 function newsCheck() { if (!cauth) return; rpc('is_news_tester').then(function (r) { var v = r === true || (r && r[0] === true); newsT = v; try { localStorage.setItem('gesta.news', v ? '1' : '0'); } catch (e) {} if (v) newsLoad(false); render(); }).catch(function () {}); }
 function newsSeenAt() { try { return +localStorage.getItem('gesta.newsSeen') || 0; } catch (e) { return 0; } }
-function newsMine() { var mine = S.profile.sports, hid = nHide(); return (ui.news || []).filter(function (x) { return mine.indexOf(x.sport) >= 0 && !hid[x.id] && !(x.news_sources && x.news_sources.active === false); }); }
+function newsMine() { var mine = S.profile.sports, hid = nHide(), hs = tavS().hs, dup = {}; return (ui.news || []).filter(function (x) { var k = x.sport + '|' + x.link; if (mine.indexOf(x.sport) < 0 || hid[x.id] || hs[x.source_id] || (x.news_sources && x.news_sources.active === false) || dup[k]) return false; dup[k] = 1; return true; }); }
+function tavS() { S.tav = S.tav || {}; S.tav.hs = S.tav.hs || {}; S.tav.ps = S.tav.ps || {}; return S.tav; }
+function newsOwn(x) { return !!(cauth && x.news_sources && x.news_sources.owner === cauth.uid); }
 /* 4.10: quelli trascinati via non tornano più */
 var NHIDE = null;
 function nHide() { if (!NHIDE) { try { NHIDE = JSON.parse(localStorage.getItem('gesta.nhide') || '{}') || {}; } catch (e) { NHIDE = {}; } } return NHIDE; }
@@ -3582,7 +3587,7 @@ function newsPick(sp, full) {
     ar.forEach(function (x) { var k = (x.news_sources && x.news_sources.name) || ''; (by[k] = by[k] || []).push(x); });
     Object.keys(by).forEach(function (k) { var l = by[k].sort(function (a, b) { return (a.pop || 1e6) - (b.pop || 1e6) || (b.views || 0) - (a.views || 0) || newsDay(a) - newsDay(b); }); l.forEach(function (x, i) { x._k = ((i - dn) % l.length + l.length) % l.length; }); });
     ar.sort(function (a, b) { return a._k - b._k || newsDay(a) - newsDay(b); });
-    var pri = function (x) { return NEWS_PRI[x.sport + '|' + (x.news_sources && x.news_sources.name)] ? 0 : 1; };
+    var pri = function (x) { return NEWS_PRI[x.sport + '|' + (x.news_sources && x.news_sources.name)] || newsOwn(x) ? 0 : 1; };
     var pool = fr.filter(function (x) { return !pri(x); }).concat(ar.filter(function (x) { return !pri(x); }), fr.filter(pri), ar.filter(pri)), seen = {}, got = [], nm = function (x) { return x.news_sources && x.news_sources.name; };
     pool.forEach(function (x) { if (got.length < n && !seen[nm(x)]) { seen[nm(x)] = 1; got.push(x); } }); /* prima una per fonte, poi si riempie */
     pool.forEach(function (x) { if (got.length < n && got.indexOf(x) < 0) got.push(x); });
@@ -3594,12 +3599,12 @@ function newsPick(sp, full) {
 function newsFresh() { if (!ui.news && !ui.newsReq) { ui.newsReq = 1; setTimeout(function () { newsLoad(false); }, 1500); } var t = newsSeenAt(), mine = S.profile.sports; return mine.some(function (sp) { return newsPick(sp, false).some(function (o) { return Date.parse(o.x.created_at) > t && !o.arc; }); }); }
 function newsLoad(refresh) {
   var sps = S.profile.sports.filter(function (x) { return x !== 'bon'; }).join(',');
-  var pull = function () { return sbFetch('/rest/v1/news_items?select=id,sport,kind,title,link,image,published_at,created_at,views,pop,news_sources(name,active)&sport=in.(' + sps + ')&order=published_at.desc&limit=2000', cauth ? {} : { anon: true }).then(function (r) { ui.news = Array.isArray(r) ? r : []; ui.newsErr = null; render(); }); };
+  var pull = function () { return sbFetch('/rest/v1/news_items?select=id,source_id,sport,kind,title,link,image,published_at,created_at,views,pop,news_sources(name,active,owner)&sport=in.(' + sps + ')&order=published_at.desc&limit=2000', cauth ? {} : { anon: true }).then(function (r) { ui.news = Array.isArray(r) ? r : []; ui.newsErr = null; render(); }); };
   (cauth ? authFresh() : Promise.resolve()).then(pull).catch(function () { ui.newsErr = 'Non riesco a caricare la Taverna: controlla la connessione.'; render(); })
     .then(function () { if (!refresh || !cauth) return; ui.newsBusy = true; render(); return sbFetch('/functions/v1/news', { method: 'POST', body: {} }).then(pull, function () {}).then(function () { ui.newsBusy = false; render(); newsSrcLoad(); }); });
   newsSrcLoad(true);
 }
-function newsSrcLoad(sync) { if (!numAdmin()) return; sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,active,ok,n,err,title,checked_at,pop_n,pop_err&order=sport').then(function (r) { r = Array.isArray(r) ? r : []; ui.newsSrc = r.filter(function (x) { return x.active !== false; }); render(); if (sync) newsSync(r); }).catch(function () {}); }
+function newsSrcLoad(sync) { if (!numAdmin()) return; sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,active,ok,n,err,title,checked_at,pop_n,pop_err,owner,shared&order=sport').then(function (r) { r = Array.isArray(r) ? r : []; ui.newsSrc = r.filter(function (x) { return x.active !== false; }); render(); if (sync) newsSync(r); }).catch(function () {}); }
 function agoTxt(iso) { var d = (Date.now() - Date.parse(iso)) / 36e5; if (d < 1) return 'ora'; if (d < 24) return Math.round(d) + ' h'; var g = Math.round(d / 24); if (g === 1) return 'ieri'; if (g < 30) return g + ' gg'; var m = Math.round(g / 30); return m < 12 ? m + (m === 1 ? ' mese' : ' mesi') : Math.round(g / 365) + (g < 548 ? ' anno' : ' anni'); }
 function newsThumb(x, w) {
   var sp = SPORTS[x.sport], tag = x.kind === 'video' ? '<span class="nbadge">TECNICA</span>' : x.kind === 'top' ? '<span class="nbadge top">TOP</span>' : x.kind === 'local' ? '<span class="nbadge loc">PER TE</span>' : '<span class="nbadge nws">NOTIZIA</span>';
@@ -3609,7 +3614,7 @@ function newsRow(o) {
   var x = o.x, src = (x.news_sources && x.news_sources.name) || '', to = SH.out[x.link] || [];
   var sent = to.length ? '<span class="nsent">' + svg(IC.check, '#9BE15D', 12) + 'Mandato a ' + (to.length === 1 ? esc((friend(to[0]) || { n: '1 amico' }).n) : to.length + ' amici') + '</span>' : '';
   return '<div class="card nitem" data-nid="' + x.id + '"><a class="nlink" href="' + esc(x.link) + '" target="_blank" rel="noopener">' + newsThumb(x) +
-    '<span class="nmeta"><span class="nkick"><span class="nsrc">' + esc(src) + '</span><span class="nago">' + (o.arc ? 'dall’archivio' : agoTxt(x.published_at)) + '</span></span><span class="ntit">' + esc(x.title) + '</span>' + sent + '</span></a>' +
+    '<span class="nmeta"><span class="nkick">' + (newsOwn(x) ? '<span class="nmine">TUA</span>' : '') + '<span class="nsrc">' + esc(src) + '</span><span class="nago">' + (o.arc ? 'dall’archivio' : agoTxt(x.published_at)) + '</span></span><span class="ntit">' + esc(x.title) + '</span>' + sent + '</span></a>' +
     (shareOn() ? '<button class="msend" data-a="mandaOpen" data-v="' + x.id + '" aria-label="Manda a un amico">' + svg(SEND_IC, '#7CC4FF', 18) + '</button>' : '') + '</div>';
 }
 /* 4.9: «Condivisi con te», in cima alla Taverna. Restano 7 giorni, o fino a fine giornata dopo che li hai aperti */
@@ -3621,7 +3626,7 @@ function shareCard(x) {
 }
 function viewOggi() {
   var n = new Date(), f = ui.newsF || 'all', mine = S.profile.sports.filter(function (x) { return x !== 'bon'; });
-  var h = '<div class="top"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="lbl kick">[ Gesta · ' + DAYS_LONG[n.getDay()].toLowerCase() + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()].toLowerCase() + ' ]</span><h1>Taverna</h1><span class="hint" style="font-size:12px">Tecnica, highlights e notizie dei tuoi sport</span></div>' + (ui.newsBusy ? '<span class="hint" style="font-size:11px">aggiorno…</span>' : '') + '</div>';
+  var h = '<div class="top"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="lbl kick">[ Gesta · ' + n.getDate() + ' ' + MONTHS[n.getMonth()].toLowerCase() + ' ]</span><h1>Taverna</h1><span class="hint" style="font-size:12px">' + (ui.newsBusy ? 'Aggiorno…' : 'Tecnica, highlights e notizie dei tuoi sport') + '</span></div><button class="icon-btn" data-a="fontiOpen" aria-label="Le tue fonti">' + svg(SLID_IC, null, 22) + '</button></div>';
   var shv = shareVis(); if (shv.length) h += '<div class="nsec"><span class="nsech" style="color:var(--sysl)">' + svg(SEND_IC, '#7CC4FF', 18) + '<span>Condivisi con te</span></span>' + shv.map(shareCard).join('') + '</div>';
   var secs = mine.map(function (sp) { return [sp, newsPick(sp, f !== 'all')]; }).filter(function (z) { return z[1].length && (f === 'all' || z[0] === f); });
   var withAny = mine.filter(function (sp) { return newsPick(sp, false).length; });
@@ -3637,7 +3642,7 @@ function viewOggi() {
   return h;
 }
 var PA46 = {
-  oggiOpen: function () { ui.arrange = false; ui.screen = 'oggi'; ui.ov = null; ding('tap'); render(); newsLoad(true); shareLoad(true); setTimeout(function () { try { localStorage.setItem('gesta.newsSeen', String(Date.now())); } catch (e) {} }, 1500); },
+  oggiOpen: function () { ui.arrange = false; ui.screen = 'oggi'; ui.ov = null; ding('tap'); render(); newsLoad(true); shareLoad(true); fontiLoad(); setTimeout(function () { try { localStorage.setItem('gesta.newsSeen', String(Date.now())); } catch (e) {} }, 1500); },
   newsF: function (v) { ui.newsF = v; ding('tap'); render(); },
   newsForce: function () { ui.newsBusy = true; render(); authFresh().then(function () { return sbFetch('/functions/v1/news', { method: 'POST', body: { force: true } }); }).catch(function () {}).then(function () { ui.newsBusy = false; newsLoad(false); newsSrcLoad(); }); },
   /* il resoconto da incollare a Claude: una riga per fonte, con il nome vero del canale o del sito trovato */
@@ -3695,6 +3700,102 @@ var PA49 = {
   }
 };
 for (var pk49 in PA49) A[pk49] = PA49[pk49];
+/* 4.11: Le tue fonti */
+var SLID_IC = '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>';
+var YT_IC = '<rect x="3" y="6" width="18" height="12" rx="3.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/>', WEB_IC = '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/>';
+var EYE_IC = '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>', EYEX_IC = '<path d="M4 4l16 16"/><path d="M9.6 6c.8-.3 1.6-.5 2.4-.5 6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.3 7.6A16 16 0 0 0 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1"/>';
+var TRASH_IC = '<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>';
+var NKIND = { video: 'Tecnica', top: 'Highlights', news: 'Notizie', local: 'Per te' };
+function fontiLoad() {
+  if (!cauth || !S) return;
+  var sps = S.profile.sports.filter(function (x) { return x !== 'bon'; }).join(',');
+  authFresh().then(function () { return sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,owner,shared,ok,n,err,title&active=eq.true&sport=in.(' + sps + ')&order=id'); }).then(function (r) {
+    r = (Array.isArray(r) ? r : []).filter(function (x) { return !x.owner || x.shared === 'yes' || x.owner === cauth.uid; });
+    ui.fsrc = r; ui.fErr = null;
+    /* la risposta di chi fa Gesta alla tua proposta arriva come letterina */
+    var t = tavS(), ch = false;
+    r.forEach(function (x) { if (x.owner !== cauth.uid) return; var was = t.ps[x.id]; if (was === 'proposed' && (x.shared === 'yes' || x.shared === 'no') && S.party) { letter(x.shared === 'yes' ? 'acc' : 'none', null, x.shared === 'yes' ? '«' + x.name + '» è nella Taverna di tutti' : '«' + x.name + '» resta solo tua', x.shared === 'yes' ? 'Chi fa ' + SPORTS[x.sport].name.toLowerCase() + ' ora la vede. Grazie!' : 'Per ora non entra tra le fonti di tutti, ma tu continui a vederla.'); } if (was !== x.shared) { t.ps[x.id] = x.shared || ''; ch = true; } });
+    if (ch) save(); render();
+  }).catch(function () { ui.fErr = 'Non riesco a caricare le fonti: controlla la connessione.'; render(); });
+}
+function viewFonti() {
+  var h = pBack('Taverna', 'Le tue fonti', 'oggi'), hs = tavS().hs, mine = S.profile.sports.filter(function (x) { return x !== 'bon'; }), L = ui.fsrc;
+  var own = (L || []).filter(function (x) { return x.owner === (cauth && cauth.uid); }).length;
+  h += cauth ? '<button class="btn main fadd" data-a="faddOpen"' + (own >= 10 ? ' disabled' : '') + '>' + svg(PI.plus, '#06101F', 18) + 'Aggiungi una fonte</button>' : '<p class="hint">Per aggiungere fonti tue entra con l’email (in Stato, ingranaggio).</p>';
+  h += '<span class="hint" style="margin-top:-4px">' + (own >= 10 ? 'Hai già 10 fonti tue: togline una per aggiungerne un’altra.' : 'Tocca l’occhio per nascondere una fonte. Solo per te.') + '</span>';
+  if (!L) return h + '<p class="hint" style="text-align:center;padding:30px 0">' + (ui.fErr ? esc(ui.fErr) : 'Carico le fonti…') + '</p>';
+  var ord = { video: 0, top: 1, news: 2, local: 3 };
+  mine.forEach(function (sp) {
+    var l = L.filter(function (x) { return x.sport === sp; }).sort(function (a, b) { var ao = a.owner === cauth.uid ? 0 : 1, bo = b.owner === cauth.uid ? 0 : 1; return ao - bo || ord[a.kind] - ord[b.kind] || a.id - b.id; });
+    if (!l.length) return;
+    h += '<div class="nsec"><span class="nsech">' + sportIc(sp, 18, true) + '<span style="color:' + SPORTS[sp].c + '">' + SPORTS[sp].name + '</span></span><div class="card slist">' + l.map(function (x) {
+      var me = cauth && x.owner === cauth.uid, off = !me && hs[x.id], st = me ? (x.ok === false ? 'non riesco a leggerla' : x.ok == null ? 'la leggo a breve' : x.shared === 'proposed' ? 'proposta a tutti' : x.shared === 'yes' ? 'approvata per tutti' : x.shared === 'no' ? 'solo tua' : '') : '';
+      return '<div class="srow' + (off ? ' off' : '') + '"><span class="sic">' + svg(/youtube|^yt:/.test(x.url + (x.feed || '')) || x.kind === 'video' || x.kind === 'top' ? YT_IC : WEB_IC, '#8FA3C2', 18) + '</span><span class="frwt"><span class="srn">' + (me ? '<span class="nmine">TUA</span>' : '') + '<span>' + esc(x.name) + '</span></span><span class="hint" style="font-size:11.5px">' + NKIND[x.kind] + (st ? ' · ' + st : '') + '</span></span>' +
+        (me ? '<button class="eye" data-a="fDel" data-v="' + x.id + '" aria-label="Togli">' + svg(TRASH_IC, '#8FA3C2', 18) + '</button>' : '<button class="eye" data-a="fHide" data-v="' + x.id + '" aria-label="' + (off ? 'Mostra' : 'Nascondi') + '">' + svg(off ? EYEX_IC : EYE_IC, off ? '#5A6B88' : '#7CC4FF', 18) + '</button>') + '</div>';
+    }).join('') + '</div></div>';
+  });
+  return h;
+}
+var faddT = null;
+function faddInput(v) { var o = ui.ov; if (!o || o.t !== 'fadd') return; o.url = v; o.found = null; o.err = null; clearTimeout(faddT); if (v.trim().length > 6) faddT = setTimeout(function () { faddCheck(); }, 900); }
+function faddCheck() {
+  var o = ui.ov; if (!o || o.t !== 'fadd' || !o.url.trim() || o.busy) return;
+  var u = o.url.trim(); o.busy = 'check'; render();
+  authFresh().then(function () { return sbFetch('/functions/v1/news', { method: 'POST', body: { check: u } }); }).then(function (r) {
+    if (ui.ov !== o || o.url.trim() !== u) return; o.busy = false;
+    if (r && r.ok) o.found = r; else o.err = (r && r.error) || 'Non trovo niente da leggere a questo link';
+    render();
+  }, function () { if (ui.ov !== o) return; o.busy = false; o.err = 'Non riesco a controllare il link: riprova.'; render(); });
+}
+function viewFAdd(o, cls) {
+  var mine = S.profile.sports.filter(function (x) { return x !== 'bon'; }), f = o.found;
+  return '<div class="' + cls + '" style="gap:14px">' + whead('Aggiungi una fonte', true) +
+    '<p class="wtext" style="text-align:left;font-size:13px;line-height:19px">Incolla il link di un canale YouTube (o di un suo video) o di un sito di notizie.</p>' +
+    '<input class="inp" data-f="faddurl" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-size:14px" placeholder="youtube.com/@canale" value="' + esc(o.url || '') + '">' +
+    (f ? '<div class="card found"><span class="sic" style="border-color:#9BE15D66">' + svg(f.kind === 'video' ? YT_IC : WEB_IC, '#9BE15D', 20) + '</span><span class="frwt"><span class="srn"><span>' + esc(f.title) + '</span></span><span class="hint" style="font-size:11.5px;color:#9BE15D">Trovato · ' + (f.kind === 'video' ? 'canale YouTube · ' + f.n + ' video' : 'sito · ' + f.n + ' articoli') + '</span></span></div>'
+      : o.busy === 'check' ? '<span class="hint" style="text-align:center">Cerco…</span>' : o.err ? '<span class="hint" style="color:#FF8A80;text-align:center">' + esc(o.err) + '</span>' : '') +
+    '<span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:var(--sysl);margin-bottom:-6px">Per quale sport</span>' +
+    '<div class="fchips">' + mine.map(function (sp) { return '<button class="chip' + (o.sp === sp ? ' on' : '') + '" data-a="faddSp" data-v="' + sp + '">' + SPORTS[sp].name + '</button>'; }).join('') + '</div>' +
+    '<button class="toggle" data-a="faddProp" style="padding:0;min-height:52px"><span style="display:flex;flex-direction:column;gap:2px"><span style="font:600 15px/20px var(--fb)">Proponila a tutti</span><span class="hint" style="font-size:11.5px">Se va bene, entra nella Taverna di chi fa ' + SPORTS[o.sp].name.toLowerCase() + '</span></span><span class="sw' + (o.prop ? ' on' : '') + '"></span></button>' +
+    (o.saveErr ? '<span class="hint" style="color:#FF8A80;text-align:center">' + esc(o.saveErr) + '</span>' : '') +
+    '<div class="acts"><button class="btn" data-a="close">Annulla</button>' + (f ? '<button class="btn main" data-a="faddGo"' + (o.busy ? ' disabled' : '') + '>' + (o.busy === 'save' ? 'Aggiungo…' : 'Aggiungi') + '</button>' : '<button class="btn main" data-a="faddFind"' + (o.busy || !(o.url || '').trim() ? ' disabled' : '') + '>Cerca</button>') + '</div></div>';
+}
+function viewProps() {
+  if (!numAdmin()) return '';
+  if (ui.fprop === undefined) { ui.fprop = null; authFresh().then(function () { return rpc('gesta_proposals'); }).then(function (r) { ui.fprop = Array.isArray(r) ? r : []; render(); }).catch(function () { ui.fprop = []; }); }
+  var L = ui.fprop || []; if (!L.length) return '';
+  return '<div class="row" style="align-items:baseline;padding:4px 2px 0"><span class="lbl kick">Fonti proposte</span><span class="hint" style="font-size:11px">' + L.length + '</span></div>' + L.map(function (x) {
+    return '<div class="card" style="padding:12px;display:flex;flex-direction:column;gap:10px"><span style="display:flex;align-items:center;gap:12px"><span class="sic">' + svg(x.kind === 'video' ? YT_IC : WEB_IC, '#8FA3C2', 18) + '</span><span class="frwt"><span class="srn"><span>' + esc(x.name) + '</span></span><span class="hint" style="font-size:11.5px">' + (SPORTS[x.sport] ? SPORTS[x.sport].name : x.sport) + ' · da ' + esc(x.who) + ' · ' + (x.ok ? (x.n || 0) + (x.kind === 'video' ? ' video' : ' articoli') : x.ok === false ? 'non si legge' : 'da leggere') + '</span></span><a class="eye" href="' + esc(/^https?:/.test(x.url) ? x.url : 'https://' + x.url) + '" target="_blank" rel="noopener" aria-label="Apri">' + svg(PI.link, '#7CC4FF', 18) + '</a></span>' +
+      '<div class="g2"><button class="btn sm" data-a="fDecide" data-v="' + x.id + ':0">No</button><button class="btn sm main" data-a="fDecide" data-v="' + x.id + ':1">Aggiungi a tutti</button></div></div>';
+  }).join('') + '<span class="hint" style="text-align:center">«Aggiungi a tutti» la mette nella Taverna di chi fa quello sport. «No» la lascia solo a chi l’ha aggiunta.</span>';
+}
+var PA411 = {
+  fontiOpen: function () { ui.screen = 'fonti'; ui.ov = null; ding('open'); render(); fontiLoad(); },
+  fHide: function (id) { var hs = tavS().hs; if (hs[id]) delete hs[id]; else hs[id] = 1; save(); ding('tap'); render(); },
+  fDel: function (id) {
+    var x = (ui.fsrc || []).filter(function (y) { return String(y.id) === String(id); })[0]; if (!x) return;
+    if (ui.fDelSure !== id) { ui.fDelSure = id; toast('Tocca ancora il cestino per togliere «' + x.name + '».'); setTimeout(function () { if (ui.fDelSure === id) ui.fDelSure = null; }, 4000); return; }
+    ui.fDelSure = null; ui.fsrc = ui.fsrc.filter(function (y) { return y !== x; }); ui.news = (ui.news || []).filter(function (y) { return String(y.source_id) !== String(id); }); ding('tap'); render();
+    authFresh().then(function () { return rpc('my_source_remove', { p_id: +id }); }).then(function () { toast('Tolta.'); fontiLoad(); }, function () { toast('Non sono riuscito a toglierla: riprova.'); fontiLoad(); });
+  },
+  faddOpen: function () { var mine = S.profile.sports.filter(function (x) { return x !== 'bon'; }); ui.ov = { t: 'fadd', url: '', sp: ui.newsF && ui.newsF !== 'all' ? ui.newsF : mine[0], prop: false }; ui.focusNext = 'faddurl'; ding('open'); render(); },
+  faddSp: function (sp) { ui.ov.sp = sp; ding('tap'); render(); },
+  faddProp: function () { ui.ov.prop = !ui.ov.prop; ding('tap'); render(); },
+  faddFind: function () { clearTimeout(faddT); faddCheck(); },
+  faddGo: function () {
+    var o = ui.ov; if (!o || !o.found || o.busy) return; var f = o.found; o.busy = 'save'; o.saveErr = null; render();
+    authFresh().then(function () { return rpc('my_source_add', { p_sport: o.sp, p_url: f.url.slice(0, 500), p_kind: f.kind, p_name: f.title, p_feed: f.feed, p_propose: !!o.prop }); })
+      .then(function () {
+        if (ui.ov === o) ui.ov = null; toast('Aggiunta: tra poco trovi i suoi contenuti in prima fila.'); ding('tap'); render(); fontiLoad();
+        authFresh().then(function () { return sbFetch('/functions/v1/news', { method: 'POST', body: {} }); }).then(function () { newsLoad(false); fontiLoad(); }, function () {});
+      }, function (e) { o.busy = false; o.saveErr = String((e && e.message) || 'Non sono riuscito ad aggiungerla: riprova.').slice(0, 120); render(); });
+  },
+  fDecide: function (v) {
+    var p = v.split(':'), id = +p[0], ok = p[1] === '1'; ui.fprop = (ui.fprop || []).filter(function (x) { return x.id !== id; }); ding('tap'); render();
+    authFresh().then(function () { return rpc('source_decide', { p_id: id, p_ok: ok }); }).then(function () { toast(ok ? 'Aggiunta per tutti.' : 'Resta solo sua.'); }, function () { toast('Non è andata: riprova.'); ui.fprop = undefined; render(); });
+  }
+};
+for (var pk411 in PA411) A[pk411] = PA411[pk411];
 /* 4.3: privacy, segnalazioni, cancellare l'account */
 function devLabel() { var ua = navigator.userAgent || '', sa = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); return (/iPhone|iPad/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : 'Computer') + (sa ? ' · app' : ' · browser') + ' · ' + innerWidth + '×' + innerHeight; }
 function viewPrivacy(o, cls) {
@@ -3756,7 +3857,7 @@ function numLoad(d) { ui.numErr = null; authFresh().then(function () { return rp
 function viewNumeri() {
   var d = ui.numD || 30, n = ui.num && ui.num[d], h = '<div class="numw">' + pBack('Party · solo per te', 'Gesta in numeri', 'psettings');
   h += '<div class="numseg">' + [[7, '7 giorni'], [30, '30 giorni'], [0, 'Da sempre']].map(function (x) { return '<button class="' + (x[0] === d ? 'on' : '') + '" data-a="numD" data-v="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>';
-  h += '<p class="hint" style="margin:0;text-align:center">Solo chi ha collegato l’email · totali, mai una persona sola</p>';
+  h += '<p class="hint" style="margin:0;text-align:center">Solo chi ha collegato l’email · totali, mai una persona sola</p>' + viewProps();
   if (!n) return h + (ui.numErr ? '<p class="hint" style="text-align:center;color:#FF8A80">' + esc(ui.numErr) + '</p><button class="btn" data-a="numD" data-v="' + d + '">Riprova</button>' : '<p class="hint" style="text-align:center;padding:30px 0">Sto contando…</p>') + '</div>';
   var pc = function (a, b) { return b ? Math.round(a / b * 100) : 0; }, nf = function (x) { return String(Math.round(x * 10) / 10).replace('.', ','); };
   var tile = function (v, l) { return '<div class="numt"><b>' + (v == null ? 0 : v) + '</b><span>' + l + '</span></div>'; };
@@ -3973,6 +4074,7 @@ window.addEventListener('popstate', function () {
   } else if (ui.arrange) ui.arrange = false;
   else if (ui.screen === 'settings' || ui.screen === 'bacheca') ui.screen = 'stato';
   else if (ui.screen === 'numeri') ui.screen = 'psettings';
+  else if (ui.screen === 'fonti') ui.screen = 'oggi';
   else if (['friend', 'letters', 'psettings', 'gang', 'sfide', 'pfriends', 'pgangs'].indexOf(ui.screen) >= 0) ui.screen = 'party';
   else if (ui.screen !== 'home') ui.screen = 'home';
   render();
@@ -3993,12 +4095,12 @@ function render() {
     if (!ui.ov && ui.rkq) { ui.ov = { t: 'rankup', r: ui.rkq.r, plus: ui.rkq.plus, from: ui.rkq.from === undefined ? -1 : ui.rkq.from, k: ui.rkq.r + ui.rkq.plus + Date.now() }; ui.rkq = null; ding('open'); buzz([15, 60, 15, 60, 15]); }
     if (!ui.ov && ui.mq && ui.mq.length) { if (!ui.mqTot || ui.mqN >= ui.mqTot) { ui.mqTot = ui.mq.length; ui.mqN = 0; } var q = ui.mq.shift(); ui.mqN++; ui.ov = { t: 'medal', id: q.id, tr: q.t, n: ui.mqN, tot: ui.mqTot }; if (!ui.mq.length) { ui.mqTot = 0; } medalSound(); }
     gloveQueue(); lateQueue(); pushAsk();
-    var body = ui.screen === 'party' ? viewParty() : ui.screen === 'friend' ? viewFriend() : ui.screen === 'letters' ? viewLetters() : ui.screen === 'pfriends' ? viewPList('f') : ui.screen === 'pgangs' ? viewPList('g') : ui.screen === 'psettings' ? viewPSettings() : ui.screen === 'numeri' ? viewNumeri() : ui.screen === 'oggi' ? viewOggi() : ui.screen === 'gang' ? viewGang() : ui.screen === 'sfide' ? viewSfide() : ui.screen === 'stato' ? viewStato() : ui.screen === 'settings' ? viewSettings() : ui.screen === 'bacheca' ? viewBacheca() : viewHome();
+    var body = ui.screen === 'party' ? viewParty() : ui.screen === 'friend' ? viewFriend() : ui.screen === 'letters' ? viewLetters() : ui.screen === 'pfriends' ? viewPList('f') : ui.screen === 'pgangs' ? viewPList('g') : ui.screen === 'psettings' ? viewPSettings() : ui.screen === 'numeri' ? viewNumeri() : ui.screen === 'oggi' ? viewOggi() : ui.screen === 'fonti' ? viewFonti() : ui.screen === 'gang' ? viewGang() : ui.screen === 'sfide' ? viewSfide() : ui.screen === 'stato' ? viewStato() : ui.screen === 'settings' ? viewSettings() : ui.screen === 'bacheca' ? viewBacheca() : viewHome();
     if (!ui.ov) lastAnim.ov = null;
     if (ui.screen !== 'home') lastAnim.card = null;
     var ovKey = ui.ov ? [ui.ov.t, ui.ov.kind, ui.ov.k, ui.ov.id, ui.ov.sport, ui.ov.group].join('|') : null;
     if (ovKey !== lastOvKey) { lastOvKey = ovKey; if (ovKey && toastMsg) { toastMsg = null; clearTimeout(toastTimer); } }
-    h = '<div class="scroller">' + body + '</div><nav class="nav"><button class="' + (ui.screen === 'home' ? 'on' : '') + '" data-a="go" data-v="home">' + svg(IC.cal) + 'Calendario</button><button class="' + (['stato', 'settings', 'bacheca'].indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="stato">' + svg(IC.stato) + 'Stato</button>' + (newsOn() ? '<button class="' + (ui.screen === 'oggi' ? 'on' : '') + '" data-a="oggiOpen">' + svg(NEWS_IC) + 'Taverna' + (ui.screen !== 'oggi' && (newsFresh() || shareNew()) ? '<i class="ndot"></i>' : '') + '</button>' : '') + '<button class="' + (PSCR.indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="party">' + svg(PI.party) + 'Party' + (S.party && ui.screen !== 'letters' && unreadLetters() ? '<i class="ndot"></i>' : '') + '</button></nav>' + viewOverlay();
+    h = '<div class="scroller">' + body + '</div><nav class="nav"><button class="' + (ui.screen === 'home' ? 'on' : '') + '" data-a="go" data-v="home">' + svg(IC.cal) + 'Calendario</button><button class="' + (['stato', 'settings', 'bacheca'].indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="stato">' + svg(IC.stato) + 'Stato</button>' + (newsOn() ? '<button class="' + (ui.screen === 'oggi' || ui.screen === 'fonti' ? 'on' : '') + '" data-a="oggiOpen">' + svg(NEWS_IC) + 'Taverna' + (ui.screen !== 'oggi' && (newsFresh() || shareNew()) ? '<i class="ndot"></i>' : '') + '</button>' : '') + '<button class="' + (PSCR.indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="party">' + svg(PI.party) + 'Party' + (S.party && ui.screen !== 'letters' && unreadLetters() ? '<i class="ndot"></i>' : '') + '</button></nav>' + viewOverlay();
   }
   if (S && ui.wpop) { var we = (Date.now() - ui.wpop.at) / 1000; if (we > 3.4) ui.wpop = null; else h += '<div class="wpop" style="animation-delay:-' + we.toFixed(2) + 's" role="status"><span style="width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(255,201,77,.7);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font:700 18px/1 var(--fd);color:var(--rew);text-shadow:0 0 10px rgba(255,201,77,.6)">' + ui.wpop.n + '</span><span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px"><span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:#D9B04A">' + ui.wpop.n + (ui.wpop.n === 1 ? ' giorno' : ' giorni') + ' questa settimana</span><span class="badge" style="font-size:19px;line-height:23px">' + esc(ui.wpop.name) + '</span>' + (ui.wpop.next ? '<span style="font:500 12px/16px var(--fb);color:#C9BFA0">Ancora 1 giorno per ' + esc(ui.wpop.next) + '</span>' : '') + '</span></div>'; }
   if (toastMsg) h += '<div class="toast' + (S && ui.ov ? ' low' : '') + '"' + (toastShown === toastMsg ? ' style="animation-delay:-' + Math.min(2.5, (Date.now() - toastAt) / 1000) + 's"' : '') + ' role="status"><span class="mark">!</span><span>' + esc(toastMsg) + '</span></div>';
@@ -4081,6 +4183,7 @@ root.addEventListener('input', function (e) {
   else if (f === 'fcode') { ui.ov.code = e.target.value; ui.ov.err = null; }
   else if (f === 'fbmsg') { ui.ov.msg = e.target.value; ui.ov.err = null; }
   else if (f === 'mnote') { ui.ov.note = e.target.value; }
+  else if (f === 'faddurl') { faddInput(e.target.value); }
   else if (f === 'lq' || f === 'cq') { ui.ov.q = e.target.value; var gb = root.querySelector('[data-a="' + (f === 'lq' ? 'lGo' : 'cGo') + '"]'); if (gb) gb.disabled = !ui.ov.q.trim(); }
   else if (f === 'lmsg' || f === 'cmsg') ui.ov.msg = e.target.value;
   else if (f === 'gname') { ui.ov.name = e.target.value; var cb = root.querySelector('[data-a="gangCreate"]'); if (cb) cb.disabled = !(ui.ov.name.trim() && Object.keys(ui.ov.mem).filter(function (k) { return ui.ov.mem[k]; }).length >= 2); }
@@ -4135,7 +4238,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.10.0';
+var APP_V = 'gesta-v4.11.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

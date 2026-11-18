@@ -40,6 +40,13 @@ async function discover(url: string): Promise<string> {
     if (m) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
     return discover("https://www.youtube.com/@" + q.replace(/[^\w.-]/g, ""));
   }
+  // il link di un video (anche uno Short): si risale al suo canale
+  if (/youtube\.com\/(watch|shorts\/)|youtu\.be\//.test(url)) {
+    const { text } = await ytGet(url);
+    const m = text.match(/"channelId":"(UC[\w-]{22})"/) || text.match(/itemprop="channelId" content="(UC[\w-]{22})"/);
+    if (!m) throw new Error("canale non trovato");
+    return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m[1];
+  }
   if (/youtube\.com\/(@|channel\/|c\/|user\/)/.test(url)) {
     const m0 = url.match(/channel\/(UC[\w-]{22})/); if (m0) return "https://www.youtube.com/feeds/videos.xml?channel_id=" + m0[1];
     const { text } = await ytGet(url);
@@ -107,7 +114,7 @@ async function readSource(s: any) {
     const d = Date.parse(x.date);
     return { source_id: s.id, sport: s.sport, kind: s.kind, title: x.title.slice(0, 300), link: x.link.replace(/#short$/, "").slice(0, 1000), image: x.image ? x.image.slice(0, 1000) : null, published_at: new Date(isNaN(d) ? Date.now() : Math.min(d, Date.now())).toISOString(), views: x.views };
   });
-  if (rows.length) { const { error } = await sb.from("news_items").upsert(rows, { onConflict: "sport,link" }); if (error) throw new Error(error.message); }
+  if (rows.length) { const { error } = await sb.from("news_items").upsert(rows, { onConflict: "source_id,link" }); if (error) throw new Error(error.message); }
   return { feed, n: rows.length, title };
 }
 
@@ -131,8 +138,8 @@ async function readPopular(s: any) {
     return { source_id: s.id, sport: s.sport, kind: s.kind, title: String(v.snippet.title).slice(0, 300), link: "https://www.youtube.com/watch?v=" + v.id, image: im ? im.url : null, published_at: v.snippet.publishedAt, views: +((v.statistics && v.statistics.viewCount) || 0) };
   }).sort((a: any, b: any) => b.views - a.views).map((x: any, i: number) => ({ ...x, pop: i + 1 }));
   await sb.from("news_items").update({ pop: null }).eq("source_id", s.id);
-  await sb.from("news_items").delete().eq("sport", s.sport).in("link", ids.map((id: string) => "https://www.youtube.com/shorts/" + id));
-  const { error } = await sb.from("news_items").upsert(rows, { onConflict: "sport,link" });
+  await sb.from("news_items").delete().eq("source_id", s.id).in("link", ids.map((id: string) => "https://www.youtube.com/shorts/" + id));
+  const { error } = await sb.from("news_items").upsert(rows, { onConflict: "source_id,link" });
   if (error) throw new Error(error.message);
   return rows.length;
 }
@@ -145,6 +152,21 @@ Deno.serve(async (req) => {
   const { data: t } = await sb.from("news_testers").select("user_id").eq("user_id", u.user.id).maybeSingle();
   if (!t) return json({ error: "non sei tra i tester" }, 403);
   const body = await req.json().catch(() => ({}));
+  // 4.11: controllo di un link che un utente vuole aggiungere come fonte sua: si trova il feed, senza salvare niente
+  if (body.check) {
+    let url = String(body.check).trim();
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    try {
+      const feed = await discover(url);
+      const { text } = await get(feed, 20000);
+      const items = parse(text);
+      const title = tag(text.replace(/<(item|entry)[\s>][\s\S]*$/i, ""), ["title"]).slice(0, 80);
+      if (!items.length) return json({ ok: false, error: "Ho trovato la fonte, ma è vuota" });
+      return json({ ok: true, url, feed, title: title || url, kind: /youtube\.com\/feeds/.test(feed) ? "video" : "news", n: items.length });
+    } catch (e) {
+      return json({ ok: false, error: /canale non trovato/.test(String((e as Error).message)) ? "Non trovo il canale: prova con il link della pagina del canale" : "Non trovo niente da leggere a questo link" });
+    }
+  }
   const { data: srcs } = await sb.from("news_sources").select("*").eq("active", true);
   const now = Date.now();
   const due = (srcs || []).filter((s: any) => body.force || !s.checked_at || now - Date.parse(s.checked_at) > 3 * 3600e3);
