@@ -1074,7 +1074,7 @@ function viewStato() {
     '<span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:8px"><span style="font:700 22px/26px var(--fd);letter-spacing:2px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(S.profile.name) + '</span>' +
     '<span style="display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:8px;row-gap:8px">' +
     '<span class="lbl" style="font-size:10.5px;letter-spacing:2px">Rango</span><span class="track"><span class="fill" style="display:block;width:' + rb.pct + '%"></span></span><span style="font:600 11px/14px var(--fd);color:var(--soft);font-variant-numeric:tabular-nums;white-space:nowrap">' + rb.lbl + '</span>' +
-    '<span class="lbl" style="font-size:10.5px;letter-spacing:2px">Gesta</span><span style="font:500 12px/14px var(--fb);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">' + (gnS ? 'da ' + gestaSince(true) : 'la prima arriva con lo sport') + '</span><span style="font:700 15px/16px var(--fd);color:var(--ink);white-space:nowrap">N° ' + gnS + '</span>' +
+    '<span class="lbl" style="font-size:10.5px;letter-spacing:2px">Gesta</span><span style="font:500 12px/14px var(--fb);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">' + (gnS ? 'da ' + gestaSince(true) : 'da oggi') + '</span><span style="font:700 15px/16px var(--fd);color:var(--ink);white-space:nowrap">N° ' + gnS + '</span>' +
     '</span></span>' + svg(IC.right, 'var(--mut)', 18) + '</button>';
   h += '<div class="ttlc" style="border-radius:14px;border:1px solid rgba(255,201,77,.55);background:#14120A;box-shadow:0 0 18px rgba(255,201,77,.16);padding:11px 16px;display:flex;flex-direction:column;gap:2px"><span class="lbl" style="color:#D9B04A">Titolo di ' + MONTHS[n.getMonth()].toLowerCase() + '</span><span class="fit1 t28" style="color:var(--rew);text-shadow:0 0 14px rgba(255,201,77,.45);letter-spacing:1px;text-transform:uppercase">' + esc(ms.title) + '</span><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px"><span style="font:500 13px/18px var(--fb);color:#C9BFA0;min-width:0;text-wrap:balance">' + titleWhy(ms) + '</span><span style="font:500 13px/18px var(--fb);color:#C9BFA0;white-space:nowrap;flex:0 0 auto">' + ms.weeksOk + '/' + ms.weeksTot + ' settimane</span></div></div>';
   /* sport ordinati da soli: prima i più fatti del mese, il bonus in fondo */
@@ -1084,7 +1084,7 @@ function viewStato() {
     var sp = SPORTS[s], p = ms.sportPts[s] || 0, val, pct, nn = ms.counts[s] || 0;
     if (s === 'bon') { val = nn; pct = Math.min(100, val * 25); }
     else { val = rankOf(p, SPORT_RANKS); pct = Math.min(100, Math.round(p / SPORT_RANKS[0][1] * 100)); }
-    h += '<div class="tw" data-s="' + s + '"><button class="tile" data-a="sport" data-v="' + s + '">' + sportIc(s, 28, true) + '<span class="tname"' + (sp.name.length > 9 ? ' style="font-size:12px;letter-spacing:-.2px"' : '') + '>' + sp.name + '</span><span class="trank" style="' + (s === 'bon' ? 'font-size:20px;' : '') + 'text-shadow:0 0 12px ' + sp.c + '">' + val + '</span><span class="tbar"><i style="width:' + pct + '%;background:' + sp.c + '"></i></span><span class="tsub">' + (s === 'bon' ? (nn ? nn + ' questo mese' : 'Ancora nessuno') : nn ? nn + (nn === 1 ? ' volta' : ' volte') + ' questo mese' : 'Non ancora questo mese') + '</span></button></div>';
+    h += '<div class="tw" data-s="' + s + '"><button class="tile" data-a="sport" data-v="' + s + '">' + sportIc(s, 28, true) + '<span class="tname"' + (sp.name.length > 9 ? ' style="font-size:12px;letter-spacing:-.2px"' : '') + '>' + sp.name + '</span><span class="trank" style="' + (s === 'bon' ? 'font-size:20px;' : '') + 'text-shadow:0 0 12px ' + sp.c + '">' + val + '</span><span class="tbar"><i style="width:' + pct + '%;background:' + sp.c + '"></i></span><span class="tsub">' + (s === 'bon' ? (nn ? nn + ' questo mese' : 'Ancora nessuno') : nn ? nn + ' questo mese' : 'Ancora nessuna') + '</span></button></div>';
   });
   h += '</div></div>';
   var mst = medalState(), mvis = MEDALS.filter(function (d) { return mvisible(d, 'mine'); }), mgot = mvis.filter(function (d) { return mst[d.id].t >= 0; }).length;
@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.12.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.13.0</span>';
   return h;
 }
 
@@ -1179,13 +1179,13 @@ function viewOverlay() {
       '<p><b>Esserci conta più di tutto.</b> Ogni giorno in cui fai sport ti avvicina al rango del mese.</p>' +
       '<p><b>Le quest sono il di più.</b> Prima della sessione scegli una sfida facile, media o difficile: più è dura, più ti fa salire di rango.</p>' +
       '<p><b>Un giorno saltato non toglie niente.</b> Gesta premia quello che fai. Costa qualcosa solo saltare una quest che ti eri fissato in anticipo.</p></div>' +
-      '<div class="acts"><button class="btn" data-a="introRules">Tutte le regole</button><button class="btn main" data-a="introOk">Inizia</button></div></div>';
+      '<div class="acts"><button class="btn" data-a="introRules">Le regole</button><button class="btn main" data-a="introOk">Inizia</button></div></div>';
     else if (o.kind === 'gender') h = '<div class="' + cls + '">' + whead('Notifica', false) + '<p class="wtitle">Nuovi titoli del mese</p><p class="wtext">I titoli ora si declinano. Maschile o femminile?</p><div class="g2"><button class="opt pick" style="justify-content:center" data-a="gender" data-v="m">M</button><button class="opt pick" style="justify-content:center" data-a="gender" data-v="f">F</button></div><p class="wtext" style="font-size:12px">Puoi cambiarlo quando vuoi dal profilo.</p></div>';
     else if (o.kind === 'install') { var andr = /android/i.test(navigator.userAgent);
       h = '<div class="' + cls + '">' + whead('Notifica', false) + '<p class="wtitle">Mettila sulla Home</p><p class="wtext">Gesta è aperta nel browser. Aggiungila alla schermata Home: si apre a tutto schermo come un’app, con la sua icona.</p>' +
         '<div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:6px;text-align:left"><span style="font:600 14px/20px var(--fb)">' + (andr ? 'In Chrome tocca i tre puntini ⋮ e poi «Aggiungi a schermata Home» o «Installa app».' : 'In Safari tocca Condividi (il quadrato con la freccia ⬆️) e poi «Aggiungi alla schermata Home».') + '</span><span class="hint" style="font-size:12px">Poi aprila dall’icona ed entra con la tua email: ritrovi tutto.</span></div>' +
         '<div class="acts one"><button class="btn main" data-a="instOk">Ho capito</button></div></div>'; }
-    else if (o.kind === 'mail') h = '<div class="' + cls + '">' + whead('Notifica', false) + '<div style="display:flex;justify-content:center">' + svg(PI.party, '#7CC4FF', 44) + '</div><p class="wtitle">' + (o.inv ? (o.invName ? esc(o.invName) + ' ti ha invitato' : 'Hai un invito') : 'Collega la tua email') + '</p><p class="wtext">' + (o.inv ? 'Entra con la tua email e diventate amici subito: potrete lanciarvi il guanto e fare Gang insieme. I tuoi dati restano al sicuro nel cloud.' : 'Serve per il Party: lanciare il guanto agli amici, ricevere le loro sfide, entrare in una Gang. E i tuoi dati restano al sicuro nel cloud, anche se cambi telefono.') + '</p><p class="hint" style="text-align:center;margin:0">Niente password: ti arriva un codice. Puoi farlo anche dopo, da Stato → ingranaggio.</p><div class="acts"><button class="btn" data-a="mailSkip">Più tardi</button><button class="btn main" data-a="mailYes">' + (o.inv ? 'Entra' : 'Collega') + '</button></div></div>';
+    else if (o.kind === 'mail') h = '<div class="' + cls + '">' + whead('Notifica', false) + '<div style="display:flex;justify-content:center">' + svg(PI.party, '#7CC4FF', 44) + '</div><p class="wtitle">' + (o.inv ? (o.invName ? esc(o.invName) + ' ti ha invitato' : 'Hai un invito') : 'Collega la tua email') + '</p><p class="wtext">' + (o.inv ? 'Entra con la tua email e diventate amici subito: potrete lanciarvi il guanto e fare Gang insieme. I tuoi dati restano al sicuro nel cloud.' : 'Serve per il Party: lanciare il guanto agli amici, mandarvi i video della Taverna, entrare in una Gang. E i tuoi dati restano al sicuro nel cloud, anche se cambi telefono.') + '</p><p class="hint" style="text-align:center;margin:0">Niente password: ti arriva un codice. Puoi farlo anche dopo, da Stato → ingranaggio.</p><div class="acts"><button class="btn" data-a="mailSkip">Più tardi</button><button class="btn main" data-a="mailYes">' + (o.inv ? 'Entra' : 'Collega') + '</button></div></div>';
     else if (o.kind === 'edit') h = '<div class="' + cls + '">' + whead('Notifica', false) + '<p class="wtitle">Recupera il mese</p><p class="wtext">Per i primi 14 giorni puoi segnare anche gli allenamenti dell’ultimo mese: tocca i giorni passati sul calendario. Così parti dal tuo rango vero.</p><div class="acts one"><button class="btn main" data-a="noticeOk">Ricevuto</button></div></div>';
     else h = '<div class="' + cls + '">' + whead('Notifica', false) + '<p class="wtitle">È ora di un backup</p><p class="wtext">I tuoi dati vivono solo su questo telefono. ' + (ANDROID ? 'Tocca Backup e scegli Drive, oppure salvalo nei file del telefono: bastano due tocchi.' : 'Tocca Backup e scegli “Salva in File” → iCloud Drive: bastano due tocchi.') + '</p><div class="acts"><button class="btn" data-a="noticeLater">Più tardi</button><button class="btn main" data-a="noticeBackup">Backup</button></div></div>';
   } else if (o.t === 'planner') {
@@ -3433,7 +3433,8 @@ function seenPing() {
   if (last === t || !S || !cauth) return;
   try { localStorage.setItem('gesta.seen', t); } catch (e) {}
   sbFetch('/rest/v1/profiles?id=eq.' + cauth.uid, { method: 'PATCH', prefer: 'return=minimal', body: { summary: summaryOf(), updated_at: new Date().toISOString() } }).catch(function () { try { localStorage.removeItem('gesta.seen'); } catch (e) {} });
-  sbFetch('/rest/v1/app_days', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { day: t } }).catch(function () {});
+  sbFetch('/rest/v1/app_days', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { day: t, ver: APP_V.replace('gesta-v', '') } })
+    .catch(function () { return sbFetch('/rest/v1/app_days', { method: 'POST', prefer: 'resolution=ignore-duplicates,return=minimal', body: { day: t } }); }).catch(function () {});
 }
 /* 4.6: Oggi (prova per i tester). Le notizie le legge la funzione news su Supabase; qui si mostrano solo titolo, immagine e link */
 var NEWS_IC = '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>', newsT = null;
@@ -3608,6 +3609,7 @@ function newsSrcLoad(sync) { if (!numAdmin()) return; sbFetch('/rest/v1/news_sou
 function agoTxt(iso) { var d = (Date.now() - Date.parse(iso)) / 36e5; if (d < 1) return 'ora'; if (d < 24) return Math.round(d) + ' h'; var g = Math.round(d / 24); if (g === 1) return 'ieri'; if (g < 30) return g + ' gg'; var m = Math.round(g / 30); return m < 12 ? m + (m === 1 ? ' mese' : ' mesi') : Math.round(g / 365) + (g < 548 ? ' anno' : ' anni'); }
 function newsThumb(x, w) {
   var sp = SPORTS[x.sport], tag = x.kind === 'video' ? '<span class="nbadge">TECNICA</span>' : x.kind === 'top' ? '<span class="nbadge top">TOP</span>' : x.kind === 'local' ? '<span class="nbadge loc">PER TE</span>' : '<span class="nbadge nws">NOTIZIA</span>';
+  if (w && w < 60) tag = ''; /* nelle miniature piccole l'etichetta non ci sta */
   return '<span class="nth" style="' + (w ? 'width:' + w + 'px;height:' + w + 'px;' : '') + 'background:linear-gradient(150deg,' + sp.c + '33,#0E1A30 70%);border-color:' + sp.c + '44">' + sportIc(x.sport, 26) + (x.image ? '<img alt="" loading="lazy" src="' + esc(x.image) + '" onerror="this.remove()">' : '') + tag + '</span>';
 }
 function newsRow(o) {
@@ -3637,7 +3639,7 @@ function viewOggi() {
   if (numAdmin() && ui.newsSrc) {
     var bad = ui.newsSrc.filter(function (x) { return x.ok === false; }).length, good = ui.newsSrc.filter(function (x) { return x.ok; }).length;
     h += '<div class="card" style="padding:10px 12px;display:flex;flex-direction:column;gap:6px"><span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:var(--sysl)">Fonti · solo per te · ' + good + ' ok, ' + bad + ' no</span>' + ui.newsSrc.map(function (x) { return '<span style="display:flex;align-items:center;gap:8px;font:500 12px/16px var(--fb)"><i style="display:block;width:8px;height:8px;border-radius:4px;flex:0 0 auto;background:' + (x.ok ? '#9BE15D' : x.ok === false ? '#FF6B6B' : '#5A6B88') + '"></i><span style="flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (SPORTS[x.sport] ? SPORTS[x.sport].name : x.sport) + ' · ' + esc(x.name) + ' · ' + x.kind + '</span><span style="color:var(--mut);flex:0 0 auto">' + (x.ok ? (x.n || 0) : x.ok === false ? esc((x.err || 'errore').slice(0, 22)) : 'mai letta') + '</span></span>'; }).join('') +
-      '<div class="acts"><button class="btn sm" data-a="newsForce">Rileggi tutte</button><button class="btn sm main" data-a="newsReport">Copia il resoconto</button></div></div>';
+      '<div class="acts"><button class="btn sm" data-a="newsForce">Rileggi</button><button class="btn sm main" data-a="newsReport">Resoconto</button></div></div>';
   }
   return h;
 }
@@ -3707,26 +3709,26 @@ var EYE_IC = '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 
 var TRASH_IC = '<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>';
 var NKIND = { video: 'Tecnica', top: 'Highlights', news: 'Notizie', local: 'Per te' };
 function fontiLoad() {
-  if (!cauth || !S) return;
+  if (!S) return;
   var sps = S.profile.sports.filter(function (x) { return x !== 'bon'; }).join(',');
-  authFresh().then(function () { return sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,owner,shared,ok,n,err,title&active=eq.true&sport=in.(' + sps + ')&order=id'); }).then(function (r) {
-    r = (Array.isArray(r) ? r : []).filter(function (x) { return !x.owner || x.shared === 'yes' || x.owner === cauth.uid; });
+  (cauth ? authFresh() : Promise.resolve()).then(function () { return sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,owner,shared,ok,n,err,title&active=eq.true&sport=in.(' + sps + ')&order=id'); }).then(function (r) {
+    var me = cauth && cauth.uid; r = (Array.isArray(r) ? r : []).filter(function (x) { return !x.owner || x.shared === 'yes' || x.owner === me; });
     ui.fsrc = r; ui.fErr = null;
     /* la risposta di chi fa Gesta alla tua proposta arriva come letterina */
     var t = tavS(), ch = false;
-    r.forEach(function (x) { if (x.owner !== cauth.uid) return; var was = t.ps[x.id]; if (was === 'proposed' && (x.shared === 'yes' || x.shared === 'no') && S.party) { letter(x.shared === 'yes' ? 'acc' : 'none', null, x.shared === 'yes' ? '«' + x.name + '» è nella Taverna di tutti' : '«' + x.name + '» resta solo tua', x.shared === 'yes' ? 'Chi fa ' + SPORTS[x.sport].name.toLowerCase() + ' ora la vede. Grazie!' : 'Per ora non entra tra le fonti di tutti, ma tu continui a vederla.'); } if (was !== x.shared) { t.ps[x.id] = x.shared || ''; ch = true; } });
+    r.forEach(function (x) { if (!me || x.owner !== me) return; var was = t.ps[x.id]; if (was === 'proposed' && (x.shared === 'yes' || x.shared === 'no') && S.party) { letter(x.shared === 'yes' ? 'acc' : 'none', null, x.shared === 'yes' ? '«' + x.name + '» è nella Taverna di tutti' : '«' + x.name + '» resta solo tua', x.shared === 'yes' ? 'Chi fa ' + SPORTS[x.sport].name.toLowerCase() + ' ora la vede. Grazie!' : 'Per ora non entra tra le fonti di tutti, ma tu continui a vederla.'); } if (was !== x.shared) { t.ps[x.id] = x.shared || ''; ch = true; } });
     if (ch) save(); render();
   }).catch(function () { ui.fErr = 'Non riesco a caricare le fonti: controlla la connessione.'; render(); });
 }
 function viewFonti() {
   var h = pBack('Taverna', 'Le tue fonti', 'oggi'), hs = tavS().hs, mine = S.profile.sports.filter(function (x) { return x !== 'bon'; }), L = ui.fsrc;
   var own = (L || []).filter(function (x) { return x.owner === (cauth && cauth.uid); }).length;
-  h += cauth ? '<button class="btn main fadd" data-a="faddOpen"' + (own >= 10 ? ' disabled' : '') + '>' + svg(PI.plus, '#06101F', 18) + 'Aggiungi una fonte</button>' : '<p class="hint">Per aggiungere fonti tue entra con l’email (in Stato, ingranaggio).</p>';
-  h += '<span class="hint" style="margin-top:-4px">' + (own >= 10 ? 'Hai già 10 fonti tue: togline una per aggiungerne un’altra.' : 'Tocca l’occhio per nascondere una fonte. Solo per te.') + '</span>';
+  h += cauth ? '<button class="btn main fadd" data-a="faddOpen"' + (own >= 10 ? ' disabled' : '') + '>' + svg(PI.plus, '#06101F', 18) + 'Aggiungi una fonte</button>' : '<button class="btn fadd" data-a="cLogin">Entra con l’email</button>';
+  h += '<span class="hint" style="margin-top:-4px">' + (!cauth ? 'Con l’email aggiungi anche fonti tue. Tocca l’occhio per nascondere una fonte.' : own >= 10 ? 'Hai già 10 fonti tue: togline una per aggiungerne un’altra.' : 'Tocca l’occhio per nascondere una fonte. Solo per te.') + '</span>';
   if (!L) return h + '<p class="hint" style="text-align:center;padding:30px 0">' + (ui.fErr ? esc(ui.fErr) : 'Carico le fonti…') + '</p>';
   var ord = { video: 0, top: 1, news: 2, local: 3 };
   mine.forEach(function (sp) {
-    var l = L.filter(function (x) { return x.sport === sp; }).sort(function (a, b) { var ao = a.owner === cauth.uid ? 0 : 1, bo = b.owner === cauth.uid ? 0 : 1; return ao - bo || ord[a.kind] - ord[b.kind] || a.id - b.id; });
+    var me = cauth && cauth.uid, l = L.filter(function (x) { return x.sport === sp; }).sort(function (a, b) { var ao = me && a.owner === me ? 0 : 1, bo = me && b.owner === me ? 0 : 1; return ao - bo || ord[a.kind] - ord[b.kind] || a.id - b.id; });
     if (!l.length) return;
     h += '<div class="nsec"><span class="nsech">' + sportIc(sp, 18, true) + '<span style="color:' + SPORTS[sp].c + '">' + SPORTS[sp].name + '</span></span><div class="card slist">' + l.map(function (x) {
       var me = cauth && x.owner === cauth.uid, off = !me && hs[x.id], st = me ? (x.ok === false ? 'non riesco a leggerla' : x.ok == null ? 'la leggo a breve' : x.shared === 'proposed' ? 'proposta a tutti' : x.shared === 'yes' ? 'approvata per tutti' : x.shared === 'no' ? 'solo tua' : '') : '';
@@ -3805,7 +3807,8 @@ function viewPrivacy(o, cls) {
     it('Con l’email', 'Una copia va nel cloud di Gesta (su Supabase), così la ritrovi su un altro telefono. L’email serve solo per entrare: ti arriva un codice, niente password e niente newsletter.') +
     it('Chi vede cosa', 'Gli amici vedono rango, Gesta, titolo, la bacheca e i giorni allenati come puntini colorati. Quest e dettagli delle sessioni solo se li accendi nelle impostazioni del Party. Le foto sono private: le condividi tu, una per una. I giorni senza sport non li vede nessuno.') +
     it('Foto', 'Prima di caricarle Gesta le rimpicciolisce e toglie la posizione GPS e gli altri dati nascosti nel file.') +
-    it('Chi fa Gesta', 'Guarda solo i totali, per capire cosa migliorare: quante sessioni, quali sport, quante quest riuscite. Non legge il diario di nessuno e non dà i tuoi dati a nessuno. Niente pubblicità, niente tracciamento di altre aziende.') +
+    it('Taverna', 'Mostra titoli e copertine di canali YouTube e siti pubblici; toccando, apri la fonte. Quello che mandi a un amico (con la tua riga) lo vedete solo voi due e sparisce dopo 30 giorni. Le fonti che aggiungi le vedi solo tu, finché non la proponi a tutti e chi fa Gesta la approva. Quelle che nascondi sono salvate nel tuo account, solo per te.') +
+    it('Chi fa Gesta', 'Guarda solo i totali, per capire cosa migliorare: quante sessioni, quali sport, quante quest riuscite, quale versione dell’app si usa. Non legge il diario di nessuno e non dà i tuoi dati a nessuno. Niente pubblicità, niente tracciamento di altre aziende.') +
     it('Notifiche', 'Solo quelle che scegli tu, e le spegni quando vuoi nelle impostazioni del Party.') +
     it('Andartene', 'In Stato, ingranaggio in alto, «Cancella il mio account»: sparisce tutto dal cloud e da questo telefono.') +
     it('Domande', 'Scrivi da «Segnala», sempre in Stato, ingranaggio: il messaggio arriva a chi fa Gesta.') +
@@ -3820,7 +3823,7 @@ function viewFb(o, cls) {
 }
 function viewDelAcc(o, cls) {
   return '<div class="' + cls + '" style="gap:12px;border-color:#FF8A80">' + whead('Cancella l’account', true) +
-    '<p class="wtext" style="text-align:left">Spariscono per sempre, dal cloud e da questo telefono: sessioni, foto, Gesta, medaglie, amicizie, guanti, cinque e le Gang che hai creato. Gli amici non ti vedranno più.</p><p class="wtext" style="text-align:left;color:var(--ink)">Non si può annullare.</p>' +
+    '<p class="wtext" style="text-align:left">Spariscono per sempre, dal cloud e da questo telefono: sessioni, foto, Gesta, medaglie, amicizie, guanti, cinque, le Gang che hai creato, i contenuti mandati dalla Taverna e le tue fonti. Gli amici non ti vedranno più.</p><p class="wtext" style="text-align:left;color:var(--ink)">Non si può annullare.</p>' +
     (o.err ? '<span class="hint" style="color:#FF8A80;text-align:center">' + esc(o.err) + '</span>' : '') +
     '<div class="acts"><button class="btn" data-a="close">Annulla</button><button class="btn danger" data-a="delGo"' + (o.busy ? ' disabled' : '') + '>' + (o.busy ? 'Cancello…' : o.sure ? 'Conferma' : 'Cancella tutto') + '</button></div>' +
     (o.sure && !o.busy ? '<span class="hint" style="text-align:center">Tocca ancora per confermare.</span>' : '') + '</div>';
@@ -3886,7 +3889,19 @@ function viewNumeri() {
   var tipR = !rtot ? '' : (rk.S || 0) / rtot > 0.3 ? 'Tanti in S: forse la scala è troppo facile.' : (rk.E || 0) / rtot > 0.4 ? 'Tanti in E: forse la scala è troppo dura.' : !rk.S && !rk.E ? 'Nessuno in E e nessuno in S: la scala sembra tarata bene.' : '';
   var rank = sec('Il rango di ' + MONTHS[new Date().getMonth()].toLowerCase(), '<div class="numrk">' + rl.map(function (r) { var c = rk[r] || 0; return '<div><span>' + c + '</span><i style="height:' + (c ? c / rmax * 80 : 3) + 'px;background:' + (c ? 'var(--sys)' : 'var(--line)') + '"></i><b>' + r + '</b></div>'; }).join('') + '</div>', tipR);
   var fbl = ui.numFb || [], fbs = fbl.length ? sec('Segnalazioni · ' + fbl.length, '<div style="display:flex;flex-direction:column;gap:8px">' + fbl.slice(0, ui.numFbAll ? 50 : 3).map(function (f) { var dt = new Date(f.at); return '<div class="numt" style="gap:4px"><span style="font:500 14px/20px var(--fb);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere">' + esc(f.msg) + '</span><span>' + esc(f.name) + ' · ' + dt.getDate() + ' ' + MSHORT[dt.getMonth()] + ' · v' + esc(f.ver || '') + ' · ' + esc(f.device || '') + '</span></div>'; }).join('') + (fbl.length > 3 && !ui.numFbAll ? '<button class="mlink" data-a="numFbAll" style="color:var(--sysl)">Vedi tutte</button>' : '') + '</div>', '') : '';
-  return h + '<div class="numgrid">' + fbs + who + how + use + rank + viewYt(sec, tile, row) + '</div></div>';
+  return h + '<div class="numgrid">' + fbs + who + viewVers(sec, row) + how + use + rank + viewYt(sec, tile, row) + '</div></div>';
+}
+/* 4.13: chi è rimasto su una versione vecchia (es. icona installata dal vecchio indirizzo) */
+function viewVers(sec, row) {
+  if (ui.numVer === undefined) { ui.numVer = null; authFresh().then(function () { return rpc('gesta_versions'); }).then(function (r) { ui.numVer = Array.isArray(r) ? r : false; render(); }).catch(function () { ui.numVer = false; render(); }); }
+  var L = ui.numVer; if (!L || !L.length) return '';
+  var cur = APP_V.replace('gesta-v', ''), tot = L.reduce(function (a, x) { return a + x.n; }, 0), mx = Math.max.apply(null, L.map(function (x) { return x.n; }).concat([1]));
+  var cmp = function (v) { var a = v.split('.').map(Number), b = cur.split('.').map(Number); for (var i = 0; i < 3; i++) { if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) - (b[i] || 0); } return 0; };
+  var old = L.filter(function (x) { return !x.ver || cmp(x.ver) < 0; }).reduce(function (a, x) { return a + x.n; }, 0);
+  var rows = L.slice().sort(function (a, b) { return (b.ver ? 1 : 0) - (a.ver ? 1 : 0) || (a.ver && b.ver ? cmp(b.ver) - (cmp(a.ver)) : 0); }).map(function (x) {
+    var ok = x.ver && cmp(x.ver) >= 0; return row(x.ver ? x.ver : 'prima 4.13', ok ? '#9BE15D' : '#FFB27A', Math.round(x.n / mx * 100), x.n + (x.n === 1 ? ' utente' : ' utenti')); }).join('');
+  return sec('Versioni · ultimi 30 giorni', '<div style="display:flex;flex-direction:column;gap:8px"><span class="hint">L’ultima versione che ognuno ha aperto · ora è la ' + cur + '</span>' + rows + '</div>',
+    old ? old + (old === 1 ? ' utente su ' : ' utenti su ') + tot + ' non si aggiorna: se dura da giorni, reinstallare l’icona da getgesta.app' : '');
 }
 /* 4.12: quanto usiamo la chiave YouTube (quota gratuita: 10.000 unità al giorno; ogni canale di tecnica ne costa 101 a settimana) */
 function viewYt(sec, tile, row) {
@@ -3904,7 +3919,7 @@ function viewYt(sec, tile, row) {
   return sec('YouTube · consumi', body, idle.length ? idle.length + ' sport senza utenti in pausa: ' + nf(idleU) + ' unità risparmiate a settimana' : '');
 }
 var PA42 = {
-  numOpen: function () { ui.numYt = undefined; ui.fprop = undefined; ui.screen = 'numeri'; ui.numD = ui.numD === undefined ? 30 : ui.numD; ding('open'); render(); if (!(ui.num && ui.num[ui.numD])) numLoad(ui.numD); authFresh().then(function () { return rpc('gesta_feedback'); }).then(function (r) { ui.numFb = Array.isArray(r) ? r : []; render(); }).catch(function () {}); },
+  numOpen: function () { ui.numVer = undefined; ui.numYt = undefined; ui.fprop = undefined; ui.screen = 'numeri'; ui.numD = ui.numD === undefined ? 30 : ui.numD; ding('open'); render(); if (!(ui.num && ui.num[ui.numD])) numLoad(ui.numD); authFresh().then(function () { return rpc('gesta_feedback'); }).then(function (r) { ui.numFb = Array.isArray(r) ? r : []; render(); }).catch(function () {}); },
   numFbAll: function () { ui.numFbAll = true; ding('tap'); render(); },
   numD: function (v) { var d = +v; ui.numD = d; ding('tap'); render(); if (!(ui.num && ui.num[d])) numLoad(d); }
 };
@@ -4253,7 +4268,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.12.1';
+var APP_V = 'gesta-v4.13.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
