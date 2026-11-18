@@ -418,7 +418,10 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 .nkick>span:nth-child(2){flex:0 0 auto}
 .nsrc{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .nago{margin-left:auto;flex:0 0 auto}
-.ntit{font:600 14px/19px var(--fb);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ntit{overflow-wrap:anywhere;font:600 14px/19px var(--fb);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* 4.9.1: la pagina scorre solo in alto e in basso, anche se un titolo o una riga sono più larghi */
+.scroller{overflow-x:hidden;overscroll-behavior-x:none}
+.nitem,.nmeta,.nsec{min-width:0;max-width:100%}
 .nlink{display:flex;gap:12px;align-items:center;flex:1 1 auto;min-width:0;text-decoration:none;color:var(--ink)}
 .msend{flex:0 0 auto;width:38px;height:38px;padding:0;border-radius:10px;border:1px solid var(--line2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .nsent{display:flex;align-items:center;gap:4px;font:600 11px/14px var(--fb);color:#9BE15D;white-space:nowrap}
@@ -524,6 +527,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.9.0" defer></script>
+<script src="app.js?v=4.9.1" defer></script>
 </body>
 </html>
