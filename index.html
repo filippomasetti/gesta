@@ -419,6 +419,22 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 .nsrc{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .nago{margin-left:auto;flex:0 0 auto}
 .ntit{font:600 14px/19px var(--fb);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nlink{display:flex;gap:12px;align-items:center;flex:1 1 auto;min-width:0;text-decoration:none;color:var(--ink)}
+.msend{flex:0 0 auto;width:38px;height:38px;padding:0;border-radius:10px;border:1px solid var(--line2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nsent{display:flex;align-items:center;gap:4px;font:600 11px/14px var(--fb);color:#9BE15D;white-space:nowrap}
+.nsent .i{stroke-width:2.4}
+.shr{border-color:var(--line2)}
+.shr.new{border-color:rgba(124,196,255,.6);box-shadow:0 0 14px rgba(59,167,255,.18)}
+.shr .ntit,.mprev .ntit{font-size:13.5px;line-height:18px;-webkit-line-clamp:2}
+.nnote{font:500 12.5px/17px var(--fb);color:var(--soft);font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mprev{padding:8px;background:var(--raised);flex:0 0 auto}
+.frw{width:100%;display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;flex:0 0 auto}
+.frw.on{border-color:var(--sysl);background:rgba(59,167,255,.1)}
+.frwt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.frwn{font:700 14px/19px var(--fd);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ck.on{background:var(--sys);border-color:var(--sys)}
+.ck .i{stroke-width:2.6}
 /* 4.2 · Gesta in numeri */
 .numw{display:flex;flex-direction:column;gap:12px;width:100%;max-width:1240px;margin:0 auto}
 .numseg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;border-radius:12px;border:1px solid var(--line);background:var(--surface);max-width:420px;width:100%;align-self:center;box-sizing:border-box}
@@ -508,6 +524,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.8.4" defer></script>
+<script src="app.js?v=4.9.0" defer></script>
 </body>
 </html>

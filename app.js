@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.8.4</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.9.0</span>';
   return h;
 }
 
@@ -1249,6 +1249,7 @@ function viewOverlay() {
   } else if (o.t === 'gno') { h = viewGNo(o, cls);
   } else if (o.t === 'privacy') { h = viewPrivacy(o, cls);
   } else if (o.t === 'fb') { h = viewFb(o, cls);
+  } else if (o.t === 'manda') { h = viewManda(o, cls);
   } else if (o.t === 'delacc') { h = viewDelAcc(o, cls);
   } else if (o.t === 'rules') {
     h = '<div class="' + cls + ' tall" style="gap:12px">' + whead('Regole del gioco', true) + '<div class="wbody rules" data-keep>' +
@@ -1269,7 +1270,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Un applauso a un amico, uno a settimana per amico: nel suo calendario tocchi un giorno di sport e glielo dai per quella sessione. Se lui lo ricambia entro 7 giorni (o tu ricambi il suo) è un <b>cinque battuto</b>, e in Bacheca c’è una medaglia apposta. Non dà Punti Rango: fa solo piacere.</p></div>' +
       (VAPID_PUB ? '<div class="fld"><span class="lbl" style="font-size:11px">Notifiche</span><p>Con Gesta aggiunta alla schermata Home possono arrivarti sul telefono guanti, sfide chiuse, richieste di amicizia, obiettivi della Gang e cinque. Scegli tu quali nelle impostazioni del Party. Una sola notifica per ogni cosa: pianificare non avvisa nessuno.</p></div>' : '') +
       '<div class="fld"><span class="lbl" style="font-size:11px">Foto</span><p>Una foto per sessione, se ti va: nei dettagli della sessione o toccando il giorno sul calendario, anche settimane dopo. Se la scatti da Gesta il giorno stesso è <b>verificata</b>; dalla galleria va benissimo lo stesso. È tua: la vedono gli amici solo se accendi l’interruttore, foto per foto. Quando vinci un guanto puoi aggiungere la prova per chi te l’ha lanciato.</p></div>' +
-      '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p><p>Con l’<b>aeroplanino</b> mandi un contenuto a uno o più amici, con una riga se vuoi. Lo trovano in cima alla loro Taverna, in <b>Condivisi con te</b>: resta 7 giorni, oppure fino a fine giornata dopo che l’hanno aperto.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Le tue Gesta</span><p>Ogni giorno con almeno uno sport è una <b>Gesta</b>. Le conti da quando hai iniziato e non si azzerano mai: le vedi in alto, accanto al nome dell’app. Le soglie tonde (10, 25, 50, 100, 200, 365, 500) sono una medaglia in Bacheca.</p></div>' +
       '</div><div class="acts"><button class="btn" data-a="guideAgain" style="font-size:12px;letter-spacing:1px">Rivedi la guida</button><button class="btn main" data-a="close">Ho capito</button></div></div>';
   } else if (o.t === 'when') {
@@ -2443,8 +2444,8 @@ function pToggle(key, t, s, on, lock) { return '<button class="toggle"' + (lock 
 /* ---------- 3.8: notifiche sul telefono ----------
    La chiave pubblica VAPID la crea Filippo (laboratorio chiavi); la privata sta solo nei secret di Supabase. */
 var VAPID_PUB = 'BKCM98ttsyfzcbPiutLy3ULQrsQ3-KBtOv5vqS0V9D92V-e909oPFPqyOs5VlU4NMcAUXyUSjfBk7RieQ93umXs';
-var PUSH_K = [['glove', 'Guanti ricevuti', 'Un amico ti sfida o ti propone una modifica'], ['won', 'Sfide chiuse', 'Quando un amico completa la tua'], ['req', 'Richieste di amicizia', ''], ['gang', 'Obiettivi della Gang', 'Quando qualcuno ne fissa uno'], ['five', 'Cinque ricevuti', '']];
-function pushPrefs() { var p = P(), d = { glove: true, won: true, req: true, gang: true, five: false }; if (!p) return d; p.set.push = p.set.push || d; Object.keys(d).forEach(function (k) { if (p.set.push[k] === undefined) p.set.push[k] = d[k]; }); return p.set.push; }
+var PUSH_K = [['glove', 'Guanti ricevuti', 'Un amico ti sfida o ti propone una modifica'], ['won', 'Sfide chiuse', 'Quando un amico completa la tua'], ['req', 'Richieste di amicizia', ''], ['gang', 'Obiettivi della Gang', 'Quando qualcuno ne fissa uno'], ['five', 'Cinque ricevuti', ''], ['share', 'Contenuti dagli amici', 'Video e notizie mandati dalla Taverna']];
+function pushPrefs() { var p = P(), d = { glove: true, won: true, req: true, gang: true, five: false, share: true }; if (!p) return d; p.set.push = p.set.push || d; Object.keys(d).forEach(function (k) { if (p.set.push[k] === undefined) p.set.push[k] = d[k]; }); return p.set.push; }
 function isStandalone() { try { return !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); } catch (e) { return false; } }
 function pushCan() { return !!(VAPID_PUB && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && cauth && cloudOn()); }
 function pushState() { if (!pushCan()) return 'no'; if (Notification.permission === 'denied') return 'denied'; return Notification.permission === 'granted' && P() && P().pushOn ? 'on' : 'off'; }
@@ -3400,8 +3401,8 @@ function cloudPush() {
     .catch(function (e) { syncBusy = false; cloudMeta({ err: e.message || String(e) }); if (e.status === 401 || e.status === 403) { /* sessione scaduta */ } if (ui.screen === 'settings') render(); });
 }
 /* dal tocco su una notifica: ?go=letters o ?go=party */
-(function () { try { var m = location.search.match(/[?&]go=(letters|party)/); if (m) { ui.goTo = m[1]; history.replaceState(null, '', location.pathname); } } catch (e) {} })();
-if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.go && S && S.party) { ui.ov = null; ui.screen = e.data.go; render(); } });
+(function () { try { var m = location.search.match(/[?&]go=(letters|party|oggi)/); if (m) { ui.goTo = m[1]; history.replaceState(null, '', location.pathname); } } catch (e) {} })();
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.go === 'oggi' && S) { A.oggiOpen(); return; } if (e.data && e.data.go && S && S.party) { ui.ov = null; ui.screen = e.data.go; render(); } });
 /* invito col link: ?invito=<token> → appena sei dentro diventate amici */
 (function () { try { var m = location.search.match(/[?&]invito=([0-9a-fA-F-]{36})/); if (m) { localStorage.setItem('gesta.invite', m[1]); history.replaceState(null, '', location.pathname); } } catch (e) {} })();
 function pendingInvite() { try { return localStorage.getItem('gesta.invite'); } catch (e) { return null; } }
@@ -3577,15 +3578,28 @@ function newsLoad(refresh) {
 }
 function newsSrcLoad(sync) { if (!numAdmin()) return; sbFetch('/rest/v1/news_sources?select=id,sport,name,kind,url,active,ok,n,err,title,checked_at&order=sport').then(function (r) { r = Array.isArray(r) ? r : []; ui.newsSrc = r.filter(function (x) { return x.active !== false; }); render(); if (sync) newsSync(r); }).catch(function () {}); }
 function agoTxt(iso) { var d = (Date.now() - Date.parse(iso)) / 36e5; if (d < 1) return 'ora'; if (d < 24) return Math.round(d) + ' h'; var g = Math.round(d / 24); if (g === 1) return 'ieri'; if (g < 30) return g + ' gg'; var m = Math.round(g / 30); return m < 12 ? m + (m === 1 ? ' mese' : ' mesi') : Math.round(g / 365) + (g < 548 ? ' anno' : ' anni'); }
+function newsThumb(x, w) {
+  var sp = SPORTS[x.sport], tag = x.kind === 'video' ? '<span class="nbadge">TECNICA</span>' : x.kind === 'top' ? '<span class="nbadge top">TOP</span>' : x.kind === 'local' ? '<span class="nbadge loc">PER TE</span>' : '<span class="nbadge nws">NOTIZIA</span>';
+  return '<span class="nth" style="' + (w ? 'width:' + w + 'px;height:' + w + 'px;' : '') + 'background:linear-gradient(150deg,' + sp.c + '33,#0E1A30 70%);border-color:' + sp.c + '44">' + sportIc(x.sport, 26) + (x.image ? '<img alt="" loading="lazy" src="' + esc(x.image) + '" onerror="this.remove()">' : '') + tag + '</span>';
+}
 function newsRow(o) {
-  var x = o.x, sp = SPORTS[x.sport], tag = x.kind === 'video' ? '<span class="nbadge">TECNICA</span>' : x.kind === 'top' ? '<span class="nbadge top">TOP</span>' : x.kind === 'local' ? '<span class="nbadge loc">PER TE</span>' : '<span class="nbadge nws">NOTIZIA</span>';
-  var src = (x.news_sources && x.news_sources.name) || '';
-  return '<a class="card nitem" href="' + esc(x.link) + '" target="_blank" rel="noopener"><span class="nth" style="background:linear-gradient(150deg,' + sp.c + '33,#0E1A30 70%);border-color:' + sp.c + '44">' + sportIc(x.sport, 26) + (x.image ? '<img alt="" loading="lazy" src="' + esc(x.image) + '" onerror="this.remove()">' : '') + tag + '</span>' +
-    '<span class="nmeta"><span class="nkick"><span class="nsrc">' + esc(src) + '</span><span class="nago">' + (o.arc ? 'dall’archivio' : agoTxt(x.published_at)) + '</span></span><span class="ntit">' + esc(x.title) + '</span></span></a>';
+  var x = o.x, src = (x.news_sources && x.news_sources.name) || '', to = SH.out[x.link] || [];
+  var sent = to.length ? '<span class="nsent">' + svg(IC.check, '#9BE15D', 12) + 'Mandato a ' + (to.length === 1 ? esc((friend(to[0]) || { n: '1 amico' }).n) : to.length + ' amici') + '</span>' : '';
+  return '<div class="card nitem"><a class="nlink" href="' + esc(x.link) + '" target="_blank" rel="noopener">' + newsThumb(x) +
+    '<span class="nmeta"><span class="nkick"><span class="nsrc">' + esc(src) + '</span><span class="nago">' + (o.arc ? 'dall’archivio' : agoTxt(x.published_at)) + '</span></span><span class="ntit">' + esc(x.title) + '</span>' + sent + '</span></a>' +
+    (shareOn() ? '<button class="msend" data-a="mandaOpen" data-v="' + x.id + '" aria-label="Manda a un amico">' + svg(SEND_IC, '#7CC4FF', 18) + '</button>' : '') + '</div>';
+}
+/* 4.9: «Condivisi con te», in cima alla Taverna. Restano 7 giorni, o fino a fine giornata dopo che li hai aperti */
+function shareCard(x) {
+  var f = friend(x.from_id), nw = !x.opened_at;
+  return '<a class="card nitem shr' + (nw ? ' new' : '') + '" href="' + esc(x.link) + '" target="_blank" rel="noopener" data-a="shareOpen" data-v="' + x.id + '">' + newsThumb(x, 64) +
+    '<span class="nmeta"><span class="nkick"><span class="nsrc" style="color:var(--ink)">Da ' + esc(f ? f.n : 'un amico') + '</span><span class="nago">' + agoTxt(x.created_at) + '</span>' + (nw ? '<i style="background:#FF5C8A;box-shadow:0 0 6px #FF5C8A"></i>' : '') + '</span>' +
+    '<span class="ntit">' + esc(x.title) + '</span>' + (x.note ? '<span class="nnote">«' + esc(x.note) + '»</span>' : '') + '</span></a>';
 }
 function viewOggi() {
   var n = new Date(), f = ui.newsF || 'all', mine = S.profile.sports.filter(function (x) { return x !== 'bon'; });
   var h = '<div class="top"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span class="lbl kick">[ Gesta · ' + DAYS_LONG[n.getDay()].toLowerCase() + ' ' + n.getDate() + ' ' + MONTHS[n.getMonth()].toLowerCase() + ' ]</span><h1>Taverna</h1><span class="hint" style="font-size:12px">Tecnica, highlights e notizie dei tuoi sport</span></div>' + (ui.newsBusy ? '<span class="hint" style="font-size:11px">aggiorno…</span>' : '') + '</div>';
+  var shv = shareVis(); if (shv.length) h += '<div class="nsec"><span class="nsech" style="color:var(--sysl)">' + svg(SEND_IC, '#7CC4FF', 18) + '<span>Condivisi con te</span></span>' + shv.map(shareCard).join('') + '</div>';
   var secs = mine.map(function (sp) { return [sp, newsPick(sp, f !== 'all')]; }).filter(function (z) { return z[1].length && (f === 'all' || z[0] === f); });
   var withAny = mine.filter(function (sp) { return newsPick(sp, false).length; });
   if (withAny.length > 1) h += '<div class="nchips">' + [['all', 'Tutti']].concat(withAny.map(function (x) { return [x, SPORTS[x].name]; })).map(function (c) { return '<button class="chip' + (f === c[0] ? ' on' : '') + '" data-a="newsF" data-v="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div>';
@@ -3600,7 +3614,7 @@ function viewOggi() {
   return h;
 }
 var PA46 = {
-  oggiOpen: function () { ui.arrange = false; ui.screen = 'oggi'; ui.ov = null; ding('tap'); render(); newsLoad(true); setTimeout(function () { try { localStorage.setItem('gesta.newsSeen', String(Date.now())); } catch (e) {} }, 1500); },
+  oggiOpen: function () { ui.arrange = false; ui.screen = 'oggi'; ui.ov = null; ding('tap'); render(); newsLoad(true); shareLoad(true); setTimeout(function () { try { localStorage.setItem('gesta.newsSeen', String(Date.now())); } catch (e) {} }, 1500); },
   newsF: function (v) { ui.newsF = v; ding('tap'); render(); },
   newsForce: function () { ui.newsBusy = true; render(); authFresh().then(function () { return sbFetch('/functions/v1/news', { method: 'POST', body: { force: true } }); }).catch(function () {}).then(function () { ui.newsBusy = false; newsLoad(false); newsSrcLoad(); }); },
   /* il resoconto da incollare a Claude: una riga per fonte, con il nome vero del canale o del sito trovato */
@@ -3608,6 +3622,56 @@ var PA46 = {
     try { navigator.clipboard.writeText(t).then(function () { toast('Resoconto copiato: incollalo a Claude.'); }, function () { toast('Non riesco a copiarlo.'); }); } catch (e) { toast('Non riesco a copiarlo.'); } }
 };
 for (var pk46 in PA46) A[pk46] = PA46[pk46];
+/* 4.9: Manda a un amico */
+var SEND_IC = '<path d="M20.5 3.5 3.5 10.6l6.8 2.6 2.6 6.8z"/><path d="M20.5 3.5l-10.2 9.7"/>';
+var SH = { inb: [], out: {}, at: 0 };
+function shareOn() { return !!(cauth && S && S.party && !S.party.demo && RF.length); }
+function shareLoad(force) {
+  if (!cauth || !S || !S.party || S.party.demo) return;
+  if (!force && Date.now() - SH.at < 60000) return; SH.at = Date.now();
+  var iso = function (d) { return encodeURIComponent(new Date(Date.now() - d * 864e5).toISOString()); };
+  authFresh().then(function () { return Promise.all([
+    sbFetch('/rest/v1/news_shares?select=id,from_id,sport,kind,title,link,image,src,note,created_at,opened_at&to_id=eq.' + cauth.uid + '&created_at=gte.' + iso(7) + '&order=created_at.desc&limit=40'),
+    sbFetch('/rest/v1/news_shares?select=to_id,link&from_id=eq.' + cauth.uid + '&created_at=gte.' + iso(30) + '&limit=400')]); })
+    .then(function (r) { SH.inb = (Array.isArray(r[0]) ? r[0] : []).filter(function (x) { return SPORTS[x.sport]; }); var o = {}; (Array.isArray(r[1]) ? r[1] : []).forEach(function (x) { var L = o[x.link] = o[x.link] || []; if (L.indexOf(x.to_id) < 0) L.push(x.to_id); }); SH.out = o; render(); })
+    .catch(function () {});
+}
+function shareVis() { var t = todayKey(); return SH.inb.filter(function (x) { return !x.opened_at || keyOf(new Date(x.opened_at)) === t; }); }
+function shareNew() { shareLoad(false); var t = newsSeenAt(); return shareVis().some(function (x) { return !x.opened_at && Date.parse(x.created_at) > t; }); }
+document.addEventListener('visibilitychange', function () { if (!document.hidden) shareLoad(true); });
+function viewManda(o, cls) {
+  var x = o.x, src = (x.news_sources && x.news_sources.name) || '', done = SH.out[x.link] || [], n = Object.keys(o.sel).filter(function (k) { return o.sel[k]; }).length;
+  var fl = RF.slice().sort(function (a, b) { return (a.sports.indexOf(x.sport) >= 0 ? 0 : 1) - (b.sports.indexOf(x.sport) >= 0 ? 0 : 1) || a.n.localeCompare(b.n); });
+  return '<div class="' + cls + '" style="gap:14px">' + whead('Manda a un amico', true) +
+    '<div class="card nitem mprev">' + newsThumb(x, 56) + '<span class="nmeta"><span class="nkick"><span class="nsrc">' + esc(src) + '</span></span><span class="ntit">' + esc(x.title) + '</span></span></div>' +
+    '<span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:var(--sysl);margin-bottom:-6px">A chi</span>' +
+    '<div class="wbody" data-keep style="gap:6px">' + fl.map(function (f) { var on = !!o.sel[f.id], sub = done.indexOf(f.id) >= 0 ? 'Gliel’hai già mandato' : f.sports.filter(function (k) { return k !== 'bon'; }).slice(0, 2).map(function (k) { return SPORTS[k].name; }).join(' · ');
+      return '<button class="frw' + (on ? ' on' : '') + '" data-a="mandaTg" data-v="' + f.id + '">' + rkHex(f.r, 34, f.plus) + '<span class="frwt"><span class="frwn">' + esc(f.n) + '</span>' + (sub ? '<span class="hint" style="font-size:11.5px">' + sub + '</span>' : '') + '</span><span class="ck' + (on ? ' on' : '') + '">' + (on ? svg(IC.check, '#06101F', 16) : '') + '</span></button>'; }).join('') + '</div>' +
+    '<textarea class="inp" data-f="mnote" maxlength="60" style="height:64px;flex:0 0 auto" placeholder="Due parole, se vuoi">' + esc(o.note || '') + '</textarea>' +
+    (o.err ? '<span class="hint" style="color:#FF8A80;text-align:center">' + esc(o.err) + '</span>' : '') +
+    '<div class="acts"><button class="btn" data-a="close">Annulla</button><button class="btn main" data-a="mandaGo"' + (n && !o.busy ? '' : ' disabled') + '>' + (o.busy ? 'Mando…' : 'Manda') + '</button></div></div>';
+}
+var PA49 = {
+  mandaOpen: function (id) { var x = (ui.news || []).filter(function (y) { return String(y.id) === String(id); })[0]; if (!x || !shareOn()) return; ui.ov = { t: 'manda', id: 'm' + x.id, x: x, sel: {}, note: '' }; rfLoad(); ding('open'); render(); },
+  mandaTg: function (id) { var o = ui.ov; if (!o || o.busy) return; o.sel[id] = !o.sel[id]; o.err = null; ding('tap'); render(); },
+  mandaGo: function () {
+    var o = ui.ov; if (!o || o.t !== 'manda' || o.busy) return;
+    var ids = Object.keys(o.sel).filter(function (k) { return o.sel[k]; }), x = o.x, note = (o.note || '').trim().slice(0, 60), src = ((x.news_sources && x.news_sources.name) || '').slice(0, 120);
+    if (!ids.length) return; o.busy = true; render();
+    authFresh().then(function () { return sbFetch('/rest/v1/news_shares', { method: 'POST', prefer: 'return=minimal', body: ids.map(function (id) { return { to_id: id, sport: x.sport, kind: x.kind, title: x.title.slice(0, 300), link: x.link.slice(0, 1000), image: x.image ? x.image.slice(0, 1000) : null, src: src || null, note: note || null }; }) }); })
+      .then(function () {
+        var L = SH.out[x.link] = SH.out[x.link] || []; ids.forEach(function (id) { if (L.indexOf(id) < 0) L.push(id); });
+        var nm = ids.map(function (id) { return (friend(id) || { n: 'un amico' }).n; });
+        if (ui.ov === o) ui.ov = null; ding('tap'); toast('Mandato a ' + (nm.length === 1 ? nm[0] : nm.length === 2 ? nm[0] + ' e ' + nm[1] : nm.length + ' amici') + '.'); render();
+      }, function (e) { o.busy = false; o.err = /Troppi/.test(String(e && e.message)) ? 'Troppi invii oggi: riprova domani.' : 'Non sono riuscito a mandarlo: controlla la connessione.'; render(); });
+  },
+  shareOpen: function (id) {
+    var x = SH.inb.filter(function (y) { return y.id === id; })[0]; if (!x || x.opened_at) return;
+    x.opened_at = new Date().toISOString(); setTimeout(render, 600);
+    authFresh().then(function () { return sbFetch('/rest/v1/news_shares?id=eq.' + id, { method: 'PATCH', prefer: 'return=minimal', body: { opened_at: x.opened_at } }); }).catch(function () {});
+  }
+};
+for (var pk49 in PA49) A[pk49] = PA49[pk49];
 /* 4.3: privacy, segnalazioni, cancellare l'account */
 function devLabel() { var ua = navigator.userAgent || '', sa = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); return (/iPhone|iPad/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : 'Computer') + (sa ? ' · app' : ' · browser') + ' · ' + innerWidth + '×' + innerHeight; }
 function viewPrivacy(o, cls) {
@@ -3911,7 +3975,7 @@ function render() {
     if (ui.screen !== 'home') lastAnim.card = null;
     var ovKey = ui.ov ? [ui.ov.t, ui.ov.kind, ui.ov.k, ui.ov.id, ui.ov.sport, ui.ov.group].join('|') : null;
     if (ovKey !== lastOvKey) { lastOvKey = ovKey; if (ovKey && toastMsg) { toastMsg = null; clearTimeout(toastTimer); } }
-    h = '<div class="scroller">' + body + '</div><nav class="nav"><button class="' + (ui.screen === 'home' ? 'on' : '') + '" data-a="go" data-v="home">' + svg(IC.cal) + 'Calendario</button><button class="' + (['stato', 'settings', 'bacheca'].indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="stato">' + svg(IC.stato) + 'Stato</button>' + (newsOn() ? '<button class="' + (ui.screen === 'oggi' ? 'on' : '') + '" data-a="oggiOpen">' + svg(NEWS_IC) + 'Taverna' + (ui.screen !== 'oggi' && newsFresh() ? '<i class="ndot"></i>' : '') + '</button>' : '') + '<button class="' + (PSCR.indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="party">' + svg(PI.party) + 'Party' + (S.party && ui.screen !== 'letters' && unreadLetters() ? '<i class="ndot"></i>' : '') + '</button></nav>' + viewOverlay();
+    h = '<div class="scroller">' + body + '</div><nav class="nav"><button class="' + (ui.screen === 'home' ? 'on' : '') + '" data-a="go" data-v="home">' + svg(IC.cal) + 'Calendario</button><button class="' + (['stato', 'settings', 'bacheca'].indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="stato">' + svg(IC.stato) + 'Stato</button>' + (newsOn() ? '<button class="' + (ui.screen === 'oggi' ? 'on' : '') + '" data-a="oggiOpen">' + svg(NEWS_IC) + 'Taverna' + (ui.screen !== 'oggi' && (newsFresh() || shareNew()) ? '<i class="ndot"></i>' : '') + '</button>' : '') + '<button class="' + (PSCR.indexOf(ui.screen) >= 0 ? 'on' : '') + '" data-a="go" data-v="party">' + svg(PI.party) + 'Party' + (S.party && ui.screen !== 'letters' && unreadLetters() ? '<i class="ndot"></i>' : '') + '</button></nav>' + viewOverlay();
   }
   if (S && ui.wpop) { var we = (Date.now() - ui.wpop.at) / 1000; if (we > 3.4) ui.wpop = null; else h += '<div class="wpop" style="animation-delay:-' + we.toFixed(2) + 's" role="status"><span style="width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(255,201,77,.7);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font:700 18px/1 var(--fd);color:var(--rew);text-shadow:0 0 10px rgba(255,201,77,.6)">' + ui.wpop.n + '</span><span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px"><span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:#D9B04A">' + ui.wpop.n + (ui.wpop.n === 1 ? ' giorno' : ' giorni') + ' questa settimana</span><span class="badge" style="font-size:19px;line-height:23px">' + esc(ui.wpop.name) + '</span>' + (ui.wpop.next ? '<span style="font:500 12px/16px var(--fb);color:#C9BFA0">Ancora 1 giorno per ' + esc(ui.wpop.next) + '</span>' : '') + '</span></div>'; }
   if (toastMsg) h += '<div class="toast' + (S && ui.ov ? ' low' : '') + '"' + (toastShown === toastMsg ? ' style="animation-delay:-' + Math.min(2.5, (Date.now() - toastAt) / 1000) + 's"' : '') + ' role="status"><span class="mark">!</span><span>' + esc(toastMsg) + '</span></div>';
@@ -3993,6 +4057,7 @@ root.addEventListener('input', function (e) {
   else if (f === 'ccode') ui.ov.code = e.target.value;
   else if (f === 'fcode') { ui.ov.code = e.target.value; ui.ov.err = null; }
   else if (f === 'fbmsg') { ui.ov.msg = e.target.value; ui.ov.err = null; }
+  else if (f === 'mnote') { ui.ov.note = e.target.value; }
   else if (f === 'lq' || f === 'cq') { ui.ov.q = e.target.value; var gb = root.querySelector('[data-a="' + (f === 'lq' ? 'lGo' : 'cGo') + '"]'); if (gb) gb.disabled = !ui.ov.q.trim(); }
   else if (f === 'lmsg' || f === 'cmsg') ui.ov.msg = e.target.value;
   else if (f === 'gname') { ui.ov.name = e.target.value; var cb = root.querySelector('[data-a="gangCreate"]'); if (cb) cb.disabled = !(ui.ov.name.trim() && Object.keys(ui.ov.mem).filter(function (k) { return ui.ov.mem[k]; }).length >= 2); }
@@ -4028,7 +4093,7 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 
 autoClose();
 startupNotice();
-if (ui.goTo && S && S.party) { ui.screen = ui.goTo; } ui.goTo = null;
+if (ui.goTo === 'oggi' && S) { ui.screen = 'oggi'; setTimeout(function () { newsLoad(true); }, 300); } else if (ui.goTo && S && S.party) { ui.screen = ui.goTo; } ui.goTo = null;
 setTimeout(pushRefresh, 4000);
 /* splash d'apertura (laboratorio 02): la G si disegna dal bianco alla barra d'oro, poi compare GESTA. Un tocco la salta */
 (function () {
@@ -4047,7 +4112,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.8.4';
+var APP_V = 'gesta-v4.9.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") || "mailto:gesta@example.com", Deno.env.get("VAPID_PUBLIC_KEY")!, Deno.env.get("VAPID_PRIVATE_KEY")!);
 
-const SPORT: Record<string, string> = { gym: "Palestra", cal: "Calisthenics", cfx: "Crossfit", box: "Boxe", run: "Corsa", swm: "Nuoto", bik: "Bici", row: "Canottaggio", trk: "Trekking", bch: "Beach", soc: "Calcio", vol: "Pallavolo", bsk: "Basket", rug: "Rugby", pad: "Padel", ten: "Tennis", sqs: "Squash", pkb: "Pickleball", yog: "Yoga", pil: "Pilates", dnc: "Danza", wsf: "Windsurf", ski: "Sci", bld: "Boulder", glf: "Golf", bon: "Jolly" };
+const SPORT: Record<string, string> = { gym: "Palestra", cal: "Calisthenics", cfx: "Crossfit", box: "Boxe", run: "Corsa", swm: "Nuoto", bik: "Bici", row: "Canottaggio", trk: "Trekking", bch: "Beach", soc: "Calcio", vol: "Pallavolo", bsk: "Basket", rug: "Rugby", pad: "Padel", ten: "Tennis", sqs: "Squash", pkb: "Pickleball", yog: "Yoga", pil: "Pilates", dnc: "Danza", wsf: "Windsurf", ski: "Sci", bld: "Arrampicata", glf: "Golf", bon: "Jolly" };
 const GIORNI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 const sp = (k: string) => SPORT[k] || k;
 const oggi = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" });
@@ -44,11 +44,14 @@ async function messaggi(p: any): Promise<Msg[]> {
     const chi = await nome(r.from_id);
     if (back) out.push({ to: r.to_id, kind: "five", title: chi + " ha battuto il tuo cinque", body: "Cinque battuto", go: "letters", tag: "b" + r.from_id + r.week });
     else out.push({ to: r.to_id, kind: "five", title: chi + " ti ha dato il cinque", body: r.day && r.sport ? "Per la sessione di " + sp(r.sport).toLowerCase() + " " + giorno(r.day) : "Per la tua settimana", go: "letters", tag: "f" + r.from_id + r.week });
+  } else if (p.table === "news_shares" && p.type === "INSERT") {
+    const cosa = r.kind === "video" ? "un video" : r.kind === "top" ? "un highlight" : "una notizia";
+    out.push({ to: r.to_id, kind: "share", title: (await nome(r.from_id)) + " ti ha mandato " + cosa, body: (r.src ? r.src + " · " : "") + (r.note ? "«" + r.note + "»" : r.title), go: "oggi", tag: "n" + r.id });
   }
   return out;
 }
 
-const DEF: Record<string, boolean> = { glove: true, won: true, req: true, gang: true, five: false };
+const DEF: Record<string, boolean> = { glove: true, won: true, req: true, gang: true, five: false, share: true };
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-hook-secret") !== Deno.env.get("HOOK_SECRET")) return new Response("non autorizzato", { status: 401 });
