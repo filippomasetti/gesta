@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.12.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.12.1</span>';
   return h;
 }
 
@@ -3752,8 +3752,8 @@ function viewFAdd(o, cls) {
   return '<div class="' + cls + '" style="gap:14px">' + whead('Aggiungi una fonte', true) +
     '<p class="wtext" style="text-align:left;font-size:13px;line-height:19px">Incolla il link di un canale YouTube (o di un suo video) o di un sito di notizie.</p>' +
     '<input class="inp" data-f="faddurl" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-size:14px" placeholder="youtube.com/@canale" value="' + esc(o.url || '') + '">' +
-    (f ? '<div class="card found"><span class="sic" style="border-color:#9BE15D66">' + svg(f.kind === 'video' ? YT_IC : WEB_IC, '#9BE15D', 20) + '</span><span class="frwt"><span class="srn"><span>' + esc(f.title) + '</span></span><span class="hint" style="font-size:11.5px;color:#9BE15D">Trovato · ' + (f.kind === 'video' ? 'canale YouTube · ' + f.n + ' video' : 'sito · ' + f.n + ' articoli') + '</span></span></div>'
-      : o.busy === 'check' ? '<span class="hint" style="text-align:center">Cerco…</span>' : o.err ? '<span class="hint" style="color:#FF8A80;text-align:center">' + esc(o.err) + '</span>' : '') +
+    '<div class="fslot">' + (f ? '<div class="card found"><span class="sic" style="border-color:#9BE15D66">' + svg(f.kind === 'video' ? YT_IC : WEB_IC, '#9BE15D', 20) + '</span><span class="frwt"><span class="srn"><span>' + esc(f.title) + '</span></span><span class="hint" style="font-size:11.5px;color:#9BE15D">Trovato · ' + (f.kind === 'video' ? 'canale YouTube · ' + f.n + ' video' : 'sito · ' + f.n + ' articoli') + '</span></span></div>'
+      : o.busy === 'check' ? '<span class="hint">Cerco…</span>' : o.err ? '<span class="hint" style="color:#FF8A80">' + esc(o.err) + '</span>' : '<span class="hint">Qui compare il canale o il sito trovato.</span>') + '</div>' +
     '<span class="lbl" style="font-size:10.5px;letter-spacing:2px;color:var(--sysl);margin-bottom:-6px">Per quale sport</span>' +
     '<div class="fchips">' + mine.map(function (sp) { return '<button class="chip' + (o.sp === sp ? ' on' : '') + '" data-a="faddSp" data-v="' + sp + '">' + SPORTS[sp].name + '</button>'; }).join('') + '</div>' +
     '<button class="toggle" data-a="faddProp" style="padding:0;min-height:52px"><span style="display:flex;flex-direction:column;gap:2px"><span style="font:600 15px/20px var(--fb)">Proponila a tutti</span><span class="hint" style="font-size:11.5px">Se va bene, entra nella Taverna di chi fa ' + SPORTS[o.sp].name.toLowerCase() + '</span></span><span class="sw' + (o.prop ? ' on' : '') + '"></span></button>' +
@@ -3894,14 +3894,14 @@ function viewYt(sec, tile, row) {
   var y = ui.numYt; if (!y) return '';
   var nf = function (x) { return String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
   var days = y.days || [], dmax = Math.max.apply(null, days.map(function (x) { return x.u; }).concat([1]));
-  var sp = (y.sports || []).filter(function (x) { return SPORTS[x.sport]; }), est = sp.reduce(function (a, x) { return a + x.est; }, 0), emax = Math.max.apply(null, sp.map(function (x) { return x.est; }).concat([1]));
-  var idle = sp.filter(function (x) { return !x.users; }), idleU = idle.reduce(function (a, x) { return a + x.est; }, 0);
+  var sp = (y.sports || []).filter(function (x) { return SPORTS[x.sport]; }).map(function (x) { if (!x.users) x.est = 0; return x; }).sort(function (a, b) { return b.est - a.est || b.srcs - a.srcs; }), est = sp.reduce(function (a, x) { return a + x.est; }, 0), emax = Math.max.apply(null, sp.map(function (x) { return x.est; }).concat([1]));
+  var idle = sp.filter(function (x) { return !x.users; }), idleU = idle.reduce(function (a, x) { return a + x.srcs * 101; }, 0);
   var body = '<div class="numt3">' + tile(nf(y.today), 'oggi') + tile(nf(y.week / 7), 'al giorno') + tile(nf(est), 'a settimana') + '</div>' +
     '<div style="display:flex;flex-direction:column;gap:6px"><span class="hint">Unità usate ogni giorno, ultimi 14</span><div class="numday">' + days.map(function (x, i) { return '<i style="height:' + Math.max(4, x.u / dmax * 100) + '%;background:' + (i === days.length - 1 ? 'var(--sysl)' : '#2F5F94') + '"></i>'; }).join('') + '</div></div>' +
     '<div style="display:flex;flex-direction:column;gap:8px"><span class="hint">Per sport · stima a settimana</span>' + sp.map(function (x) {
-      return '<div class="ytr"><span class="ytn"><b style="color:' + SPORTS[x.sport].c + '">' + SPORTS[x.sport].name + '</b><span>' + x.srcs + (x.srcs === 1 ? ' canale' : ' canali') + ' · ' + (x.users ? x.users + (x.users === 1 ? ' utente' : ' utenti') : '<em>nessun utente</em>') + '</span></span><span class="track"><span class="fill" style="display:block;width:' + Math.round(x.est / emax * 100) + '%;background:' + (x.users ? SPORTS[x.sport].c : '#5A6B88') + '"></span></span><span class="ytv">' + nf(x.est) + '</span></div>'; }).join('') + '</div>' +
-    '<p class="hint" style="margin:0">Ogni canale di tecnica costa 101 unità una volta a settimana. La quota gratuita è di ' + nf(y.quota) + ' unità al giorno e si azzera alle 9 (ora italiana). Leggere i feed non costa niente.</p>';
-  return sec('YouTube · consumi', body, idle.length ? idle.length + (idle.length === 1 ? ' sport senza utenti usa ' : ' sport senza utenti usano ') + nf(idleU) + ' unità a settimana' : '');
+      return '<div class="ytr"><span class="ytn"><b style="color:' + SPORTS[x.sport].c + '">' + SPORTS[x.sport].name + '</b><span>' + x.srcs + (x.srcs === 1 ? ' canale' : ' canali') + ' · ' + (x.users ? x.users + (x.users === 1 ? ' utente' : ' utenti') : '<em>nessun utente · in pausa</em>') + '</span></span><span class="track"><span class="fill" style="display:block;width:' + Math.round(x.est / emax * 100) + '%;background:' + (x.users ? SPORTS[x.sport].c : '#5A6B88') + '"></span></span><span class="ytv">' + nf(x.est) + '</span></div>'; }).join('') + '</div>' +
+    '<p class="hint" style="margin:0">Ogni canale di tecnica costa 101 unità una volta a settimana; negli sport che nessuno pratica i più visti sono in pausa e si riaccendono da soli con il primo utente. La quota gratuita è di ' + nf(y.quota) + ' unità al giorno e si azzera alle 9 (ora italiana). Leggere i feed non costa niente.</p>';
+  return sec('YouTube · consumi', body, idle.length ? idle.length + ' sport senza utenti in pausa: ' + nf(idleU) + ' unità risparmiate a settimana' : '');
 }
 var PA42 = {
   numOpen: function () { ui.numYt = undefined; ui.fprop = undefined; ui.screen = 'numeri'; ui.numD = ui.numD === undefined ? 30 : ui.numD; ding('open'); render(); if (!(ui.num && ui.num[ui.numD])) numLoad(ui.numD); authFresh().then(function () { return rpc('gesta_feedback'); }).then(function (r) { ui.numFb = Array.isArray(r) ? r : []; render(); }).catch(function () {}); },
@@ -4253,7 +4253,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.12.0';
+var APP_V = 'gesta-v4.12.1';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

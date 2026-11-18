@@ -188,7 +188,10 @@ Deno.serve(async (req) => {
   let pop = 0;
   if (YT_KEY) {
     const { data: fresh } = await sb.from("news_sources").select("*").eq("active", true).eq("kind", "video").eq("ok", true);
-    const pdue = (fresh || []).filter((s: any) => /channel_id=/.test(s.feed || "") && (!s.pop_at || now - Date.parse(s.pop_at) > 7 * 864e5)).slice(0, 12);
+    // solo per gli sport che almeno un utente pratica (e per le fonti aggiunte da un utente): gli altri restano con gli ultimi 15 video, gratis
+    const { data: profs } = await sb.from("profiles").select("summary");
+    const used = new Set<string>(); (profs || []).forEach((p: any) => ((p.summary && p.summary.sports) || []).forEach((x: string) => used.add(x)));
+    const pdue = (fresh || []).filter((s: any) => (used.has(s.sport) || s.owner) && /channel_id=/.test(s.feed || "") && (!s.pop_at || now - Date.parse(s.pop_at) > 7 * 864e5)).slice(0, 12);
     for (const s of pdue) {
       try { const n = await readPopular(s); await sb.from("news_sources").update({ pop_at: new Date().toISOString(), pop_n: n, pop_err: null }).eq("id", s.id); pop++; }
       catch (e) { const m = String((e as Error).message || e).slice(0, 200); await sb.from("news_sources").update({ pop_at: /quota/i.test(m) ? null : new Date().toISOString(), pop_err: m }).eq("id", s.id); if (/quota/i.test(m)) break; }
