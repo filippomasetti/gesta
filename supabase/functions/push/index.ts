@@ -37,13 +37,10 @@ async function messaggi(p: any): Promise<Msg[]> {
   } else if (p.table === "friend_requests" && p.type === "INSERT") {
     out.push({ to: r.to_id, kind: "req", title: (await nome(r.from_id)) + " vuole essere tuo amico", body: "Rispondi in Novità", go: "letters", tag: "r" + r.id });
   } else if (p.table === "fives" && p.type === "INSERT") {
-    // se l'altro te l'aveva dato da poco (questa settimana o la scorsa), questo lo batte
-    const prev = new Date(r.week + "T12:00:00"); prev.setDate(prev.getDate() - 7);
-    const { data: backs } = await sb.from("fives").select("from_id").eq("from_id", r.to_id).eq("to_id", r.from_id).in("week", [r.week, prev.toISOString().slice(0, 10)]);
-    const back = backs && backs.length;
+    // 4.15: il tipo di cinque lo decide l'app; qui solo la frase giusta
+    const K: Record<string, string> = { base: "ti ha dato il cinque ✋", oro: "ti ha dato un Cinque d'oro", fuoco: "ti ha dato un Cinque di fuoco 🔥", fulmine: "ti ha dato un Cinque fulmine ⚡", nerd: "ti ha dato un Cinque da secchione 🤓", ritorno: "ti ha dato il Cinque del ritorno", leg: "ti ha dato un Cinque leggendario ✨", batt: "ha battuto il tuo cinque 🤝", beast: "è andato in modalità bestia 🦍" };
     const chi = await nome(r.from_id);
-    if (back) out.push({ to: r.to_id, kind: "five", title: chi + " ha battuto il tuo cinque", body: "Cinque battuto", go: "letters", tag: "b" + r.from_id + r.week });
-    else out.push({ to: r.to_id, kind: "five", title: chi + " ti ha dato il cinque", body: r.day && r.sport ? "Per la sessione di " + sp(r.sport).toLowerCase() + " " + giorno(r.day) : "Per la tua settimana", go: "letters", tag: "f" + r.from_id + r.week });
+    out.push({ to: r.to_id, kind: "five", title: chi + " " + (K[r.kind] || K.base), body: r.sport ? "Per la tua sessione di " + sp(r.sport).toLowerCase() + " " + giorno(r.day) : "Per la tua giornata " + giorno(r.day), go: "letters", tag: "f" + r.from_id + r.day });
   } else if (p.table === "news_shares" && p.type === "INSERT") {
     const cosa = r.kind === "video" ? "un video" : r.kind === "top" ? "un highlight" : "una notizia";
     out.push({ to: r.to_id, kind: "share", title: (await nome(r.from_id)) + " ti ha mandato " + cosa, body: (r.src ? r.src + " · " : "") + (r.note ? "«" + r.note + "»" : r.title), go: "oggi", tag: "n" + r.id });

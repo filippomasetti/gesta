@@ -1104,7 +1104,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.14.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.15.0</span>';
   return h;
 }
 
@@ -1173,6 +1173,7 @@ function viewOverlay() {
         (o.confirm === s.id ? '<button class="btn sm danger" data-a="remove" data-v="' + s.id + '">Rimuovi</button>' : '<button class="x" style="margin:0 -6px 0 0" data-a="askRemove" data-v="' + s.id + '" aria-label="Rimuovi sessione">' + svg(IC.close, '#8FA3C2', 18) + '</button>') + '</div>';
     });
     if (hasMark(o.k)) h += '<div class="sess" style="border-style:dashed">' + svg(HW.ic, '#AEBBD3', 26) + '<div class="meta"><b>Hard Study/Work</b><span>Giornata di testa, conta anche questa</span></div><button class="x" style="margin:0 -6px 0 0" data-a="hw" aria-label="Togli Hard Study/Work">' + svg(IC.close, '#8FA3C2', 18) + '</button></div>';
+    h += c5RxRow(o.k);
     h += '</div>' + (o.ro ? '<p class="hint" style="margin:0;text-align:center">Oltre i ' + editWindow() + ' giorni la sessione non si cambia più, ma la foto sì.</p><button class="btn" data-a="close">Chiudi</button>' : '<button class="btn" data-a="addOther">Aggiungi uno sport</button>') + '</div>';
   } else if (o.t === 'notice') {
     if (o.kind === 'intro') h = '<div class="' + cls + '">' + whead('Notifica', false) + '<p class="wtitle">Come funziona</p><div class="rules">' +
@@ -1250,6 +1251,7 @@ function viewOverlay() {
   } else if (o.t === 'privacy') { h = viewPrivacy(o, cls);
   } else if (o.t === 'fb') { h = viewFb(o, cls);
   } else if (o.t === 'manda') { h = viewManda(o, cls);
+  } else if (o.t === 'fday') { h = viewFDay(o, cls);
   } else if (o.t === 'fadd') { h = viewFAdd(o, cls);
   } else if (o.t === 'delacc') { h = viewDelAcc(o, cls);
   } else if (o.t === 'rules') {
@@ -1268,7 +1270,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Party e guanto di sfida</span><p>Un amico ti lancia il <b>guanto</b>: uno sport e una quest precisa. Puoi accettare, dire non oggi o modificarla e rimandarla. Si accetta entro mezzanotte. A fine sessione lo chiudi con <b>Fatta?</b> sulla card in alto, oppure toccando oggi sul calendario: la prima cosa che vedi è com’è andata. Se lo completi vale <b>mezzo Punto Rango</b> per il rango del mese. Se chi lancia sceglie “lo devo fare anch’io”, diventa una <b>quest condivisa</b>: <b>mezzo Punto Rango a testa</b> a chi la completa, anche a chi l’ha lanciata. Se accetti un guanto e non lo chiudi entro mezzanotte, <b>−0,5 Punti Rango</b> (solo per i guanti, non per gli obiettivi Gang); nel punteggio tra amici nessuna penalità.</p><p>Ognuno può lanciare all’altro un guanto al giorno: se tu l’hai mandato a un amico, lui può mandarne uno a te. La quest condivisa vale già per tutti e due. Al massimo <b>3 guanti a settimana</b> per ogni amico.</p><p>Con <b>Per un altro giorno</b> scegli una data: per l’amico diventa la quest di quel giorno e scade a mezzanotte. Un guanto accettato si toglie senza costi <b>fino alle 12</b> di quel giorno.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Gang</span><p>Un membro <b>fissa l’obiettivo</b> della Gang, uno al giorno, uguale per tutti. Vale se almeno un altro membro accetta, ed è superato se lo completano almeno 2 membri su 3: mezzo Punto Rango a tutti, ogni volta. Se lo completi anche tu, conta per il + del rango. Il <b>rango della Gang</b> sale solo con gli obiettivi superati: D a 1, C a 2, B a 4, A a 6, S a 8.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Il + del rango</span><p>Ogni rango ha il suo +: C+, B+, fino a S+. Lo prendi vincendo una quest social quando sei già in quel rango: un guanto di un amico che hai completato, o un obiettivo Gang che hai completato tu e che almeno un altro membro ha accettato. Va per soglie: se da D+ sali in C sei C, e per il + ti serve una nuova quest social da C. Senza amici sali lo stesso, ma senza +.</p><p>Si sale di <b>un gradino al giorno</b> (un rango pieno o un +): se oggi sei già salito, il gradino dopo scatta domani alla prima sessione. Non vale l’ultimo giorno del mese, e A+, S e S+ scattano sempre.</p></div>' +
-      '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Un applauso a un amico, uno a settimana per amico: nel suo calendario tocchi un giorno di sport e glielo dai per quella sessione. Se lui lo ricambia entro 7 giorni (o tu ricambi il suo) è un <b>cinque battuto</b>, e in Bacheca c’è una medaglia apposta. Non dà Punti Rango: fa solo piacere.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Nel calendario di un amico tocchi un giorno: si apre la sua giornata. <b>Tieni premuto</b> sulla foto (o sulla scheda) finché schiocca, e gli arriva il cinque. Uno per giornata. Che cinque esce lo decide Gesta: <b>d’oro</b> per una quest difficile, <b>di fuoco</b> dalla terza sessione della settimana, <b>fulmine</b> con cinque giorni su sette, <b>da secchione</b> per una giornata di Hard Study/Work, <b>il ritorno</b> dopo due settimane di pausa, <b>battuto</b> se te l’aveva dato da poco, e ogni tanto, per caso, <b>leggendario</b>. Qualcuno dice che ce n’è anche uno segreto. Non dà Punti Rango: fa solo piacere, e in Bacheca ci sono le medaglie apposta.</p></div>' +
       (VAPID_PUB ? '<div class="fld"><span class="lbl" style="font-size:11px">Notifiche</span><p>Con Gesta aggiunta alla schermata Home possono arrivarti sul telefono guanti, sfide chiuse, richieste di amicizia, obiettivi della Gang e cinque. Scegli tu quali nelle impostazioni del Party. Una sola notifica per ogni cosa: pianificare non avvisa nessuno.</p></div>' : '') +
       '<div class="fld"><span class="lbl" style="font-size:11px">Foto</span><p>Una foto per sessione, se ti va: nei dettagli della sessione o toccando il giorno sul calendario, anche settimane dopo. Se la scatti da Gesta il giorno stesso è <b>verificata</b>; dalla galleria va benissimo lo stesso. La vedono gli amici (puoi spegnerlo in Party, impostazioni) e una singola la nascondi toccandola. Quando vinci un guanto puoi aggiungere la prova per chi te l’ha lanciato.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p><p>Con l’<b>aeroplanino</b> mandi un contenuto a uno o più amici, con una riga se vuoi. Lo trovano in cima alla loro Taverna, in <b>Condivisi con te</b>: resta 7 giorni, oppure fino a fine giornata dopo che l’hanno aperto.</p><p><b>Scorri un contenuto verso sinistra</b>: compaiono <b>Salva</b> (lo ritrovi in «Salvati», in alto) e <b>Cambia</b> (sparisce e arriva il prossimo). Scorrendo ancora una volta, cambia subito. L’archivio dei video di tecnica va per visualizzazioni: ogni giorno il successivo tra i più visti di ogni canale.</p><p>Con il tasto in alto a destra apri <b>Le tue fonti</b>: nascondi quelle che non ti interessano e aggiungi fino a 10 canali YouTube o siti tuoi, che stanno in prima fila. Se la proponi a tutti e chi fa Gesta la approva, entra nella Taverna di chi fa quello sport.</p></div>' +
@@ -2042,13 +2044,13 @@ var RF = []; try { RF = JSON.parse(localStorage.getItem('gesta.rf') || '[]') || 
 var rfAt = 0;
 function realFriend(p) {
   var s = p.summary || {}, n = new Date(), ym = ymKey(n.getFullYear(), n.getMonth()), days = {};
-  if (s.ym === ym) (s.days || []).forEach(function (d) { days[d[0]] = d[1]; });
+  var qh = {}; if (s.ym === ym) (s.days || []).forEach(function (d) { days[d[0]] = d[1]; if (d[2]) qh[d[0]] = 1; });
   var v = s.tv || { F: 0, A: 0, R: 0, E: 0 }; if (!s.tv && s.trait) v[s.trait] = 1;
   var plan = {}; (s.plan || []).forEach(function (x) { if (x[0] >= todayKey() && SPORTS[x[1]]) plan[x[0]] = [x[1], !!x[2]]; });
   var hw = {}; if (s.ym === ym) (s.hw || []).forEach(function (d) { hw[d] = 1; });
   var sp = (s.sports || []).filter(function (x) { return SPORTS[x]; });
   var stale = !!s.ym && s.ym !== ym; /* 4.5: non ha ancora aperto Gesta questo mese: il mese nuovo parte da E anche per lui */
-  return { id: p.id, real: 1, n: p.name || 'Amico', g: p.gender || 'm', r: stale ? 'E' : s.rank || 'E', plus: !stale && !!s.plus, lv: s.lv || 1, gn: s.gn || 0, seen: s.seen || '', title: stale ? '' : s.title || '', stale: stale, top: sp[0] || 'bon', sports: sp.length ? sp : ['bon'], v: v, days: days, med: s.medals || 0, wk: stale ? 0 : s.wk || 0, show: s.showcase || [], last: s.last || null, fr: 0, plan: plan, hw: hw };
+  return { id: p.id, real: 1, n: p.name || 'Amico', g: p.gender || 'm', r: stale ? 'E' : s.rank || 'E', plus: !stale && !!s.plus, lv: s.lv || 1, gn: s.gn || 0, seen: s.seen || '', title: stale ? '' : s.title || '', stale: stale, top: sp[0] || 'bon', sports: sp.length ? sp : ['bon'], v: v, days: days, med: s.medals || 0, wk: stale ? 0 : s.wk || 0, show: s.showcase || [], last: s.last || null, fr: 0, plan: plan, hw: hw, qh: qh, lp: s.lp || null };
 }
 /* ---------- 3.2: guanti e cinque con gli amici veri ---------- */
 var chAt = 0, chBusy = false;
@@ -2122,7 +2124,11 @@ function chPull(force) {
     if (JSON.stringify(out) !== JSON.stringify(p.ch)) { p.ch = out; dirty = true; }
     /* cinque ricevuti */
     p.fin = p.fin || {};
-    (res[1] || []).forEach(function (x) { var k = x.from_id + '|' + x.week; if (p.fin[k]) return; p.fin[k] = 1; dirty = true; var f = friend(x.from_id), nm = f ? f.n : 'Un amico'; p.fiveIn = p.fiveIn || {}; p.fiveOut = p.fiveOut || {}; if (p.fiveOut[x.from_id] && Date.now() - p.fiveOut[x.from_id] < 7 * 864e5) { delete p.fiveOut[x.from_id]; p.nbat = (p.nbat || 0) + 1; letter('bat', x.from_id, nm + ' ha battuto il tuo cinque', 'Tu e ' + nm + ', questa settimana.', null, x.week); } else { p.fiveIn[x.from_id] = Date.now(); letter('five', x.from_id, nm + ' ti ha dato il cinque', fiveSub(x.day, x.sport), null, x.week); } });
+    (res[1] || []).forEach(function (x) { var k = x.from_id + '|' + (x.day || x.week); if (p.fin[k] || (!x.kind && p.fin[x.from_id + '|' + x.week])) return; p.fin[k] = 1; dirty = true; var f = friend(x.from_id), nm = f ? f.n : 'Un amico', kd = C5T[x.kind] ? x.kind : 'base'; p.fiveIn = p.fiveIn || {}; p.fiveRx = p.fiveRx || {};
+      if (x.day) { var rl = p.fiveRx[x.day] = p.fiveRx[x.day] || []; if (!rl.some(function (y) { return y[0] === x.from_id; })) rl.push([x.from_id, kd]); }
+      if (kd === 'batt') { p.nbat = (p.nbat || 0) + 1; letter('bat', x.from_id, nm + ' ha battuto il tuo cinque', fiveSub(x.day, x.sport), null, x.week); }
+      else { p.fiveIn[x.from_id] = Date.now(); letter('five', x.from_id, nm + ' ' + C5T[kd].tx, fiveSub(x.day, x.sport), null, x.week); } });
+    if (p.fiveRx) Object.keys(p.fiveRx).forEach(function (d) { if (d < addDays(todayKey(), -60)) delete p.fiveRx[d]; });
     patches.forEach(function (q) { chPatch(q[0], q[1]); });
     if (dirty) { save(); render(); }
   }).catch(function () { chBusy = false; });
@@ -2230,7 +2236,7 @@ var TIPS = [
   ['plan', 'home', '.cell.plan:not(.today)', 'Parola mantenuta', 'Se quel giorno fai sport, +¼ di Punto Rango. Se salta, nessun problema: il piano sparisce e basta.'],
   ['plus', 'home', '.top button[data-v="stato"] .rplus, .top button[data-v="stato"]', 'Il + del rango', 'Hai vinto una quest social quando eri già in questo rango: il gradino in più è tuo per tutto il mese.', function () { var n = new Date(); return monthStats(n.getFullYear(), n.getMonth()).plus; }],
   ['taverna', 'home', '.nav [data-a="oggiOpen"]', 'La Taverna', 'Ogni giorno, per i tuoi sport: due video di tecnica, un highlight dei campioni e le notizie. Passaci anche nei giorni senza allenamento.'],
-  ['fcal', 'friend', '[data-a="fCal"]', 'Il cinque', 'Apri il suo calendario e tocca un giorno di sport: gli dai il cinque per quella sessione. Se lo ricambia, è battuto.'],
+  ['fcal', 'friend', '[data-a="fCal"]', 'Il cinque', 'Apri il suo calendario e tocca un giorno: si apre la sua giornata. Tieni premuto e gli dai il cinque. Chissà quale esce.'],
   ['ggoal', 'gang', '.gbar', 'Due su tre', 'L’obiettivo è superato quando lo completano 2 membri su 3. Gli esagoni accesi sono quelli che l’hanno già fatto.']
 ];
 function tipStart() {
@@ -2446,7 +2452,7 @@ function pToggle(key, t, s, on, lock) { return '<button class="toggle"' + (lock 
    La chiave pubblica VAPID la crea Filippo (laboratorio chiavi); la privata sta solo nei secret di Supabase. */
 var VAPID_PUB = 'BKCM98ttsyfzcbPiutLy3ULQrsQ3-KBtOv5vqS0V9D92V-e909oPFPqyOs5VlU4NMcAUXyUSjfBk7RieQ93umXs';
 var PUSH_K = [['glove', 'Guanti ricevuti', 'Un amico ti sfida o ti propone una modifica'], ['won', 'Sfide chiuse', 'Quando un amico completa la tua'], ['req', 'Richieste di amicizia', ''], ['gang', 'Obiettivi della Gang', 'Quando qualcuno ne fissa uno'], ['five', 'Cinque ricevuti', ''], ['share', 'Contenuti dagli amici', 'Video e notizie mandati dalla Taverna']];
-function pushPrefs() { var p = P(), d = { glove: true, won: true, req: true, gang: true, five: false, share: true }; if (!p) return d; p.set.push = p.set.push || d; Object.keys(d).forEach(function (k) { if (p.set.push[k] === undefined) p.set.push[k] = d[k]; }); return p.set.push; }
+function pushPrefs() { var p = P(), d = { glove: true, won: true, req: true, gang: true, five: true, share: true }; if (!p) return d; p.set.push = p.set.push || d; Object.keys(d).forEach(function (k) { if (p.set.push[k] === undefined) p.set.push[k] = d[k]; }); return p.set.push; }
 function isStandalone() { try { return !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); } catch (e) { return false; } }
 function pushCan() { return !!(VAPID_PUB && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && cauth && cloudOn()); }
 function pushState() { if (!pushCan()) return 'no'; if (Notification.permission === 'denied') return 'denied'; return Notification.permission === 'granted' && P() && P().pushOn ? 'on' : 'off'; }
@@ -2593,14 +2599,14 @@ var PA = {
     save(); ui.ov = null; ding('ok');
     toast(sent ? (o.fid ? 'Guanto lanciato a ' + friend(o.fid).n + '.' : 'Guanto lanciato a ' + sent + (sent === 1 ? ' amico' : ' amici') + ' della Gang.') : 'Oggi con loro c’è già un guanto aperto.');
   },
-  five: function (arg) { var a = String(arg).split('|'); fiveGive(a[0], a[1] || null); },
-  fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); if (fiveGive(l.f, null, true) && ui.ov && ui.ov.t === 'fnote') { ui.ov.batl = lid; render(); } },
+  five: function (arg) { var a = String(arg).split('|'); if (a[1] && c5Open(a[0], a[1])) return; A.fDayLast(a[0]); },
+  fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); ui.ov = null; A.fDayLast(l.f); },
   phOpen: function (arg) { var a = arg.split('|'), back = ui.ov && ui.ov.t !== 'photo' ? ui.ov : null; ui.ov = { t: 'photo', k: a[0], sid: a[1], back: back }; ding('open'); render(); },
   phSh: function (arg) { var a = arg.split('|'), s = phSess(a[0], a[1]); if (!s || !s.ph) return; phShare(a[0], a[1], !s.ph.sh); ding('tap'); render(); },
   phDelAsk: function () { ui.ov.del = 1; render(); },
   phDelGo: function (arg) { var a = arg.split('|'); phRemove(a[0], a[1]); ding('tap'); toast('Foto tolta.'); A.phBack(); },
   phBack: function () { var o = ui.ov; ui.ov = o && o.back ? o.back : null; if (ui.ov) delete ui.ov.del; render(); },
-  fPhotoOpen: function (arg) { var a = arg.split('|'), x = fph[a[0]] && fph[a[0]][a[1]]; if (!x) return; var back = ui.ov; ui.ov = { t: 'fphoto', fid: a[0], x: x, back: back, five: P().fives[a[0]] !== mondayOf(todayKey()) }; ding('open'); render(); },
+  fPhotoOpen: function (arg) { var a = arg.split('|'), x = fph[a[0]] && fph[a[0]][a[1]]; if (!x) return; if (c5Open(a[0], a[1])) return; var back = ui.ov; ui.ov = { t: 'fphoto', fid: a[0], x: x, back: back, five: P().fives[a[0]] !== mondayOf(todayKey()) }; ding('open'); render(); },
   rkBreak: function () { var o = ui.ov; if (!o || o.t !== 'rankup' || o.br) return; o.br = 1; rankSound(); buzz([40, 50, 40, 50, 140]); render(); },
   fAdd: function () { if (!cauth) { A.cLogin(); return; } ui.ov = { t: 'addf', code: '' }; ui.focusNext = 'fcode'; ding('open'); render(); },
   fAddGo: function () {
@@ -2707,8 +2713,8 @@ function viewFriend() {
   var vcell = function (x, tag) { var dm = x && MBYID[x[0]]; return dm ? '<span style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0">' + medalHex(dm, x[1], 34, false) + '<span class="frx" style="font:600 9.5px/12px var(--fd);color:var(--ink);text-align:center;overflow-wrap:anywhere">' + dm.name + '</span><span style="font:700 7.5px/10px var(--fd);letter-spacing:1.2px;text-transform:uppercase;color:' + (tag ? 'var(--sysl)' : tierCol(dm, x[1])) + '">' + (tag || tierName(dm, x[1])) + '</span></span>' : ''; };
   h += '<div class="card" style="padding:calc(5px + 3px*var(--k)) 12px calc(6px + 4px*var(--k));display:flex;flex-direction:column;gap:calc(3px + 3px*var(--k))"><div class="row"><span class="lbl" style="font-size:10.5px">Vetrina</span><span class="hint" style="font-size:10.5px">' + f.med + ' medaglie in bacheca</span></div><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px">' + sh.map(function (x) { return vcell(x); }).join('') + (last ? vcell(last, 'Ultima') : '') + '</div></div>';
   if (f.gm && !isFriend(f.id)) { h += '<div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px"><span class="hint">Siete nella stessa Gang ma non ancora amici: aggiungilo col suo codice per lanciargli il guanto.</span><button class="btn sm main" data-a="fAdd">Aggiungi</button></div>'; return '<div class="frfit" style="--k:1;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:space-between;gap:calc(5px + 7px*var(--k))">' + h + '</div>'; }
-  var open = chOpenToday(f.id) || sendBlock(f.id), five = P().fives[f.id] === mondayOf(t);
-  h += '<div class="g2"><button class="btn" data-a="five" data-v="' + f.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px' + (five ? ';opacity:.5' : '') + '">' + svg(PI.five, null, 20) + 'Cinque</button><button class="btn main" data-a="launch" data-v="' + f.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px' + (open ? ';opacity:.5' : '') + '">' + svg(PI.glove, null, 20) + 'Guanto</button></div>';
+  var open = chOpenToday(f.id) || sendBlock(f.id), five = !c5Last(f);
+  h += '<div class="g2"><button class="btn" data-a="fDayLast" data-v="' + f.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px' + (five ? ';opacity:.5' : '') + '">' + svg(PI.five, null, 20) + 'Cinque</button><button class="btn main" data-a="launch" data-v="' + f.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px' + (open ? ';opacity:.5' : '') + '">' + svg(PI.glove, null, 20) + 'Guanto</button></div>';
   return '<div class="frfit" style="--k:1;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:space-between;gap:calc(5px + 7px*var(--k))">' + h + '</div>';
 }
 function fMonPast(f, y, m) { var key = f.id + '|' + ymKey(y, m), dt = (ui.fmon || {})[key]; if (dt === undefined || dt === false) return null; var by = {}, hw = {}; ((dt && dt.days) || []).forEach(function (x) { var sp = (x[1] || []).filter(function (q) { return SPORTS[q]; }); if (sp.length) by[x[0]] = sp[0]; }); ((dt && dt.hw) || []).forEach(function (d) { hw[d] = 1; });
@@ -2724,12 +2730,12 @@ function viewFCal(o, cls) {
   var g = '<div class="grid7">' + ['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(function (x) { return '<span class="dow">' + x + '</span>'; }).join('') + '</div><div class="grid7" style="row-gap:8px">';
   for (var i = 0; i < lead; i++) g += '<span></span>';
   var plans = days.filter(function (x) { return x.pl; });
-  var five5 = P().fives[f.id] === mondayOf(todayKey()), canF = !past && !five5 && !(f.gm && !isFriend(f.id));
-  days.forEach(function (x) { if (x.sp) used[x.sp] = 1; if (x.pl) used[x.pl] = 1; var fut = x.k > todayKey(), fpx = !past && fph[f.id] && fph[f.id][x.k], tap = (canF && x.sp && !fut) || fpx; g += (tap ? '<button data-a="' + (fpx ? 'fPhotoOpen' : 'five') + '" data-v="' + f.id + '|' + x.k + '" aria-label="' + (fpx ? 'Foto del ' : 'Cinque per ') + dayShort(x.k) + '" style="appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;position:relative;' : '<span style="position:relative;') + 'display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0">' + (fpx ? '<i class="tri" style="top:2px;right:6px"></i>' : '') + '<span style="font:600 12px/14px var(--fd);color:' + (x.k === todayKey() ? 'var(--ink)' : fut ? '#3A4866' : 'var(--mut)') + '">' + x.d + '</span>' + (x.sp ? '<i style="display:block;width:14px;height:14px;border-radius:7px;background:' + SPORTS[x.sp].c + ';box-shadow:0 0 8px ' + SPORTS[x.sp].c + ';flex:0 0 auto"></i>' : x.hw ? '<i style="display:block;width:14px;height:14px;border-radius:7px;' + HW_DOT + ';flex:0 0 auto"></i>' : x.pl ? '<i style="display:block;box-sizing:border-box;width:14px;height:14px;border-radius:7px;border:1.5px dashed ' + (x.pg ? PGOLD : SPORTS[x.pl].c) + ';flex:0 0 auto"></i>' : '<i style="display:block;width:14px;height:14px;border-radius:7px;border:1px ' + (fut ? 'dashed #1E2A42' : 'solid #1E2A42') + ';flex:0 0 auto"></i>') + (tap ? '</button>' : '</span>'); });
+  var canF = !past && !(f.gm && !isFriend(f.id));
+  days.forEach(function (x) { if (x.sp) used[x.sp] = 1; if (x.pl) used[x.pl] = 1; var fut = x.k > todayKey(), fpx = !past && fph[f.id] && fph[f.id][x.k], tap = canF && !fut && (x.sp || x.hw || fpx) && x.k >= addDays(todayKey(), -31); g += (tap ? '<button data-a="fDay" data-v="' + f.id + '|' + x.k + '" aria-label="La giornata di ' + dayShort(x.k) + '" style="appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;position:relative;' : '<span style="position:relative;') + 'display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0">' + (fpx ? '<i class="tri" style="top:2px;right:6px"></i>' : '') + '<span style="font:600 12px/14px var(--fd);color:' + (x.k === todayKey() ? 'var(--ink)' : fut ? '#3A4866' : 'var(--mut)') + '">' + x.d + '</span>' + (x.sp ? '<i style="display:block;width:14px;height:14px;border-radius:7px;background:' + SPORTS[x.sp].c + ';box-shadow:0 0 8px ' + SPORTS[x.sp].c + ';flex:0 0 auto"></i>' : x.hw ? '<i style="display:block;width:14px;height:14px;border-radius:7px;' + HW_DOT + ';flex:0 0 auto"></i>' : x.pl ? '<i style="display:block;box-sizing:border-box;width:14px;height:14px;border-radius:7px;border:1.5px dashed ' + (x.pg ? PGOLD : SPORTS[x.pl].c) + ';flex:0 0 auto"></i>' : '<i style="display:block;width:14px;height:14px;border-radius:7px;border:1px ' + (fut ? 'dashed #1E2A42' : 'solid #1E2A42') + ';flex:0 0 auto"></i>') + (tap ? '</button>' : '</span>'); });
   g += '</div>';
   var leg = '<div style="display:flex;flex-wrap:wrap;gap:8px 16px">' + Object.keys(used).map(function (s) { return '<span style="display:flex;align-items:center;gap:6px;font:500 13px/18px var(--fb);color:var(--soft)">' + sportIc(s, 16, true) + SPORTS[s].name + '</span>'; }).join('') + (days.some(function (x) { return x.hw; }) ? '<span style="display:flex;align-items:center;gap:6px;font:500 13px/18px var(--fb);color:var(--soft)"><i style="display:block;width:12px;height:12px;border-radius:6px;' + HW_DOT + ';flex:0 0 auto"></i>Hard Study/Work</span>' : '') + '</div>';
   if (past && !days.some(function (x) { return x.sp || x.hw; })) leg = '<p class="hint" style="margin:0;text-align:center">Nessun giorno di sport a ' + MONTHS[m].toLowerCase() + '.</p>';
-  return '<div class="' + cls + '">' + whead(f.n, true) + nav + '<div class="card" style="padding:8px 10px">' + g + '</div>' + leg + (plans.length ? '<div class="card" style="padding:8px 12px;display:flex;flex-direction:column;gap:6px"><span class="lbl" style="font-size:10.5px">In programma</span>' + plans.map(function (x) { return '<span style="display:flex;align-items:center;gap:8px;font:600 13px/18px var(--fb)"><i style="display:block;box-sizing:border-box;width:12px;height:12px;border-radius:6px;border:1.5px dashed ' + (x.pg ? PGOLD : SPORTS[x.pl].c) + ';flex:0 0 auto"></i>' + dayShort(x.k).charAt(0).toUpperCase() + dayShort(x.k).slice(1) + ' · ' + SPORTS[x.pl].name + (x.pg ? '<span class="hint" style="font-size:11px">guanto</span>' : '') + '<button class="btn sm" data-a="launchOn" data-v="' + f.id + '|' + x.k + '|' + x.pl + '" style="margin-left:auto;height:30px;padding:0 10px;font-size:10.5px;display:flex;align-items:center;gap:5px;border-color:' + PGOLD + '8C;color:var(--rew)">' + svg(PI.glove, PGOLD, 14) + 'Sfida</button></span>'; }).join('') + '<span class="hint" style="font-size:11.5px">Tratteggiato: in programma. Buon momento per sfidarlo.</span></div>' : '') + (past ? '' : '<p class="hint" style="margin:0;display:flex;align-items:center;gap:6px">' + svg(PI.five, '#7CC4FF', 14) + (five5 ? 'Il cinque di questa settimana l’hai già dato.' : canF ? 'Tocca un giorno di sport per dargli il cinque.' : '') + '</p>') + '</div>';
+  return '<div class="' + cls + '">' + whead(f.n, true) + nav + '<div class="card" style="padding:8px 10px">' + g + '</div>' + leg + (plans.length ? '<div class="card" style="padding:8px 12px;display:flex;flex-direction:column;gap:6px"><span class="lbl" style="font-size:10.5px">In programma</span>' + plans.map(function (x) { return '<span style="display:flex;align-items:center;gap:8px;font:600 13px/18px var(--fb)"><i style="display:block;box-sizing:border-box;width:12px;height:12px;border-radius:6px;border:1.5px dashed ' + (x.pg ? PGOLD : SPORTS[x.pl].c) + ';flex:0 0 auto"></i>' + dayShort(x.k).charAt(0).toUpperCase() + dayShort(x.k).slice(1) + ' · ' + SPORTS[x.pl].name + (x.pg ? '<span class="hint" style="font-size:11px">guanto</span>' : '') + '<button class="btn sm" data-a="launchOn" data-v="' + f.id + '|' + x.k + '|' + x.pl + '" style="margin-left:auto;height:30px;padding:0 10px;font-size:10.5px;display:flex;align-items:center;gap:5px;border-color:' + PGOLD + '8C;color:var(--rew)">' + svg(PI.glove, PGOLD, 14) + 'Sfida</button></span>'; }).join('') + '<span class="hint" style="font-size:11.5px">Tratteggiato: in programma. Buon momento per sfidarlo.</span></div>' : '') + (past ? '' : '<p class="hint" style="margin:0;display:flex;align-items:center;gap:6px">' + svg(PI.five, '#7CC4FF', 14) + (canF ? 'Tocca un giorno: si apre la sua giornata e, tenendo premuto, gli dai il cinque.' : '') + '</p>') + '</div>';
 }
 function chOut(c, who) {
   var t = todayKey(), me = who === 'me';
@@ -2793,7 +2799,7 @@ function gStart(x, y, target) {
   if (!S || drag || ui.arrange || !target || !target.closest) return;
   if (target.closest('input,textarea,.story,.tw')) return;
   if (ui.ov) {
-    if (ui.ov.t === 'story') return;
+    if (ui.ov.t === 'story' || target.closest('[data-c5]')) return;
     var win = target.closest('.veil .win'), cl = root.querySelector('.veil [data-a="close"]');
     if (win && cl) gs = { k: 'ov', x: x, y: y, el: win, cl: cl, wb: target.closest('.wbody') };
     return;
@@ -3193,6 +3199,7 @@ function phPick(k, sid, extra, glove) {
 function phHydrate() {
   root.querySelectorAll('img[data-phs]').forEach(function (im) { var sid = im.getAttribute('data-phs'); phSrc(sid).then(function (u) { if (u && im.isConnected) { im.src = u; im.parentNode.classList.add('on'); } }); });
   root.querySelectorAll('img[data-php]').forEach(function (im) { var pa = im.getAttribute('data-php'); phSrcPath(pa).then(function (u) { if (u && im.isConnected) { im.src = u; im.parentNode.classList.add('on'); } }); });
+  var c5m = root.querySelector('[data-c5]'); if (c5m && !c5m._w) c5Wire(c5m);
 }
 /* le foto condivise da un amico, per il suo calendario */
 function fPhotosLoad(fid) {
@@ -3229,7 +3236,7 @@ function viewFNote(o, cls) {
   else if (l.k === 'medal' || l.k === 'rank') { icon = PI.medal; }
   else if (l.k === 'gang') { icon = PI.party; }
   var col = gold ? PGOLD : '#7CC4FF', wk = mondayOf(todayKey());
-  var bat = l.k === 'bat' || o.batl === l.id, canBat = l.k === 'five' && !bat && f.id && l.wk && Date.now() - l.t < 7 * 864e5 && P().fives[f.id] !== wk;
+  var bat = l.k === 'bat' || o.batl === l.id, canBat = l.k === 'five' && !bat && f.id && Date.now() - l.t < 7 * 864e5 && !!friend(f.id) && !!c5Last(friend(f.id));
   if (bat) { gold = true; col = PGOLD; title = 'Cinque battuto'; body = 'Tu e ' + f.n + ', questa settimana.'; }
   if (l.k === 'won' && cq && o.proof === undefined) { o.proof = null; gloveProof(cq.id, function (x) { if (ui.ov === o) { o.proof = x || false; render(); } }); }
   var fx = bat ? fxFiveBat('lb' + l.id) : l.k === 'five' ? fxFiveUp('lf' + l.id) : l.k === 'won' ? fxSeal(!!(cq && cq.shared && cq.me && cq.done), 'lw' + l.id) : l.k === 'flost' ? fxDust('ld' + l.id) : (l.k === 'gang' && cq && cq.st === 'passed') ? fxGang(cq, 'lg' + l.id) : '';
@@ -3238,7 +3245,7 @@ function viewFNote(o, cls) {
     (fx || '<div style="display:flex;justify-content:center">' + svg(icon, col, 44) + '</div>') + (o.proof ? '<span class="lbl" style="font-size:10.5px;color:var(--rew);text-align:center">La prova</span>' + phView('data-php="' + esc(o.proof.path) + '"', o.proof.n || '', !!o.proof.verified) : '') + '<p class="wtitle">' + esc(title) + '</p>' + (body ? '<p class="wtext">' + esc(body) + '</p>' : '') + rv +
     (score ? '<div style="display:flex;align-items:baseline;justify-content:center;gap:12px;font:700 34px/1 var(--fd)"><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">TU</span><span>' + sc[0] + '</span><span style="color:var(--mut)">–</span><span>' + sc[1] + '</span><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">' + f.n.toUpperCase() + '</span></div>' : '') +
     (cq ? '<button class="mlink" data-a="gView" data-v="' + cq.id + '" style="display:flex;align-items:center;justify-content:center;gap:6px">' + svg(cq.gang ? PI.party : PI.glove, col, 14) + 'Vedi la quest ›</button>' : '') +
-    (canBat ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="fiveBack" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + 'Batti</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
+    (canBat ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="fiveBack" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + 'Ricambia</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
 }
 function viewTrait(o, cls) {
   var n = new Date(), ms = monthStats(n.getFullYear(), n.getMonth()), mt = monthTraits(n.getFullYear(), n.getMonth()); if (!mt) return '';
@@ -3397,12 +3404,13 @@ function mergeState(a, b) {
 /* riepilogo pubblico per gli amici (3.1) */
 function summaryOf() {
   var n = new Date(), ms = monthStats(n.getFullYear(), n.getMonth()), mt = monthTraits(n.getFullYear(), n.getMonth()), st = medalState();
-  var days = monthKeys(n.getFullYear(), n.getMonth()).sort().map(function (k) { return [+k.slice(8), sessions(k)[0].sport]; });
+  var days = monthKeys(n.getFullYear(), n.getMonth()).sort().map(function (k) { var ss = sessions(k); return [+k.slice(8), ss[0].sport, ss.some(function (x) { return x.quest && x.quest.done && x.quest.diff === 'hard'; }) ? 1 : 0]; });
+  var mpre = ymKey(n.getFullYear(), n.getMonth()), lp = allKeysSorted().filter(function (k) { return k < mpre; }).pop() || null;
   var plan = [], tk = todayKey();
   for (var pk = tk; pk <= planEnd(); pk = addDays(pk, 1)) { if (sessions(pk).length) continue; var pp = planAt(pk), pg = gloveOn(pk); if (pp) plan.push([pk, pp.jsp || pp.sp, pg.length ? 1 : 0]); else if (pg.length) plan.push([pk, pg[0].sp, 1]); }
   var hw = Object.keys(S.marks || {}).filter(function (k) { return k.indexOf(ymKey(n.getFullYear(), n.getMonth())) === 0 && !sessions(k).length; }).map(function (k) { return +k.slice(8); });
   return { seen: todayKey(), plan: plan, hw: hw, rank: ms.rank, plus: !!ms.plus, lv: levelOf(totalXp()), gn: gestaN(), title: ms.title || '', sports: [ms.top, ms.second].filter(Boolean), trait: mt ? mt.top : null, tv: mt ? mt.v : null, wk: ms.weeksOk, days: days, ym: ymKey(n.getFullYear(), n.getMonth()),
-    showcase: (S.showcase || []).filter(function (id) { return st[id] && st[id].t >= 0; }).map(function (id) { return [id, st[id].t]; }), medals: MEDALS.filter(function (d) { return st[d.id].t >= 0; }).length, last: S.mlast && st[S.mlast[0]] && st[S.mlast[0]].t >= 0 ? [S.mlast[0], st[S.mlast[0]].t] : null };
+    lp: lp, showcase: (S.showcase || []).filter(function (id) { return st[id] && st[id].t >= 0; }).map(function (id) { return [id, st[id].t]; }), medals: MEDALS.filter(function (d) { return st[d.id].t >= 0; }).length, last: S.mlast && st[S.mlast[0]] && st[S.mlast[0]].t >= 0 ? [S.mlast[0], st[S.mlast[0]].t] : null };
 }
 var syncT = null, syncBusy = false, syncPending = false;
 function cloudDirty() { if (!cloudOn() || !cauth || !S) return; clearTimeout(syncT); syncT = setTimeout(cloudPush, 2500); }
@@ -3648,6 +3656,234 @@ var PA414 = {
   nSwap: function (id) { ui.nOpen = null; newsHide(id); }
 };
 for (var pk414 in PA414) A[pk414] = PA414[pk414];
+/* ---------- 4.15: il Cinque, da capo. Si tiene premuto sulla giornata di un amico (foto o scheda): l'anello si carica, schiocca, e Gesta decide che cinque esce ---------- */
+function c5R(a, b) { return a + Math.random() * (b - a); }
+var C5GOR = '<svg class="c5-gor" viewBox="0 0 200 200" aria-hidden="true"><defs>' +
+    '<linearGradient id="c5fur" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3d4f"/><stop offset=".55" stop-color="#1b1d28"/><stop offset="1" stop-color="#0c0d14"/></linearGradient>' +
+    '<linearGradient id="c5skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d6f80"/><stop offset="1" stop-color="#3f4150"/></linearGradient>' +
+    '<radialGradient id="c5glow" cx=".5" cy=".55" r=".55"><stop offset="0" stop-color="#FF8A4C" stop-opacity=".55"/><stop offset="1" stop-color="#FF8A4C" stop-opacity="0"/></radialGradient></defs>' +
+    '<ellipse cx="100" cy="120" rx="98" ry="82" fill="url(#c5glow)"/>' +
+    '<g stroke="#05060a" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">' +
+    '<path d="M70 200 C64 182 66 168 80 160 L96 172 L94 200 Z" fill="url(#c5fur)"/><path d="M130 200 C136 182 134 168 120 160 L104 172 L106 200 Z" fill="url(#c5fur)"/>' +
+    '<path d="M56 200 C48 160 52 128 72 110 C84 100 116 100 128 110 C148 128 152 160 144 200 Z" fill="url(#c5fur)"/>' +
+    '<path d="M80 122 Q100 132 120 122 Q124 146 100 154 Q76 146 80 122 Z" fill="url(#c5skin)"/><path d="M100 128 L100 150" stroke-width="2" fill="none"/>' +
+    '<g class="armL"><path d="M80 116 C62 112 44 104 34 88 C26 74 36 62 50 68 C62 74 74 90 92 106 Z" fill="url(#c5fur)"/><path d="M36 90 C28 70 30 50 40 34 C46 24 62 26 62 38 C60 54 56 72 54 88 Z" fill="url(#c5fur)"/>' +
+    '<path d="M34 30 C32 20 40 12 50 13 C60 14 66 22 64 32 C62 40 52 44 44 42 C38 40 35 36 34 30 Z" fill="url(#c5skin)"/><path d="M41 20 L42 27 M48 17 L48 25 M55 18 L54 26" stroke-width="2" fill="none"/></g>' +
+    '<g class="armR"><path d="M120 116 C138 112 156 104 166 88 C174 74 164 62 150 68 C138 74 126 90 108 106 Z" fill="url(#c5fur)"/><path d="M164 90 C172 70 170 50 160 34 C154 24 138 26 138 38 C140 54 144 72 146 88 Z" fill="url(#c5fur)"/>' +
+    '<path d="M166 30 C168 20 160 12 150 13 C140 14 134 22 136 32 C138 40 148 44 156 42 C162 40 165 36 166 30 Z" fill="url(#c5skin)"/><path d="M159 20 L158 27 M152 17 L152 25 M145 18 L146 26" stroke-width="2" fill="none"/></g>' +
+    '<path d="M76 100 C72 78 84 58 100 58 C116 58 128 78 124 100 C118 110 82 110 76 100 Z" fill="url(#c5fur)"/>' +
+    '<path d="M82 80 Q100 70 118 80 L116 87 Q100 79 84 87 Z" fill="#0a0b11"/>' +
+    '<path d="M86 84 Q100 80 114 84 Q120 98 110 106 Q100 110 90 106 Q80 98 86 84 Z" fill="url(#c5skin)"/>' +
+    '<g class="jaw"><path d="M92 95 Q100 92 108 95 Q108 103 100 104 Q92 103 92 95 Z" fill="#2a0707"/><path d="M93 95.5 L95 99 L97 95.8 M103 95.8 L105 99 L107 95.5" fill="#fff" stroke-width="1"/></g>' +
+    '<circle cx="93" cy="88" r="1.9" fill="#FFB27A" stroke="none"/><circle cx="107" cy="88" r="1.9" fill="#FFB27A" stroke="none"/>' +
+    '<path d="M96 90 Q100 92 104 90" stroke-width="1.6" fill="none"/></g>' +
+    '<path d="M128 112 C142 124 148 150 144 196" stroke="#FF8A4C" stroke-width="2.2" fill="none" opacity=".8"/><path d="M122 62 C126 70 127 84 124 98" stroke="#FF8A4C" stroke-width="2" fill="none" opacity=".75"/>' +
+    '</svg>';
+
+function C5FX(cv) {
+    var c = cv.getContext('2d'), W = 0, H = 0, P = [], lines = null, raf = 0, rays = null, hex = null;
+    function size() { var r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); W = r.width; H = r.height; cv.width = W * d; cv.height = H * d; c.setTransform(d, 0, 0, d, 0, 0); }
+    size();
+    function add(p) { P.push(p); go(); }
+    function go() { if (!raf) raf = requestAnimationFrame(loop); }
+    function speedLines(L) {
+      var n = L.n, cx = L.x, cy = L.y, maxR = Math.hypot(W, H);
+      c.save(); c.globalCompositeOperation = L.mode || 'source-over'; c.fillStyle = L.col;
+      for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2, w = c5R(.004, .018) * (L.thick || 1), r0 = c5R(L.r0, L.r0 + 40);
+        c.globalAlpha = L.a * c5R(.4, 1);
+        c.beginPath(); c.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0);
+        c.lineTo(cx + Math.cos(a - w) * maxR, cy + Math.sin(a - w) * maxR); c.lineTo(cx + Math.cos(a + w) * maxR, cy + Math.sin(a + w) * maxR); c.closePath(); c.fill();
+      }
+      c.restore();
+    }
+    function loop(t) {
+      raf = 0; c.clearRect(0, 0, W, H);
+      if (rays) { rays.t++; var ra = rays; c.save(); c.globalCompositeOperation = 'lighter'; c.translate(ra.x, ra.y); c.rotate(ra.t * .012); var al = Math.max(0, ra.a * (1 - ra.t / ra.life));
+        for (var i = 0; i < 14; i++) { c.rotate(Math.PI * 2 / 14); var g = c.createLinearGradient(0, 0, 0, -H); g.addColorStop(0, 'rgba(255,215,90,' + al + ')'); g.addColorStop(1, 'rgba(255,215,90,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(-3, 0); c.lineTo(-26, -H); c.lineTo(26, -H); c.lineTo(3, 0); c.fill(); }
+        c.restore(); if (ra.t > ra.life) rays = null; }
+      if (hex) { hex.t++; var hx = hex, k = hx.t / hx.life, rr = 40 + k * 110; c.save(); c.translate(hx.x, hx.y); c.rotate(k * 1.2); c.globalCompositeOperation = 'lighter';
+        for (var j = 0; j < 2; j++) { c.beginPath(); for (var s = 0; s < 6; s++) { var an = Math.PI / 3 * s - Math.PI / 2, q = rr * (1 - j * .18); s ? c.lineTo(Math.cos(an) * q, Math.sin(an) * q) : c.moveTo(Math.cos(an) * q, Math.sin(an) * q); } c.closePath();
+          var hg = c.createLinearGradient(-rr, -rr, rr, rr); hg.addColorStop(0, '#7CC4FF'); hg.addColorStop(.33, '#B98CFF'); hg.addColorStop(.66, '#FF5C8A'); hg.addColorStop(1, '#FFC94D');
+          c.strokeStyle = hg; c.globalAlpha = (1 - k) * (j ? .5 : 1); c.lineWidth = j ? 1.5 : 3; c.stroke(); }
+        c.restore(); if (hx.t > hx.life) hex = null; }
+      if (lines) { speedLines(lines); lines.life--; if (lines.life <= 0 && !lines.hold) lines = null; }
+      for (var i2 = P.length - 1; i2 >= 0; i2--) { var p = P[i2]; p.t++; if ((p.step && p.step(p) === false) || p.t > p.life) { P.splice(i2, 1); continue; } p.draw(p); }
+      if (P.length || lines || rays || hex) raf = requestAnimationFrame(loop);
+    }
+    var api = {
+      size: size, W: function () { return W; }, H: function () { return H; },
+      setLines: function (L) { lines = L; go(); }, clearLines: function () { lines = null; },
+      rays: function (x, y) { rays = { x: x, y: y, t: 0, life: 80, a: .22 }; go(); },
+      hex: function (x, y) { hex = { x: x, y: y, t: 0, life: 70 }; go(); },
+      ring: function (x, y, col, w, sp) { add({ t: 0, life: 32, r: 30, x: x, y: y, step: function (p) { p.r += sp || 9; }, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = col; c.globalAlpha = 1 - k; c.lineWidth = (w || 10) * (1 - k) + .5; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 7); c.stroke(); c.restore(); } }); },
+      suck: function (x, y, col) { var a = c5R(0, 7), d = c5R(90, 170); add({ t: 0, life: 26, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d, tx: x, ty: y, step: function (p) { p.x += (p.tx - p.x) * .14; p.y += (p.ty - p.y) * .14; }, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = col; c.globalAlpha = .9 * (1 - k * .5); c.lineWidth = 2; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x + (p.x - p.tx) * .25, p.y + (p.y - p.ty) * .25); c.stroke(); c.restore(); } }); },
+      sparks: function (x, y, n, cols, sp, shape, grav) { for (var i = 0; i < n; i++) { var a = c5R(0, 7), v = c5R(sp * .4, sp); add({ t: 0, life: c5R(30, 55) | 0, x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: c5R(0, 7), vr: c5R(-.3, .3), s: c5R(2, 5), col: cols[i % cols.length], step: function (p) { p.x += p.vx; p.y += p.vy; p.vx *= .93; p.vy = p.vy * .93 + (grav || 0); p.rot += p.vr; }, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 1 - k; c.fillStyle = p.col; c.translate(p.x, p.y); c.rotate(p.rot);
+        if (shape === 'shard') { c.beginPath(); c.moveTo(0, -p.s * 2.4); c.lineTo(p.s * .8, 0); c.lineTo(0, p.s * 2.4); c.lineTo(-p.s * .8, 0); c.fill(); }
+        else if (shape === 'star') { c.beginPath(); for (var s = 0; s < 8; s++) { var rr = s % 2 ? p.s * .5 : p.s * 2; c.lineTo(Math.cos(s * Math.PI / 4) * rr, Math.sin(s * Math.PI / 4) * rr); } c.fill(); }
+        else { c.strokeStyle = p.col; c.lineWidth = p.s * .6; c.beginPath(); c.moveTo(0, 0); c.lineTo(-p.vx * 2.2, -p.vy * 2.2); c.stroke(); }
+        c.restore(); } }); } },
+      flame: function (x, y, spread) { add({ t: 0, life: c5R(45, 80) | 0, x: x + c5R(-spread, spread), y: y + c5R(-4, 14), vx: c5R(-.4, .4), vy: c5R(-5.2, -2.6), r: c5R(8, 17), step: function (p) { p.x += p.vx + Math.sin((p.t + p.y) * .15) * .6; p.y += p.vy; p.vy *= .985; }, draw: function (p) {
+        var k = p.t / p.life, rad = p.r * (k < .2 ? k / .2 : 1 - (k - .2) * .9); if (rad <= 0) return; c.save(); c.globalCompositeOperation = 'lighter';
+        var g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad); var hot = 1 - k;
+        g.addColorStop(0, 'rgba(255,' + (240 - k * 120 | 0) + ',' + (190 - k * 190 | 0) + ',' + (.9 * hot) + ')'); g.addColorStop(.45, 'rgba(255,' + (140 - k * 80 | 0) + ',40,' + (.55 * hot) + ')'); g.addColorStop(1, 'rgba(200,30,10,0)');
+        c.fillStyle = g; c.beginPath(); c.ellipse(p.x, p.y, rad * .6, rad * 1.7, p.vx * .2, 0, 7); c.fill(); c.restore(); } }); },
+      ember: function (x, y) { add({ t: 0, life: c5R(40, 80) | 0, x: x + c5R(-40, 40), y: y + c5R(-10, 20), vx: c5R(-.8, .8), vy: c5R(-3.5, -1.5), step: function (p) { p.x += p.vx + Math.sin(p.t * .2) * .5; p.y += p.vy; }, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = 'rgba(255,' + (200 - k * 100 | 0) + ',80,' + (1 - k) + ')'; c.fillRect(p.x, p.y, 2, 2); c.restore(); } }); },
+      glint: function (x, y) { add({ t: 0, life: 22, x: x, y: y, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.translate(p.x, p.y); c.rotate(-.6); var off = -80 + k * 160, g = c.createLinearGradient(off - 20, 0, off + 20, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,250,220,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(-60, -60, 120, 120); c.restore(); } }); },
+      bolt: function (x, y) { var sx = x + c5R(-120, 120), pts = [[sx, -10]], segs = 14; for (var i = 1; i <= segs; i++) { var k = i / segs; pts.push([sx + (x - sx) * k + (i < segs ? c5R(-22, 22) : 0), -10 + (y + 10) * k]); }
+        var br = []; for (var j = 3; j < segs - 2; j += 4) { var b0 = pts[j], bp = [b0]; for (var q = 1; q < 5; q++) bp.push([b0[0] + q * c5R(-14, 14), b0[1] + q * c5R(8, 16)]); br.push(bp); }
+        add({ t: 0, life: 9, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round';
+          [[10, 'rgba(0,160,255,' + (.35 * (1 - k)) + ')'], [4, 'rgba(155,240,255,' + (1 - k) + ')'], [1.6, 'rgba(255,255,255,' + (1 - k) + ')']].forEach(function (L) { c.lineWidth = L[0]; c.strokeStyle = L[1]; c.beginPath(); pts.forEach(function (pt, i) { i ? c.lineTo(pt[0], pt[1]) : c.moveTo(pt[0], pt[1]); }); br.forEach(function (bp) { bp.forEach(function (pt, i) { i ? c.lineTo(pt[0], pt[1]) : c.moveTo(pt[0], pt[1]); }); }); c.stroke(); });
+          c.restore(); } }); },
+      arcs: function (x, y, n) { add({ t: 0, life: n, draw: function (p) { var k = p.t / p.life; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = 'rgba(155,240,255,' + (1 - k) + ')'; c.lineWidth = 1.6; c.shadowColor = '#00D4FF'; c.shadowBlur = 8;
+        for (var a = 0; a < 3; a++) { var a0 = c5R(0, 7), r0 = c5R(50, 80); c.beginPath(); c.moveTo(x + Math.cos(a0) * r0, y + Math.sin(a0) * r0); for (var s = 1; s < 6; s++) { var aa = a0 + s * .18, rr = r0 + c5R(-10, 10); c.lineTo(x + Math.cos(aa) * rr, y + Math.sin(aa) * rr); } c.stroke(); }
+        c.restore(); } }); },
+      formulas: function (x, y) { var F = ['E=mc²', '∑', 'π', '√2', '∫dx', 'x²', 'Δv', 'a²+b²', '∞', 'f(x)', '%', 'H₂O', '≈', '3,14'];
+        for (var i = 0; i < 20; i++) { var a = c5R(0, 7), v = c5R(3, 8); add({ t: 0, life: c5R(45, 70) | 0, x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2, rot: c5R(-.5, .5), vr: c5R(-.06, .06), s: c5R(13, 22), tx: F[i % F.length], step: function (p) { p.x += p.vx; p.y += p.vy; p.vx *= .95; p.vy = p.vy * .95 + .12; p.rot += p.vr; },
+          draw: function (p) { var k = p.t / p.life; c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.globalAlpha = 1 - k * k; c.font = 'italic 800 ' + p.s + 'px "Exo 2", sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#05060a'; c.strokeText(p.tx, 0, 0); c.fillStyle = '#E9FFE9'; c.fillText(p.tx, 0, 0); c.restore(); } }); } },
+      dust: function (x, y) { for (var i = 0; i < 40; i++) add({ t: 0, life: c5R(80, 140) | 0, x: x + c5R(-140, 140), y: y + c5R(-40, 160), vx: c5R(-.4, .4), vy: c5R(-.6, -.1), s: c5R(1, 3), step: function (p) { p.x += p.vx; p.y += p.vy; }, draw: function (p) { var k = p.t / p.life; c.save(); c.globalAlpha = .7 * Math.sin(k * Math.PI); c.fillStyle = '#F4DDB0'; c.beginPath(); c.arc(p.x, p.y, p.s, 0, 7); c.fill(); c.restore(); } }); },
+      clear: function () { P = []; lines = null; rays = null; hex = null; c.clearRect(0, 0, W, H); }
+    };
+    return api;
+  }
+
+var C5T = {
+  base: { n: 'Cinque', say: 'CINQUE!', tc: '#3BA7FF', tx: 'ti ha dato il cinque' },
+  oro: { n: 'Cinque d’oro', say: 'CINQUE D’ORO', tc: '#E0A81F', tx: 'ti ha dato un Cinque d’oro' },
+  fuoco: { n: 'Cinque di fuoco', say: 'CINQUE DI FUOCO', tc: '#E8402A', tx: 'ti ha dato un Cinque di fuoco' },
+  fulmine: { n: 'Cinque fulmine', say: 'CINQUE FULMINE', tc: '#1E6BFF', tx: 'ti ha dato un Cinque fulmine' },
+  nerd: { n: 'Cinque da secchione', say: 'CINQUE DA SECCHIONE', tc: '#1F9E57', tx: 'ti ha dato un Cinque da secchione' },
+  ritorno: { n: 'Il ritorno', say: 'IL RITORNO', tc: '#9C6B32', tx: 'ti ha dato il Cinque del ritorno' },
+  batt: { n: 'Cinque battuto', say: 'BATTUTO!', tc: '#E0A81F', tx: 'ha battuto il tuo cinque' },
+  leg: { n: 'Cinque leggendario', say: 'LEGGENDARIO', tc: '#8A4CFF', tx: 'ti ha dato un Cinque leggendario' },
+  beast: { n: 'Modalità bestia', say: 'MODALITÀ BESTIA', tc: '#FF5A1F', tx: 'è andato in modalità bestia per te' }
+};
+var C5HF = { base: [['#FFFFFF', 0], ['#CFE8FF', .6], ['#7CC4FF', 1]], oro: [['#FFF6CF', 0], ['#FFD34D', .45], ['#C98A0E', 1]], fuoco: [['#FFF1B0', 0], ['#FFA23D', .45], ['#E8402A', 1]], leg: [['#7CC4FF', 0], ['#B98CFF', .33], ['#FF5C8A', .66], ['#FFC94D', 1]], fulmine: [['#FFFFFF', 0], ['#9BF0FF', .4], ['#3B6BFF', 1]], nerd: [['#FFFFFF', 0], ['#E9FFE9', .5], ['#8EE6A8', 1]], ritorno: [['#FFF4DC', 0], ['#E8C38A', .5], ['#9C6B32', 1]] };
+var C5HG = { base: 'rgba(59,167,255,.9)', oro: 'rgba(255,201,77,.95)', fuoco: 'rgba(255,106,61,.95)', leg: 'rgba(185,140,255,.95)', fulmine: 'rgba(0,212,255,.95)', nerd: 'rgba(76,210,122,.9)', ritorno: 'rgba(232,195,138,.85)' };
+function c5Given(fid, k) { var p = P(); return p.fivesD && p.fivesD[fid] && p.fivesD[fid][k]; }
+function c5Can(f, k) { return !!f && k <= todayKey() && k >= addDays(todayKey(), -31) && (trainedOn(f, k) || fHwOn(f, k)); }
+/* che cinque esce: battuto se te l'aveva dato da poco; raro il leggendario; poi, a caso tra quelli che la giornata merita */
+function c5Kind(f, k) {
+  var p = P(), t = todayKey();
+  if (p.fiveIn && p.fiveIn[f.id] && Date.now() - p.fiveIn[f.id] < 7 * 864e5) return 'batt';
+  if (Math.random() < .05) return 'leg';
+  var c = [], mon = mondayOf(k), wk = 0, upto = 0, i, d;
+  for (i = 0; i < 7; i++) { d = addDays(mon, i); if (d <= t && trainedOn(f, d)) { wk++; if (d <= k) upto++; } }
+  if (wk >= 5) c.push('fulmine'); else if (upto >= 3) c.push('fuoco');
+  if (f.qh && f.qh[+k.slice(8)]) c.push('oro');
+  if (fHwOn(f, k)) c.push('nerd');
+  if (trainedOn(f, k)) { var last = null; for (i = 1; i <= 15; i++) { d = addDays(k, -i); if (f.real && d.slice(0, 7) !== k.slice(0, 7)) { last = f.lp || null; break; } if (trainedOn(f, d)) { last = d; break; } } if (last && daysBetween(last, k) > 14) c.push('ritorno'); }
+  return c.length ? c[Math.floor(Math.random() * c.length)] : 'base';
+}
+function daysBetween(a, b) { return Math.round((parseKey(b) - parseKey(a)) / 864e5); }
+function c5Commit(fid, k, kind) {
+  var f = friend(fid), p = P(); if (!f) return;
+  p.fivesD = p.fivesD || {}; p.fivesD[fid] = p.fivesD[fid] || {}; if (p.fivesD[fid][k]) return;
+  p.fivesD[fid][k] = kind; p.fives[fid] = mondayOf(todayKey()); p.nfive = (p.nfive || 0) + 1; p.fiveIn = p.fiveIn || {};
+  if (kind === 'batt') { p.nbat = (p.nbat || 0) + 1; delete p.fiveIn[fid]; }
+  Object.keys(p.fivesD).forEach(function (id) { Object.keys(p.fivesD[id]).forEach(function (d) { if (d < addDays(todayKey(), -60)) delete p.fivesD[id][d]; }); });
+  save();
+  if (f.real && cauth) { var sp = trainedOn(f, k) ? fSportOn(f, k) : null; authFresh().then(function () { return sbFetch('/rest/v1/fives', { method: 'POST', prefer: 'return=minimal', body: { from_id: cauth.uid, to_id: fid, week: mondayOf(k), day: k, sport: sp, kind: kind } }); }).catch(function () {}); }
+}
+function viewFDay(o, cls) {
+  var f = friend(o.fid); if (!f) { ui.ov = null; return ''; }
+  var k = o.k, sp = trainedOn(f, k) ? fSportOn(f, k) : null, hw = !sp && fHwOn(f, k), ph = fph[f.id] && fph[f.id][k], given = c5Given(f.id, k), c = sp ? SPORTS[sp].c : '#AEBBD3';
+  var corners = '<i class="c5-co a"></i><i class="c5-co b"></i><i class="c5-co c"></i><i class="c5-co d"></i>';
+  var inner = ph ? '<img class="c5-ph" alt="Foto della sessione" data-php="' + esc(ph.path) + '">' + corners + '<span class="c5-gn">[ GESTA · N° ' + (ph.n || '') + ' ]</span>'
+    : '<span class="c5-np" style="background:radial-gradient(120% 90% at 85% 0%,' + c + '55,transparent 60%),linear-gradient(160deg,#151a30,#0B1220)">' + (sp ? sportIc(sp, 220) : svg(HW.ic, '#AEBBD3', 220)) + '<span class="c5-npt"><b>' + (sp ? SPORTS[sp].name : 'Hard Study/Work') + '</b><span>' + (hw ? 'Giornata di testa' : 'Sessione di ' + DAYS_LONG[parseKey(k).getDay()].toLowerCase()) + '</span></span></span>' + corners;
+  var ring = function (cl) { return '<span class="c5-ring ' + cl + '"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="45" stroke="rgba(7,11,20,.6)" stroke-width="4" fill="none"/><circle class="tr" cx="48" cy="48" r="45" stroke="#7CC4FF" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283" transform="rotate(-90 48 48)"/><circle class="or" cx="48" cy="48" r="53" stroke="#FF8A4C" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="333" stroke-dashoffset="333" transform="rotate(-90 48 48)"/></svg><span class="hb">' + svg(PI.five, '#7CC4FF', 32) + '</span></span>'; };
+  var teach = !given && (P().nfive || 0) < 3;
+  var hint = given ? '<span class="c5-hint done">' + svg(PI.five, PGOLD, 15) + 'Cinque dato · ' + C5T[given].n + '</span>' : '<span class="c5-hint">' + svg(PI.five, '#8FA3C2', 15) + 'Tieni premuto per dare il cinque</span>';
+  var pill = f.qh && f.qh[+k.slice(8)] ? '<span class="c5-pill">Quest difficile ✓</span>' : ph && ph.verified ? '<span class="c5-pill ok">✓ Verificata</span>' : '';
+  return '<div class="' + cls + '" style="gap:10px">' + whead(f.n + ' · ' + DAYS_SHORT[parseKey(k).getDay()] + ' ' + niceDate(k), true) +
+    '<div class="c5m' + (given ? ' given' : '') + (teach ? '' : ' c5-used') + '" data-c5 data-v="' + f.id + '|' + k + '" tabindex="0" aria-label="Tieni premuto per dare il cinque a ' + esc(f.n) + '">' + inner +
+    '<span class="c5-inv">' + ring('') + '<span class="c5-tagi">Tieni premuto</span></span><canvas class="c5-fx"></canvas>' + ring('live') + C5GOR +
+    '<span class="c5-title"><span></span><small></small></span><span class="c5-wo"></span><i class="c5-lb t"></i><i class="c5-lb b"></i></div>' + hint +
+    '<div class="phfoot">' + (sp ? sportTag(sp) : '<span class="sptag" style="border-color:#AEBBD355;background:#AEBBD314">' + svg(HW.ic, '#AEBBD3', 20) + '<span>Hard Study/Work</span></span>') + pill + '</div></div>';
+}
+function c5Wire(media) {
+  media._w = 1;
+  var v = media.getAttribute('data-v').split('|'), fid = v[0], k = v[1], f = friend(fid); if (!f) return;
+  var live = media.querySelector('.c5-ring.live'), tr = live.querySelector('.tr'), orr = live.querySelector('.or'), hb = live.querySelector('.hb'), title = media.querySelector('.c5-title'), gor = media.querySelector('.c5-gor'), wo = media.querySelector('.c5-wo'), fx = C5FX(media.querySelector('.c5-fx'));
+  var t0 = 0, raf = 0, state = 'idle', lb = 0, px = 0, py = 0, lastSuck = 0, pend = null;
+  function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function shake(d) { media.style.setProperty('--sd', d + 's'); media.classList.remove('c5-shake'); void media.offsetWidth; media.classList.add('c5-shake'); }
+  function impact(n) { media.classList.add('c5-impact'); wo.classList.remove('on'); void wo.offsetWidth; wo.classList.add('on'); setTimeout(function () { media.classList.remove('c5-impact'); }, n || 90); }
+  function say(kd) { var t = C5T[kd]; title.style.setProperty('--tc', t.tc); var sp = title.querySelector('span'); sp.textContent = t.say; sp.style.fontSize = t.say.length > 16 ? '21px' : t.say.length > 13 ? '24px' : ''; title.querySelector('small').textContent = kd === 'beast' ? 'SEGRETO TROVATO' : 'A ' + f.n.toUpperCase(); title.classList.remove('on'); void title.offsetWidth; title.classList.add('on'); }
+  function hand(kd) {
+    var id = 'c5h' + Math.random().toString(36).slice(2, 8), st = C5HF[kd].map(function (s) { return '<stop offset="' + s[1] + '" stop-color="' + s[0] + '"/>'; }).join(''), d = PI.five.match(/d="([^"]+)"/)[1];
+    var el = document.createElement('div'); el.className = 'c5-hand' + (kd === 'leg' ? ' iri' : '') + (kd === 'fuoco' || kd === 'fulmine' ? ' hot' : '') + (kd === 'base' ? ' small' : '') + (kd === 'ritorno' ? ' slow' : '');
+    el.style.left = px + 'px'; el.style.top = py + 'px'; el.style.setProperty('--g', C5HG[kd]);
+    el.innerHTML = '<svg class="sm" viewBox="0 0 24 24"><path fill="' + C5HF[kd][1][0] + '" d="' + d + '"/></svg><svg class="hd" viewBox="0 0 24 24"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2=".6" y2="1">' + st + '</linearGradient></defs><path fill="url(#' + id + ')" stroke="#05060a" stroke-width=".9" stroke-linejoin="round" d="' + d + '"/><path d="M10.4 6v4.6M13.1 5v5.2M15.8 6.2v4.6" stroke="rgba(255,255,255,.75)" stroke-width=".6" stroke-linecap="round" fill="none"/>' +
+      (kd === 'nerd' ? '<g stroke="#05060a" stroke-width=".8" fill="rgba(210,245,255,.55)"><circle cx="11.3" cy="15.2" r="2.2"/><circle cx="16.3" cy="15.2" r="2.2"/><path d="M13.5 15h.6M9.1 14.6 8 13.8" fill="none"/></g><path d="M12.4 18.6q1.4 1 2.8 0" stroke="#05060a" stroke-width=".7" fill="none" stroke-linecap="round"/>' : '') + '</svg>';
+    media.appendChild(el); setTimeout(function () { el.remove(); }, kd === 'ritorno' ? 2600 : 1400);
+  }
+  function smear() { var W = fx.W(), d = PI.five.match(/d="([^"]+)"/)[1]; ['l', 'r'].forEach(function (s) { var el = document.createElement('div'); el.innerHTML = '<svg viewBox="0 0 24 24" style="width:128px;height:128px"><path fill="#FFD34D" stroke="#05060a" stroke-width=".9" stroke-linejoin="round" d="' + d + '"/></svg>'; el.style.cssText = 'position:absolute;z-index:6;left:' + (px - 64) + 'px;top:' + (py - 64) + 'px;pointer-events:none;filter:drop-shadow(0 0 12px rgba(255,201,77,.8));transition:transform .17s cubic-bezier(.6,0,.9,.4),opacity .4s .6s';
+    el.style.transform = 'translateX(' + (s === 'l' ? -W : W) + 'px) ' + (s === 'r' ? 'scaleX(-1)' : '') + ' rotate(-15deg)'; media.appendChild(el); void el.offsetWidth;
+    el.style.transform = 'translateX(' + (s === 'l' ? -40 : 40) + 'px) ' + (s === 'r' ? 'scaleX(-1)' : '') + ' rotate(-15deg)'; setTimeout(function () { el.style.opacity = '0'; }, 50); setTimeout(function () { el.remove(); }, 1200); }); }
+  function show(kd) {
+    fx.clearLines(); media.classList.add('c5-used'); live.classList.add('gone'); setTimeout(function () { live.classList.remove('on', 'gone'); }, 260);
+    if (kd === 'base') { impact(); shake(.3); fx.setLines({ n: 70, x: px, y: py, r0: 60, a: .55, col: '#fff', life: 10 }); fx.ring(px, py, '#7CC4FF', 12, 10); fx.ring(px, py, '#fff', 4, 7); fx.sparks(px, py, 26, ['#7CC4FF', '#fff', '#FFC94D'], 9); }
+    if (kd === 'oro') { impact(110); shake(.4); fx.rays(px, py); fx.setLines({ n: 90, x: px, y: py, r0: 50, a: .5, col: '#FFE38A', life: 12, mode: 'lighter' }); fx.ring(px, py, '#FFC94D', 16, 11); fx.sparks(px, py, 46, ['#FFC94D', '#FFE38A', '#FFF5D1', '#E0A81F'], 11, 'shard', .12); setTimeout(function () { fx.glint(px, py); }, 260); }
+    if (kd === 'fuoco') { impact(); shake(.35); fx.ring(px, py, '#FF7A3D', 14, 9); var n = 0, iv = setInterval(function () { for (var i = 0; i < 8; i++) fx.flame(px, py + 40, 22 + n * .6); if (n % 2) fx.ember(px, py); if (++n > 42) clearInterval(iv); }, 30); fx.sparks(px, py, 20, ['#FFB23D', '#FF5A1F', '#FFE08A'], 8, null, -.05); }
+    if (kd === 'fulmine') { impact(70); shake(.45); var bn = 0, bi = setInterval(function () { fx.bolt(px, py); wo.style.background = bn % 2 ? 'rgba(255,255,255,.55)' : 'rgba(155,240,255,.45)'; wo.classList.remove('on'); void wo.offsetWidth; wo.classList.add('on'); if (bn % 2) shake(.2); if (++bn > 4) { clearInterval(bi); wo.style.background = ''; } }, 110); fx.arcs(px, py, 70); fx.ring(px, py, '#00D4FF', 14, 11); fx.sparks(px, py, 30, ['#9BF0FF', '#fff', '#3B6BFF'], 11); }
+    if (kd === 'nerd') { impact(); shake(.3); media.classList.add('c5-chalk'); setTimeout(function () { media.classList.remove('c5-chalk'); }, 1100); fx.formulas(px, py); fx.ring(px, py, '#8EE6A8', 10, 8); }
+    if (kd === 'ritorno') { media.classList.add('c5-cine'); setTimeout(function () { media.classList.remove('c5-cine'); }, 2500); fx.dust(px, py); setTimeout(function () { impact(60); shake(.3); fx.ring(px, py, '#E8C38A', 8, 6); }, 900); }
+    if (kd === 'batt') { impact(80); shake(.25); setTimeout(function () { impact(80); shake(.4); fx.setLines({ n: 110, x: px, y: py, r0: 40, a: .7, col: '#fff', life: 14 }); fx.ring(px, py, '#FFC94D', 18, 12); fx.ring(px, py, '#fff', 6, 8); fx.sparks(px, py, 34, ['#FFC94D', '#fff'], 12); }, 170); smear(); }
+    if (kd === 'leg') { impact(120); shake(.4); media.classList.add('c5-chroma'); setTimeout(function () { media.classList.remove('c5-chroma'); }, 900); fx.hex(px, py); setTimeout(function () { fx.hex(px, py); }, 180); fx.sparks(px, py, 50, ['#7CC4FF', '#B98CFF', '#FF5C8A', '#FFC94D', '#fff'], 10, 'star', .02); fx.setLines({ n: 60, x: px, y: py, r0: 70, a: .35, col: '#B98CFF', life: 16, mode: 'lighter' }); }
+    if (kd === 'beast') { media.classList.add('c5-impact'); setTimeout(function () { media.classList.remove('c5-impact'); }, 160); shake(.7); fx.setLines({ n: 140, x: fx.W() / 2, y: fx.H() * .75, r0: 30, a: .6, col: '#FF8A4C', life: 40, mode: 'lighter', thick: 1.6 }); fx.ring(fx.W() / 2, fx.H() * .7, '#FF8A4C', 20, 12);
+      gor.classList.remove('on'); void gor.getBoundingClientRect(); gor.classList.add('on'); setTimeout(function () { shake(.5); fx.ring(fx.W() / 2, fx.H() * .5, '#FFB27A', 10, 9); }, 700); setTimeout(function () { shake(.4); }, 1300); }
+    if (kd !== 'batt' && kd !== 'beast') hand(kd);
+    say(kd); ding('ok');
+    vib(kd === 'beast' ? [80, 40, 80, 40, 160] : kd === 'batt' ? [30, 70, 50] : kd === 'leg' ? [20, 30, 20, 30, 70] : 40);
+  }
+  function commit(kd) { if (!pend) return; pend = null; c5Commit(fid, k, kd); setTimeout(function () { if (ui.ov && ui.ov.t === 'fday' && ui.ov.k === k) render(); }, kd === 'beast' ? 2700 : kd === 'ritorno' ? 2600 : 1700); }
+  function tick(now) {
+    var e = now - t0;
+    if (state === 'charge') {
+      var p = Math.min(1, e / 600); media.style.setProperty('--p', p); tr.setAttribute('stroke-dashoffset', (283 * (1 - p)).toFixed(1)); hb.style.transform = 'scale(' + (1 - p * .12) + ')';
+      if (now - lastSuck > 28) { fx.suck(px, py, p > .7 ? '#fff' : '#7CC4FF'); if (p > .4) fx.suck(px, py, '#7CC4FF'); lastSuck = now; }
+      fx.setLines({ n: 15 + p * 33, x: px, y: py, r0: 80, a: p * .22, col: '#fff', life: 2, hold: true });
+      if (now - lb > 140 - p * 95) { vib(6 + Math.round(p * 16)); lb = now; }
+      if (p >= 1) { state = 'snap'; media.classList.remove('c5-charging'); pend = c5Kind(f, k); show(pend); t0 = now; }
+    } else if (state === 'snap' && e > 500) {
+      live.classList.add('on'); live.classList.remove('gone'); var q = Math.min(1, (e - 500) / 1500); orr.setAttribute('stroke-dashoffset', (333 * (1 - q)).toFixed(1)); tr.setAttribute('stroke-dashoffset', '0'); tr.setAttribute('stroke', '#FF8A4C');
+      if (now - lastSuck > 30) { fx.suck(px, py, '#FF8A4C'); lastSuck = now; } if (now - lb > 100) { vib(10); lb = now; }
+      if (q >= 1) { state = 'done'; live.classList.remove('on'); show('beast'); commit('beast'); return; }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  function start(x, y) {
+    if (c5Given(fid, k) || state !== 'idle') { if (c5Given(fid, k)) toast('Il cinque per questa giornata l’hai già dato.'); return; }
+    cancelAnimationFrame(raf); fx.size(); px = x; py = y; live.style.left = x + 'px'; live.style.top = y + 'px';
+    tr.setAttribute('stroke', '#7CC4FF'); tr.setAttribute('stroke-dashoffset', '283'); orr.setAttribute('stroke-dashoffset', '333'); hb.style.transform = '';
+    live.classList.remove('gone'); live.classList.add('on'); media.classList.add('c5-busy', 'c5-charging'); state = 'charge'; t0 = performance.now(); lb = 0; lastSuck = 0; raf = requestAnimationFrame(tick);
+  }
+  function end() {
+    cancelAnimationFrame(raf); media.classList.remove('c5-busy', 'c5-charging'); media.style.setProperty('--p', 0); fx.clearLines();
+    if (state === 'charge') live.classList.remove('on');
+    else if (state === 'snap') { live.classList.add('gone'); setTimeout(function () { live.classList.remove('on', 'gone'); }, 260); commit(pend); }
+    state = 'idle';
+  }
+  media.addEventListener('pointerdown', function (e) { e.preventDefault(); var r = media.getBoundingClientRect(); try { media.setPointerCapture(e.pointerId); } catch (er) {} start(e.clientX - r.left, e.clientY - r.top); });
+  ['pointerup', 'pointercancel'].forEach(function (ev) { media.addEventListener(ev, function () { if (state === 'charge' || state === 'snap') end(); }); });
+  media.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  media.addEventListener('keydown', function (e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(media.clientWidth / 2, media.clientHeight / 2); } });
+  media.addEventListener('keyup', function (e) { if ((e.key === ' ' || e.key === 'Enter') && (state === 'charge' || state === 'snap')) end(); });
+}
+/* i cinque che hai ricevuto per una tua giornata */
+function c5RxRow(k) {
+  var l = (P() && P().fiveRx && P().fiveRx[k]) || []; if (!l.length) return '';
+  return '<div class="sess" style="border-color:' + PGOLD + '55">' + svg(PI.five, PGOLD, 26) + '<div class="meta"><b>' + (l.length === 1 ? 'Un cinque' : l.length + ' cinque') + '</b><span>' + l.map(function (x) { var f = friend(x[0]); return esc(f ? f.n : 'Un amico') + (x[1] && x[1] !== 'base' ? ' · ' + C5T[x[1]].n : ''); }).join(', ') + '</span></div></div>';
+}
+function c5Open(fid, k) { var f = friend(fid); if (!c5Can(f, k)) return false; ui.ov = { t: 'fday', fid: fid, k: k, back: ui.ov && ui.ov.t !== 'fday' ? ui.ov : null }; ding('open'); render(); return true; }
+function c5Last(f) { for (var i = 0; i < 8; i++) { var k = addDays(todayKey(), -i); if (trainedOn(f, k) && !c5Given(f.id, k)) return k; } return null; }
+var PA415 = {
+  fDay: function (v) { var a = v.split('|'); c5Open(a[0], a[1]); },
+  fDayLast: function (fid) { var f = friend(fid), k = f && c5Last(f); if (!k) { toast('Niente di nuovo: ' + (f ? f.n : 'il tuo amico') + ' non si è allenato negli ultimi giorni, o il cinque gliel’hai già dato.'); return; } c5Open(fid, k); }
+};
+for (var pk415 in PA415) A[pk415] = PA415[pk415];
+
 /* 4.9: «Condivisi con te», in cima alla Taverna. Restano 7 giorni, o fino a fine giornata dopo che li hai aperti */
 function shareCard(x) {
   var f = friend(x.from_id), nw = !x.opened_at;
@@ -4299,7 +4535,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.14.1';
+var APP_V = 'gesta-v4.15.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
