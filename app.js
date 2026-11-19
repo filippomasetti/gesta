@@ -440,6 +440,7 @@ function afterDone(k, before, s, kind) {
   ding('reward'); buzz([30, 60, 30]);
   if (badge) ui.wpop = { name: badge, n: wk, next: wk < 7 ? badgeOf(wk + 1, k) : '', at: Date.now() };
   openDetails(k, s.id, false); if (ui.ov) { ui.ov.done = { gain: gain, kind: kind, gn: gn }; render(); }
+  momDone(s.sport, gn, gain, kind === 'ok' && s.quest && DIFF[s.quest.diff] ? s.quest.diff : null);
 }
 /* 4.1: guanto dello stesso sport oggi, ancora da chiudere */
 /* 4.5.2: «Sto per iniziare» non dà punti: lo sport va in programma (tratteggiato) e si segna quando rispondi Fatto */
@@ -1104,7 +1105,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.15.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.16.0</span>';
   return h;
 }
 
@@ -2591,16 +2592,16 @@ var PA = {
     if (o.fid && sendBlock(o.fid)) { toast('Tre guanti a ' + friend(o.fid).n + ' questa settimana: è il massimo. Lunedì si riparte.'); return; }
     if (o.fid && chOpenToday(o.fid, gd)) { toast(gd === t ? 'Per oggi tra voi c’è già un guanto: uno al giorno. Accendi “Per un altro giorno” e scegline un altro.' : 'Quel giorno tra voi c’è già un guanto: uno al giorno. Scegline un altro.'); return; }
     if (o.fid && friend(o.fid) && friend(o.fid).real) { var fr0 = friend(o.fid), loc = { id: 'tmp-' + uid(), real: 1, from: 'me', to: o.fid, sp: o.sp, q: o.q.trim(), shared: o.sh, msg: o.msg, st: 'pending', day: gd, t: now };
-      P().ch.unshift(loc); save(); ui.ov = null; ding('ok'); render();
+      P().ch.unshift(loc); save(); ui.ov = null; ding('ok'); render(); momRocket('A ' + fr0.n.toUpperCase());
       chAct(authFresh().then(function () { return sbFetch('/rest/v1/challenges', { method: 'POST', prefer: 'return=minimal', body: { from_id: cauth.uid, to_id: o.fid, day: gd, sport: o.sp, quest: o.q.trim(), shared: !!o.sh, msg: o.msg || null, status: 'pending' } }); }), function () { toast('Guanto lanciato a ' + fr0.n + (gd === t ? '.' : ' per ' + dayShort(gd) + '.')); }, 'Non riesco a lanciare il guanto: controlla la connessione.');
       return; }
     var to = [o.fid], sent = 0;
     to.forEach(function (fid) { if (chOpenToday(fid, gd)) return; P().ch.unshift({ id: uid(), from: 'me', to: fid, sp: o.sp, q: o.q.trim(), shared: o.sh, msg: o.msg, st: 'pending', day: gd, t: now }); sent++; });
-    save(); ui.ov = null; ding('ok');
+    save(); ui.ov = null; ding('ok'); if (sent && o.fid && friend(o.fid)) momRocket('A ' + friend(o.fid).n.toUpperCase());
     toast(sent ? (o.fid ? 'Guanto lanciato a ' + friend(o.fid).n + '.' : 'Guanto lanciato a ' + sent + (sent === 1 ? ' amico' : ' amici') + ' della Gang.') : 'Oggi con loro c’è già un guanto aperto.');
   },
   five: function (arg) { var a = String(arg).split('|'); if (a[1] && c5Open(a[0], a[1])) return; A.fDayLast(a[0]); },
-  fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); ui.ov = null; A.fDayLast(l.f); },
+  fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); ui.ov = null; A.fDayLast(l.f); if (ui.ov && ui.ov.t === 'fday') { ui.ov.rx = 1; render(); } },
   phOpen: function (arg) { var a = arg.split('|'), back = ui.ov && ui.ov.t !== 'photo' ? ui.ov : null; ui.ov = { t: 'photo', k: a[0], sid: a[1], back: back }; ding('open'); render(); },
   phSh: function (arg) { var a = arg.split('|'), s = phSess(a[0], a[1]); if (!s || !s.ph) return; phShare(a[0], a[1], !s.ph.sh); ding('tap'); render(); },
   phDelAsk: function () { ui.ov.del = 1; render(); },
@@ -3657,6 +3658,152 @@ var PA414 = {
 };
 for (var pk414 in PA414) A[pk414] = PA414[pk414];
 /* ---------- 4.15: il Cinque, da capo. Si tiene premuto sulla giornata di un amico (foto o scheda): l'anello si carica, schiocca, e Gesta decide che cinque esce ---------- */
+/* ---------- 4.16: i momenti ----------
+   Calma quando la usi, esplosiva nei momenti: sessione segnata, quest superata, nuovo rango, guanto lanciato, vinto, «bello duro».
+   Uno strato sopra tutto, che non tocca la pagina sotto. MOM_ON = false per tornare a prima. */
+var MOM_ON = true;
+function momNote() {
+  var o = ui.ov; if (!o || o.t !== 'fnote' || !o.list) return; var id = o.list[o.i]; ui.momSeen = ui.momSeen || {}; if (!id || ui.momSeen[id]) return; ui.momSeen[id] = 1;
+  var l = P().letters.filter(function (x) { return x.id === id; })[0]; if (!l) return; var f = l.f ? friend(l.f) : null, n = f ? f.n.toUpperCase() : '';
+  if (l.k === 'won') momSeal(n ? 'DA ' + n : ''); else if (l.k === 'flost') momDrop(n ? n + ' NON CE L’HA FATTA' : '');
+}
+function momOk() { try { return MOM_ON && !!S && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
+var momL = null;
+function momLayer() {
+  if (momL && document.body.contains(momL.el)) return momL;
+  var el = document.createElement('div'); el.className = 'mom'; el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = '<span class="mom-dim"></span><i class="mom-cine t"></i><i class="mom-cine b"></i><canvas class="mom-sm"></canvas><div class="mom-obj"></div><canvas class="mom-fx"></canvas><span class="mom-t"><span></span><small></small></span><span class="mom-wo"></span>';
+  document.body.appendChild(el);
+  momL = { el: el, fx: C5FX(el.querySelector('.mom-fx')), sm: null, obj: el.querySelector('.mom-obj'), t: el.querySelector('.mom-t'), wo: el.querySelector('.mom-wo') };
+  return momL;
+}
+function momKit() {
+  var L = momLayer(); L.fx.size(); L.fx.clear(); L.obj.innerHTML = ''; L.el.classList.remove('dim', 'cine'); clearTimeout(L.tm);
+  var W = L.fx.W(), H = L.fx.H();
+  return {
+    L: L, W: W, H: H, fx: L.fx,
+    impact: function (n) { root.classList.add('mom-imp'); L.wo.classList.remove('on'); void L.wo.offsetWidth; L.wo.classList.add('on'); setTimeout(function () { root.classList.remove('mom-imp'); }, n || 80); },
+    shake: function (d) { root.style.setProperty('--sd', d + 's'); root.classList.remove('mom-shake'); void root.offsetWidth; root.classList.add('mom-shake'); setTimeout(function () { root.classList.remove('mom-shake'); }, d * 1000 + 50); },
+    say: function (tx, sub, tc, top) { var t = L.t; t.style.setProperty('--tc', tc); t.style.top = top || ''; var s = t.querySelector('span'); s.textContent = tx; s.style.fontSize = tx.length > 17 ? '22px' : tx.length > 13 ? '25px' : ''; t.querySelector('small').textContent = sub || ''; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); },
+    end: function (ms) { L.tm = setTimeout(function () { L.el.classList.remove('dim', 'cine'); setTimeout(function () { L.obj.innerHTML = ''; }, 400); }, ms); }
+  };
+}
+/* fumo morbido per il razzo */
+function momSmoke(cv) {
+  var c = cv.getContext('2d'), P = [], raf = 0, r = cv.getBoundingClientRect(), dp = Math.min(2, window.devicePixelRatio || 1), W = r.width, H = r.height; cv.width = W * dp; cv.height = H * dp; c.setTransform(dp, 0, 0, dp, 0, 0);
+  function loop() { c.clearRect(0, 0, W, H); for (var i = P.length - 1; i >= 0; i--) { var p = P[i]; p.t++; if (p.t > p.life) { P.splice(i, 1); continue; } p.x += p.vx; p.y += p.vy; p.vx *= .965; p.vy = p.vy * .965 - .02; p.r += p.g; var k = p.t / p.life, a = p.a * Math.min(1, k * 8) * (1 - k);
+    var g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r), col = p.t < 10 ? '255,170,90' : p.col; g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(.6, 'rgba(' + col + ',' + (a * .55) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, p.r, 0, 7); c.fill(); }
+    raf = P.length ? requestAnimationFrame(loop) : 0; }
+  return function (x, y, vx, vy, r0, g, life, a) { P.push({ x: x, y: y, vx: vx, vy: vy, r: r0, g: g, life: life, a: a, t: 0, col: Math.random() < .5 ? '150,164,188' : '120,132,156' }); if (!raf) raf = requestAnimationFrame(loop); };
+}
+var MOM_GLOVE = 'M8 20.5v-4.2L4.8 12.6c-.9-1.1.5-2.6 1.6-1.7L8.6 13V5.6a1.3 1.3 0 0 1 2.6 0v5.6V4.3a1.3 1.3 0 0 1 2.6 0v6.9V5.3a1.3 1.3 0 0 1 2.6 0v6.4V8a1.3 1.3 0 0 1 2.6 0v7.2c0 2.6-1.4 4.2-3.4 5.3Z';
+function momGlove(id, c1, c2) { return '<svg viewBox="0 0 24 24" width="100%" height="100%"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient></defs><path d="' + MOM_GLOVE + '" fill="url(#' + id + ')" stroke="#05060a" stroke-width=".9" stroke-linejoin="round"/><path d="M7.6 20.5h9.2" stroke="#05060a" stroke-width="1.4" stroke-linecap="round"/><path d="M10.4 6v4.6M13.1 5v5.2M15.8 6.2v4.6" stroke="rgba(255,255,255,.7)" stroke-width=".6" stroke-linecap="round"/></svg>'; }
+
+/* sessione segnata e quest superata: un colpo solo, del colore dello sport o della difficoltà */
+function momDone(sp, gn, gain, diff) {
+  if (!momOk()) return;
+  setTimeout(function () {
+    var K = momKit(), cx = K.W / 2, cy = K.H * .4, q = !!diff, col = q ? DIFF[diff].c : (SPORTS[sp] ? SPORTS[sp].c : '#7CC4FF'), hard = diff === 'hard', easy = diff === 'easy';
+    K.impact(hard ? 100 : 70); K.shake(hard ? .4 : easy ? .2 : .3); buzz(hard ? [30, 50, 60] : 35);
+    if (hard) K.fx.rays(cx, cy);
+    K.fx.setLines({ n: easy ? 40 : q ? 80 : 60, x: cx, y: cy, r0: 60, a: easy ? .3 : .45, col: col, life: 12, mode: 'lighter' });
+    K.fx.ring(cx, cy, col, 12, 9); K.fx.ring(cx, cy, '#fff', 4, 6); K.fx.sparks(cx, cy, hard ? 40 : 24, [col, '#fff'], hard ? 11 : 8, hard ? 'shard' : null, .06);
+    var pts = gain > 0 ? ' · +' + num(gain) + (gain === 1 ? ' PUNTO' : ' PUNTI') : '';
+    if (q) K.say('QUEST SUPERATA', DIFF[diff].label.toUpperCase() + pts, col, '38%');
+    else K.say('GESTA N° ' + gn, (SPORTS[sp] ? SPORTS[sp].name.toUpperCase() : '') + pts, col, '38%');
+  }, 120);
+}
+/* nuovo rango: bande da cinema, l'esagono al centro si carica, colpo, nuova lettera */
+function momRank(from, r, plus) {
+  if (!momOk()) return false;
+  var K = momKit(), cx = K.W / 2, cy = K.H * .42, gold = r === 'S' || plus, nc = gold ? PGOLD : '#7CC4FF', fr = from >= 0 ? RLET[Math.floor(from / 2)] : 'E', fp = from >= 0 ? from % 2 === 1 : false;
+  K.L.el.classList.add('dim', 'cine'); root.classList.add('mom-hold'); setTimeout(function () { root.classList.remove('mom-hold'); }, 2300);
+  var big = document.createElement('div'); big.className = 'mom-big'; big.innerHTML = rkHex(fr, 150, fp); big.style.left = cx + 'px'; big.style.top = cy + 'px'; K.L.obj.appendChild(big);
+  var t0 = performance.now() + 450, CH = 1150, done = false;
+  (function step(now) {
+    var el = now - t0; if (el < 0) { requestAnimationFrame(step); return; }
+    if (el < CH) {
+      var k = el / CH, a = k * k * 6;
+      big.style.transform = 'translate(-50%,-50%) translate(' + c5R(-a, a) + 'px,' + c5R(-a, a) + 'px)'; big.style.filter = 'drop-shadow(0 0 ' + (8 + k * 30) + 'px #3BA7FF)';
+      for (var i = 0; i < 1 + (k * 3 | 0); i++) K.fx.suck(cx, cy, i % 2 ? '#fff' : '#3BA7FF');
+      if ((el / 330 | 0) !== ((el - 17) / 330 | 0)) { K.fx.ring(cx, cy, '#3BA7FF', 3, 5); buzz(10 + (k * 30 | 0)); }
+      requestAnimationFrame(step); return;
+    }
+    if (done) return; done = true;
+    big.innerHTML = rkHex(r, 150, plus); big.style.transform = 'translate(-50%,-50%)'; big.style.filter = 'drop-shadow(0 0 30px ' + nc + ')'; big.classList.add('pop');
+    K.impact(130); K.shake(.6); buzz([80, 40, 140]); rankSound();
+    K.fx.rays(cx, cy); K.fx.hex(cx, cy); K.fx.ring(cx, cy, '#fff', 6, 12); K.fx.ring(cx, cy, nc, 16, 8);
+    K.fx.sparks(cx, cy, 50, [nc, '#fff', gold ? '#FF9A3D' : '#3BA7FF'], 12, 'shard', .05);
+    K.fx.setLines({ n: 110, x: cx, y: cy, r0: 90, a: .5, col: nc, life: 16, mode: 'lighter' });
+    if (gold) { var fl = setInterval(function () { K.fx.flame(cx, cy + 70, 60); K.fx.ember(cx, cy + 40); }, 30); setTimeout(function () { clearInterval(fl); }, 1400); setTimeout(function () { K.fx.glint(cx, cy); }, 500); }
+    K.say('RANGO ' + r + (plus ? '+' : ''), MONTHS[new Date().getMonth()].toUpperCase(), gold ? '#E0A81F' : '#1F6FD0', '64%');
+    setTimeout(function () { big.style.transition = 'opacity .35s, transform .35s'; big.style.opacity = '0'; big.style.transform = 'translate(-50%,-50%) scale(.8)'; }, 2000);
+    K.end(2050);
+  })(performance.now());
+  return true;
+}
+/* guanto lanciato: fumo dal basso, trema sulla fiamma, parte a cannone un po' storto */
+function momRocket(sub) {
+  if (!momOk()) return;
+  setTimeout(function () {
+    var K = momKit(), sm = momSmoke(K.L.el.querySelector('.mom-sm')), gx = K.W / 2, gy = K.H * .62, base = gy + 52;
+    var g = document.createElement('div'); g.className = 'mom-glv'; g.style.left = gx + 'px'; g.style.top = gy + 'px'; g.innerHTML = momGlove('mgr' + Date.now(), '#FFE7A8', '#E09A1F'); K.L.obj.appendChild(g);
+    var t0 = performance.now(), CH = 1100, FL = 700, launched = false;
+    buzz([20, 30, 20, 30, 20, 30, 40, 30, 60]);
+    (function step(now) {
+      var el = now - t0;
+      if (el < CH) {
+        var k = el / CH, a = 1 + k * k * 5;
+        g.style.transform = 'translate(-50%,-50%) translate(' + c5R(-a, a) + 'px,' + c5R(-a * .6, a * .6) + 'px) rotate(' + c5R(-a * .5, a * .5) + 'deg)';
+        for (var i = 0; i < 1 + (k * 1.6 | 0); i++) { var side = Math.random() < .5 ? -1 : 1; sm(gx + c5R(-10, 10), base + c5R(0, 8), side * c5R(.6, 1.5 + k * 4.5), c5R(-.6, .2), c5R(8, 13), c5R(.35, .7 + k * .6), c5R(45, 75) | 0, .22 + k * .14); }
+        if (k > .2) K.fx.flame(gx, base - 4, 6 + k * 6);
+        requestAnimationFrame(step); return;
+      }
+      if (!launched) {
+        launched = true; K.impact(70); K.shake(.35); buzz(60);
+        for (var j = 0; j < 30; j++) { var an = c5R(Math.PI * .95, Math.PI * 2.05), v = c5R(3, 9); sm(gx, base, Math.cos(an) * v, Math.sin(an) * v * .35 - .4, c5R(12, 18), c5R(.6, 1.1), c5R(60, 95) | 0, .34); }
+        K.fx.ring(gx, base, PGOLD, 12, 10); K.fx.sparks(gx, base, 26, [PGOLD, '#FF7A2A', '#fff'], 10);
+        K.fx.setLines({ n: 90, x: K.W * .95, y: -K.H * .2, r0: 40, a: .45, col: PGOLD, life: 18, mode: 'lighter', thick: 1.2 });
+        K.say('GUANTO LANCIATO', sub, '#E0A81F', '30%');
+      }
+      var u = Math.min(1, (el - CH) / FL), e2 = u * u * (3 - 2 * u) * .3 + u * u * .7, dx = 230 * e2 + Math.sin(u * 9) * 10 * (1 - u), dy = -(K.H * .95) * e2, rot = 14 + 10 * u;
+      g.style.transform = 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(' + (1 + u * .25) + ')';
+      var tx = gx + dx - Math.sin(rot * Math.PI / 180) * 52, ty = base + dy + 6;
+      sm(tx + c5R(-5, 5), ty + c5R(-4, 4), c5R(-.8, .8), c5R(.8, 2), c5R(6, 10), c5R(.4, .8), c5R(35, 60) | 0, .3);
+      K.fx.flame(tx, ty, 5); if (Math.random() < .5) K.fx.ember(tx, ty);
+      if (u < 1) requestAnimationFrame(step); else g.remove();
+    })(t0);
+  }, 150);
+}
+/* sfida superata: il sigillo d'oro che si stampa */
+function momSeal(sub) {
+  if (!momOk()) return;
+  setTimeout(function () {
+    var K = momKit(), cx = K.W / 2, cy = K.H * .42;
+    var s = document.createElement('div'); s.className = 'mom-seal'; s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.innerHTML = '<svg viewBox="0 0 100 100" width="100%" height="100%"><defs><radialGradient id="mwx" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFE38A"/><stop offset=".6" stop-color="#E0A81F"/><stop offset="1" stop-color="#8A5A08"/></radialGradient></defs>' +
+      '<path d="M50 4 C60 4 64 10 72 12 C80 14 88 18 90 28 C92 36 96 42 96 50 C96 58 90 64 90 72 C88 82 80 86 72 88 C64 90 60 96 50 96 C40 96 36 90 28 88 C20 86 12 82 10 72 C8 64 4 58 4 50 C4 42 10 36 10 28 C12 18 20 14 28 12 C36 10 40 4 50 4Z" fill="url(#mwx)" stroke="#05060a" stroke-width="2.4"/>' +
+      '<circle cx="50" cy="50" r="31" fill="none" stroke="rgba(90,55,0,.6)" stroke-width="2"/><g transform="translate(29 27) scale(1.75)" fill="none" stroke="rgba(70,40,0,.85)" stroke-width="1.3" stroke-linejoin="round"><path d="' + MOM_GLOVE + '"/></g><path d="M24 30 Q30 20 42 16" stroke="rgba(255,255,255,.65)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+    K.L.obj.appendChild(s); void s.offsetWidth; s.classList.add('on');
+    setTimeout(function () { K.impact(100); K.shake(.45); buzz([40, 50, 80]); K.fx.rays(cx, cy); K.fx.ring(cx, cy, PGOLD, 18, 12); K.fx.sparks(cx, cy, 40, [PGOLD, '#FFE38A', '#fff'], 11, 'shard', .1); K.say('SFIDA SUPERATA', sub, '#E0A81F', '14%'); }, 260);
+    setTimeout(function () { s.classList.add('out'); }, 1700);
+    K.end(2300);
+  }, 200);
+}
+/* «sei stato bello duro»: il guanto cade, rimbalza, un po' di polvere */
+function momDrop(sub) {
+  if (!momOk()) return;
+  setTimeout(function () {
+    var K = momKit(), cx = K.W / 2, cy = K.H * .42;
+    var d = document.createElement('div'); d.className = 'mom-drop'; d.style.left = cx + 'px'; d.style.top = cy + 'px'; d.innerHTML = momGlove('mgd' + Date.now(), '#C9D3E3', '#5A6B88'); K.L.obj.appendChild(d); void d.offsetWidth; d.classList.add('on');
+    function dust(n) { for (var i = 0; i < n; i++) { var a = Math.PI + Math.random() * Math.PI; K.fx.sparks(cx + Math.cos(a) * 10, cy + 90, 1, ['#8FA3C2', '#C9B79A'], 1 + Math.random() * 3.5, null, .08); } }
+    setTimeout(function () { buzz(25); K.shake(.25); dust(22); K.fx.dust(cx, cy + 60); }, 480);
+    setTimeout(function () { buzz(12); dust(10); }, 840);
+    setTimeout(function () { K.say('SEI STAT' + gw('O', 'A') + ' BELL' + gw('O', 'A') + ' DUR' + gw('O', 'A'), sub, '#B07A4A', '56%'); }, 560);
+    K.end(1500);
+  }, 200);
+}
+
 function c5R(a, b) { return a + Math.random() * (b - a); }
 var C5GOR = '<svg class="c5-gor" viewBox="0 0 200 200" aria-hidden="true"><defs>' +
     '<linearGradient id="c5fur" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3d4f"/><stop offset=".55" stop-color="#1b1d28"/><stop offset="1" stop-color="#0c0d14"/></linearGradient>' +
@@ -3792,7 +3939,7 @@ function viewFDay(o, cls) {
   var inner = ph ? '<img class="c5-ph" alt="Foto della sessione" data-php="' + esc(ph.path) + '">' + corners + '<span class="c5-gn">[ GESTA · N° ' + (ph.n || '') + ' ]</span>'
     : '<span class="c5-np" style="background:radial-gradient(120% 90% at 85% 0%,' + c + '55,transparent 60%),linear-gradient(160deg,#151a30,#0B1220)">' + (sp ? sportIc(sp, 220) : svg(HW.ic, '#AEBBD3', 220)) + '<span class="c5-npt"><b>' + (sp ? SPORTS[sp].name : 'Hard Study/Work') + '</b><span>' + (hw ? 'Giornata di testa' : 'Sessione di ' + DAYS_LONG[parseKey(k).getDay()].toLowerCase()) + '</span></span></span>' + corners;
   var ring = function (cl) { return '<span class="c5-ring ' + cl + '"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="45" stroke="rgba(7,11,20,.6)" stroke-width="4" fill="none"/><circle class="tr" cx="48" cy="48" r="45" stroke="#7CC4FF" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283" transform="rotate(-90 48 48)"/><circle class="or" cx="48" cy="48" r="53" stroke="#FF8A4C" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="333" stroke-dashoffset="333" transform="rotate(-90 48 48)"/></svg><span class="hb">' + svg(PI.five, '#7CC4FF', 32) + '</span></span>'; };
-  var teach = !given && (P().nfive || 0) < 3;
+  var teach = !given && ((P().nfive || 0) < 3 || o.rx);
   var hint = given ? '<span class="c5-hint done">' + svg(PI.five, PGOLD, 15) + 'Cinque dato · ' + C5T[given].n + '</span>' : '<span class="c5-hint">' + svg(PI.five, '#8FA3C2', 15) + 'Tieni premuto per dare il cinque</span>';
   var pill = f.qh && f.qh[+k.slice(8)] ? '<span class="c5-pill">Quest difficile ✓</span>' : ph && ph.verified ? '<span class="c5-pill ok">✓ Verificata</span>' : '';
   return '<div class="' + cls + '" style="gap:10px">' + whead(f.n + ' · ' + DAYS_SHORT[parseKey(k).getDay()] + ' ' + niceDate(k), true) +
@@ -3837,7 +3984,8 @@ function c5Wire(media) {
     say(kd); ding('ok');
     vib(kd === 'beast' ? [80, 40, 80, 40, 160] : kd === 'batt' ? [30, 70, 50] : kd === 'leg' ? [20, 30, 20, 30, 70] : 40);
   }
-  function commit(kd) { if (!pend) return; pend = null; c5Commit(fid, k, kd); setTimeout(function () { if (ui.ov && ui.ov.t === 'fday' && ui.ov.k === k) render(); }, kd === 'beast' ? 2700 : kd === 'ritorno' ? 2600 : 1700); }
+  function commit(kd) { if (!pend) return; pend = null; c5Commit(fid, k, kd); var auto = !media.querySelector('.c5-ph') || (ui.ov && ui.ov.rx);
+    setTimeout(function () { var o = ui.ov; if (!o || o.t !== 'fday' || o.k !== k) return; if (auto) ui.ov = o.back || null; render(); }, kd === 'beast' ? 2700 : kd === 'ritorno' ? 2600 : 1700); }
   function tick(now) {
     var e = now - t0;
     if (state === 'charge') {
@@ -4389,7 +4537,8 @@ function render() {
     if (medalDirty) { noteMid(); rankCheck(); titleCheck(); checkMedals(); }
     if (ui.ov && ui.ov.t === 'reward') { var ro = ui.ov; ro.items = ro.items || []; if (ui.tq) { ro.tt = ui.tq.t; ui.tq = null; } if (ui.mq && ui.mq.length) { ui.mq.forEach(function (q) { ro.items.push(q); }); ui.mq = []; ui.mqTot = 0; } }
     if (!ui.ov && !ui.rkq && ui.tq) { ui.ov = { t: 'newtitle', tt: ui.tq.t, why: ui.tq.why, was: ui.tq.was, k: ui.tq.t }; ui.tq = null; ding('reward'); }
-    if (!ui.ov && ui.rkq) { ui.ov = { t: 'rankup', r: ui.rkq.r, plus: ui.rkq.plus, from: ui.rkq.from === undefined ? -1 : ui.rkq.from, k: ui.rkq.r + ui.rkq.plus + Date.now() }; ui.rkq = null; ding('open'); buzz([15, 60, 15, 60, 15]); }
+    if (!ui.ov && ui.rkq) { ui.ov = { t: 'rankup', r: ui.rkq.r, plus: ui.rkq.plus, from: ui.rkq.from === undefined ? -1 : ui.rkq.from, k: ui.rkq.r + ui.rkq.plus + Date.now() }; ui.rkq = null; ding('open');
+      if (momOk()) { var rq = ui.ov; rq.br = 1; setTimeout(function () { momRank(rq.from, rq.r, rq.plus); }, 40); } else buzz([15, 60, 15, 60, 15]); }
     if (!ui.ov && ui.mq && ui.mq.length) { if (!ui.mqTot || ui.mqN >= ui.mqTot) { ui.mqTot = ui.mq.length; ui.mqN = 0; } var q = ui.mq.shift(); ui.mqN++; ui.ov = { t: 'medal', id: q.id, tr: q.t, n: ui.mqN, tot: ui.mqTot }; if (!ui.mq.length) { ui.mqTot = 0; } medalSound(); }
     gloveQueue(); lateQueue(); pushAsk();
     var body = ui.screen === 'party' ? viewParty() : ui.screen === 'friend' ? viewFriend() : ui.screen === 'letters' ? viewLetters() : ui.screen === 'pfriends' ? viewPList('f') : ui.screen === 'pgangs' ? viewPList('g') : ui.screen === 'psettings' ? viewPSettings() : ui.screen === 'numeri' ? viewNumeri() : ui.screen === 'oggi' ? viewOggi() : ui.screen === 'fonti' ? viewFonti() : ui.screen === 'gang' ? viewGang() : ui.screen === 'sfide' ? viewSfide() : ui.screen === 'stato' ? viewStato() : ui.screen === 'settings' ? viewSettings() : ui.screen === 'bacheca' ? viewBacheca() : viewHome();
@@ -4408,6 +4557,7 @@ function render() {
   fitLegend(); fitCalendar(); fitTitles(); fitStato(); fitParty(); syncNav();
   var gcN = root.querySelector('.win.anim .gcount'); if (gcN && +gcN.getAttribute('data-from') < +gcN.getAttribute('data-to')) setTimeout(function () { gcN.textContent = gcN.getAttribute('data-to'); gcN.classList.add('gbump'); }, 950);
   if (S) phHydrate();
+  if (S) momNote();
   if (S) { guideStart(); if (!ui.coach && (!GUIDE[ui.screen] || guideSeen(ui.screen))) tipStart(); guideDraw(); }
   var k2 = root.querySelector('[data-keep]'); if (k2 && keep) k2.scrollTop = keepTop;
   var m2 = root.querySelector('.scroller'); if (m2 && main) m2.scrollTop = mainTop;
@@ -4535,7 +4685,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.15.0';
+var APP_V = 'gesta-v4.16.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
@@ -4552,5 +4702,5 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     swPending = true;
   });
 }
-window.__sistema = { get state() { return S; }, ui: ui, A: A, rkHex: rkHex, render: function () { render(); } };
+window.__sistema = { get state() { return S; }, ui: ui, A: A, rkHex: rkHex, mom: { done: momDone, rank: momRank, rocket: momRocket, seal: momSeal, drop: momDrop }, render: function () { render(); } };
 }, 0); });

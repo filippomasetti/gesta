@@ -604,6 +604,41 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 .phthumb{appearance:none;border:0;padding:0;width:40px;height:40px;border-radius:9px;overflow:hidden;flex:0 0 auto;background:#0E1A30;position:relative;cursor:pointer}
 .phthumb img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.55) brightness(.95)}
 .phadd{width:40px;height:40px;border-radius:9px;border:1px dashed rgba(124,196,255,.55);display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer}
+/* 4.16 · i momenti */
+.mom{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:hidden}
+.mom canvas{position:absolute;inset:0;width:100%;height:100%}
+.mom-sm{z-index:2}.mom-obj{position:absolute;inset:0;z-index:3}.mom-fx{z-index:4}
+.mom-dim{position:absolute;inset:0;background:rgba(3,6,12,.86);opacity:0;transition:opacity .35s;z-index:1}
+.mom.dim .mom-dim{opacity:1}
+.mom-cine{position:absolute;left:0;right:0;height:0;background:#000;z-index:1;transition:height .35s cubic-bezier(.2,.8,.2,1)}
+.mom-cine.t{top:0}.mom-cine.b{bottom:0}
+.mom.cine .mom-cine{height:calc(env(safe-area-inset-top,0px) + 64px)}
+.mom-wo{position:absolute;inset:0;background:#fff;opacity:0;z-index:6}
+.mom-wo.on{animation:momwo .16s steps(2,end)}
+@keyframes momwo{0%{opacity:.9}100%{opacity:0}}
+.mom-t{position:absolute;left:0;right:0;top:38%;text-align:center;z-index:7;opacity:0}
+.mom-t span{display:inline-block;font:italic 900 30px/1 var(--fd);letter-spacing:1px;color:#fff;-webkit-text-stroke:2px #000;paint-order:stroke fill;text-shadow:4px 4px 0 var(--tc,#3BA7FF);transform:skewX(-10deg);white-space:nowrap}
+.mom-t small{display:block;margin-top:8px;font:800 10.5px/12px var(--fd);letter-spacing:3px;color:#fff;text-shadow:0 1px 4px #000}
+.mom-t.on{animation:momslam 1.7s cubic-bezier(.2,1.2,.3,1) forwards}
+@keyframes momslam{0%{opacity:0;transform:scale(2.2);filter:blur(6px)}10%{opacity:1;transform:scale(.94);filter:blur(0)}16%{transform:scale(1.04)}22%,80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-10px)}}
+#app.mom-hold .veil{opacity:0!important;transition:none}
+#app .veil{transition:opacity .4s}
+#app.mom-imp{filter:invert(1) grayscale(1) contrast(2.4)}
+#app.mom-shake{animation:momshake var(--sd,.35s) cubic-bezier(.36,.07,.19,.97)}
+@keyframes momshake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-7px,3px)}40%,60%{transform:translate(7px,-3px)}}
+.mom-big{position:absolute;transform:translate(-50%,-50%);animation:momin .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes momin{0%{opacity:0;scale:.3}100%{opacity:1;scale:1}}
+.mom-big.pop{animation:mompop .6s cubic-bezier(.2,1.6,.4,1)}
+@keyframes mompop{0%{scale:1}35%{scale:1.32}100%{scale:1}}
+.mom-glv{position:absolute;width:130px;height:130px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 16px rgba(255,201,77,.8));z-index:5}
+.mom-seal{position:absolute;width:170px;height:170px;margin:-85px 0 0 -85px;opacity:0}
+.mom-seal.on{animation:momseal .55s cubic-bezier(.2,1.4,.3,1) forwards}
+@keyframes momseal{0%{transform:scale(2.6) rotate(-25deg);opacity:0}45%{transform:scale(.9) rotate(4deg);opacity:1}65%{transform:scale(1.05) rotate(-2deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.mom-seal.out{animation:momsout .5s ease-in forwards}
+@keyframes momsout{0%{opacity:1}100%{transform:scale(.8);opacity:0}}
+.mom-drop{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px}
+.mom-drop.on{animation:momdrop 1.2s cubic-bezier(.3,0,.4,1) forwards}
+@keyframes momdrop{0%{transform:translateY(-420px) rotate(-30deg)}40%{transform:translateY(40px) rotate(12deg) scale(1.1,.8)}55%{transform:translateY(-30px) rotate(-6deg) scale(.95,1.05)}70%{transform:translateY(40px) rotate(4deg) scale(1.05,.92)}80%{transform:translateY(28px) rotate(0)}100%{transform:translateY(40px) rotate(-90deg);opacity:0}}
 </style>
 </head>
 <body>
@@ -632,6 +667,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.15.0" defer></script>
+<script src="app.js?v=4.16.0" defer></script>
 </body>
 </html>
