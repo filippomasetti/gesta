@@ -451,6 +451,15 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 .eye{width:44px;height:44px;padding:0;border:none;background:none;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer}
 .found{display:flex;align-items:center;gap:12px;padding:10px;border-color:#9BE15D55;background:rgba(155,225,93,.06);flex:0 0 auto}
 .fchips{display:flex;flex-wrap:wrap;gap:6px}
+.nwrap{position:relative}
+.nwrap .nitem{position:relative;z-index:1;transition:transform .2s ease-out}
+.nact{position:absolute;top:0;bottom:0;right:0;display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .15s}
+.nwrap.open .nact,.nwrap.drag .nact{opacity:1}
+.nwrap.open .nlink{pointer-events:none}
+.nact button{width:66px;height:100%;padding:0;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:600 11px/14px var(--fb);color:var(--soft);cursor:pointer}
+.nai{width:44px;height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--raised);display:flex;align-items:center;justify-content:center}
+.phfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+.sptag{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 14px 0 10px;border:1px solid var(--line);border-radius:10px;font:600 15px/20px var(--fd);letter-spacing:.5px;color:var(--ink)}
 .fslot{height:62px;flex:0 0 auto;display:flex;align-items:center}
 .fslot>.found{width:100%;height:100%}
 .fslot>.hint{width:100%;text-align:center}
@@ -550,6 +559,6 @@ textarea.inp{height:80px;padding:10px 14px;font-size:15px;resize:none}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.13.0" defer></script>
+<script src="app.js?v=4.14.0" defer></script>
 </body>
 </html>
