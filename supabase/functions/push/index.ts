@@ -48,7 +48,7 @@ async function messaggi(p: any): Promise<Msg[]> {
   return out;
 }
 
-const DEF: Record<string, boolean> = { glove: true, won: true, req: true, gang: true, five: false, share: true };
+const DEF: Record<string, boolean> = { glove: true, won: true, req: true, gang: true, five: true, share: true };
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-hook-secret") !== Deno.env.get("HOOK_SECRET")) return new Response("non autorizzato", { status: 401 });
