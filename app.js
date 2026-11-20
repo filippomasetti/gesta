@@ -227,10 +227,12 @@ function thConv(r, g, b, a, fill) {
     var ac = P.acc(l); return thOut(ac[0], a < .45 ? a * ac[1] : a);
   }
   if (l < .34 && s < .7) return thOut(P.bg(l), a);
-  if (s < .4 && l < .7) return thOut(thRgb(P.nh, .06, Math.max(.3, Math.min(.82, 1.06 - l))), a);
-  if (l >= .7 && (s < .6 || l > .9)) return thOut(thRgb(P.nh, .18, Math.max(.14, Math.min(.6, 1.12 - l))), a);
+  if (s < .4 && l < .7) return thOut(thRgb(P.nh, P.ns1 || .06, Math.max(.3, Math.min(.82, 1.06 - l))), a);
+  if (l >= .7 && (s < .6 || l > .9)) return thOut(thRgb(P.nh, P.ns2 || .18, Math.max(.14, Math.min(.6, 1.12 - l))), a);
   return thOut(thRgb(h, s * .82, a >= .6 ? Math.min(l, P.mid) : Math.min(l, .5)), a);
 }
+/* un bagliore è un'ombra senza spostamento e con sfocatura: 0 0 8px colore (anche dentro drop-shadow) */
+var thGlow = /(^|[:,(]\s*|\s)(?:inset\s+)?0(?:px)?\s+0(?:px)?\s+\d+(?:\.\d+)?px(?:\s+-?\d+(?:\.\d+)?px)?\s+(?:#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|var\(--[a-z0-9-]+\))/g;
 var thRe = /(url\(|href="|&)?#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-zA-Z_-])|rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*([\d.]+%?)\s*)?\)/g;
 function thMap(str) {
   if (!TH.pal || !str) return str;
@@ -238,6 +240,7 @@ function thMap(str) {
   /* i pezzi tra th0 e th1 (illustrazioni, regole già pensate per il chiaro) restano come sono */
   var m0 = str.indexOf('<!--th0-->') >= 0 ? ['<!--th0-->', '<!--th1-->'] : str.indexOf('/*th0*/') >= 0 ? ['/*th0*/', '/*th1*/'] : null;
   if (m0) return str.split(m0[0]).map(function (p, i) { if (!i) return thMap(p); var j = p.indexOf(m0[1]); return j < 0 ? p : p.slice(0, j) + thMap(p.slice(j)); }).join('');
+  str = str.replace(thGlow, '$10 0 0 transparent');
   return str.replace(thRe, function (m, pre, hx, r, g, b, a, off, all) {
     if (pre) return m;
     /* lo stesso colore fa da fondo o da testo: per gli sport conta cosa colora */
@@ -257,9 +260,9 @@ var THP = {
   },
   /* tema nascosto: rosa da pink lady. Si sblocca da Supabase (theme_unlocks) */
   rosa: {
-    name: 'Rosa', paper: '#FBEEF3', shadow: [120, 30, 80], warm: .02, nh: 330, mid: .44, meta: '#FBEEF3', hidden: true,
-    bg: function (l) { return thHex(l < .06 ? '#FBEEF3' : l < .1 ? '#FFF6F9' : l < .15 ? '#F8E4EC' : l < .23 ? '#F1D2DF' : '#E7BCCE').slice(0, 3); },
-    acc: function (l) { return [thRgb(328, .72, Math.min(.56, .42 + (l - .5) * .45)), .5]; },
+    name: 'Rosa', paper: '#FADDE9', shadow: [150, 20, 90], warm: .03, nh: 332, ns1: .28, ns2: .5, mid: .46, meta: '#FADDE9', hidden: true,
+    bg: function (l) { return thHex(l < .06 ? '#FADDE9' : l < .1 ? '#FFF3F8' : l < .15 ? '#F8D2E2' : l < .23 ? '#F2BFD5' : '#E8A6C4').slice(0, 3); },
+    acc: function (l) { return [thRgb(328, .86, Math.min(.6, .47 + (l - .5) * .4)), .5]; },
     fix: {}
   }
 };
@@ -268,9 +271,9 @@ var THP = {
     'eaf3ff': '#1E2638', 'c6d6ea': '#4B5468', '8fa3c2': '#83848C', '06101f': '#F7F2EA', '3ba7ff': '#1E2638', '7ccaff': '#3A4458', '7cc4ff': '#3A4458', 'bdebff': '#5A6070',
     'ffc94d': '#A8770A', 'd9b04a': '#9C7414', 'e0a81f': '#A8770A', '14120a': '#FBF1D9', 'fff4d6': '#6B4B05', 'ffffff': '#1E2638', '05060a': '#1E2638' };
   Object.keys(F).forEach(function (k) { THP.carta.fix[parseInt(k, 16).toString(16)] = F[k]; });
-  var R = { '070b14': '#FBEEF3', '0b1220': '#FFF6F9', '0e1a30': '#F8E4EC', '0a1426': '#FFF9FB', '030612': '#FBEEF3', '1e2a42': '#F1D2DF', '2c3d5e': '#E7BCCE',
-    'eaf3ff': '#3D1730', 'c6d6ea': '#6E4560', '8fa3c2': '#A98399', '06101f': '#FFFFFF', '3ba7ff': '#D6247E', '7cc4ff': '#C2307A', 'bdebff': '#B04A80',
-    'ffc94d': '#B98322', 'd9b04a': '#A8771C', 'e0a81f': '#B98322', '14120a': '#FCF0DA', 'fff4d6': '#6B4B05', 'ffffff': '#3D1730', '05060a': '#3D1730' };
+  var R = { '070b14': '#FADDE9', '0b1220': '#FFF3F8', '0e1a30': '#F8D2E2', '0a1426': '#FFF7FA', '030612': '#FADDE9', '1e2a42': '#F2BFD5', '2c3d5e': '#E8A6C4',
+    'eaf3ff': '#4A0F33', 'c6d6ea': '#86365F', '8fa3c2': '#BC6E97', '06101f': '#FFFFFF', '3ba7ff': '#E3177E', '7cc4ff': '#D11F79', 'bdebff': '#C4407F',
+    'ffc94d': '#C08A2E', 'd9b04a': '#B07D25', 'e0a81f': '#C08A2E', '14120a': '#FFF1DC', 'fff4d6': '#6B4B05', 'ffffff': '#4A0F33', '05060a': '#4A0F33' };
   Object.keys(R).forEach(function (k) { THP.rosa.fix[parseInt(k, 16).toString(16)] = R[k]; });
 })();
 function thWant() { var w = (S && S.settings && S.settings.theme) || 'dark'; if (THP[w] && THP[w].hidden && (S.settings.thx || []).indexOf(w) < 0) w = 'carta'; if (w === 'auto') { try { w = matchMedia('(prefers-color-scheme: light)').matches ? 'carta' : 'dark'; } catch (e) { w = 'dark'; } } return THP[w] ? w : 'dark'; }
@@ -288,6 +291,7 @@ function thApply() {
 }
 /* sul chiaro: niente bagliori neon, lampi morbidi al posto del negativo */
 var THCSS = ':root{color-scheme:light}' +
+  '.win{box-shadow:0 18px 50px rgba(60,40,10,.16)}.card{box-shadow:0 1px 2px rgba(70,50,20,.05)}' +
   '.cell.sport{color:#1E2638}.cell.sport .hwi{stroke:#1E2638}' +
   '.mom-wo.on{animation:momwol .32s ease-out}@keyframes momwol{0%{opacity:.1}100%{opacity:0}}' +
   '.mom-big.stamp{animation:momstamp .5s cubic-bezier(.3,1.5,.5,1)}@keyframes momstamp{0%{scale:1.14}30%{scale:.9}60%{scale:1.04}100%{scale:1}}';
@@ -1221,7 +1225,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.17.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.17.1</span>';
   return h;
 }
 
@@ -4814,7 +4818,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.17.0';
+var APP_V = 'gesta-v4.17.1';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
