@@ -220,8 +220,9 @@ function thConv(r, g, b, a, fill) {
     var sg = h > 200 && h < 230 && s < .5 ? .18 : s;
     if (a < .3) return thOut(thRgb(h, sg * .82, .84 - P.warm), 1);
     if (a < .75) return thOut(thRgb(h, sg * .62, .72), 1);
-    return fill ? thOut(thRgb(h, sg * .8, .77 - P.warm), 1) : thOut(thRgb(h, sg * .75, .34), 1);
+    return fill === 1 ? thOut(thRgb(h, sg * .8, .77 - P.warm), 1) : fill === 2 ? thOut(thRgb(h, sg * .85, .56), 1) : thOut(thRgb(h, sg * .75, .34), 1);
   }
+  if (P.sand && h >= 34 && h <= 56 && s > .5 && l > .4) return thOut(thRgb(P.sand[0], P.sand[1], a >= .6 ? P.sand[2] : .52), a);
   if (P.acc && h >= 188 && h <= 222 && s > .5 && l > .45) {
     /* la famiglia del blu di sistema diventa il colore del tema */
     var ac = P.acc(l); return thOut(ac[0], a < .45 ? a * ac[1] : a);
@@ -245,7 +246,7 @@ function thMap(str) {
   return str.replace(thRe, function (m, pre, hx, r, g, b, a, off, all) {
     if (pre) return m;
     /* lo stesso colore fa da fondo o da testo: per gli sport conta cosa colora */
-    var fill = /(background(-color)?:\s*|fill[=:]\s*"?)$/.test(all.slice(Math.max(0, off - 20), off)) ? 1 : 0, ck = fill + m;
+    var pre20 = all.slice(Math.max(0, off - 20), off), fill = /(background(-color)?:\s*|fill[=:]\s*"?)$/.test(pre20) ? 1 : /(dashed |solid |color: |stroke: )$/.test(pre20) ? 2 : 0, ck = fill + m;
     var c = thCache[ck]; if (c) return c; if (++thN > 4000) { thCache = {}; thN = 0; }
     var v = hx ? thHex(hx) : [+r, +g, +b, a == null ? 1 : (a.slice(-1) === '%' ? parseFloat(a) / 100 : +a)];
     return (thCache[ck] = thConv(v[0], v[1], v[2], v[3], fill));
@@ -254,7 +255,7 @@ function thMap(str) {
 /* le tavolozze */
 var THP = {
   carta: {
-    name: 'Chiaro', paper: '#F3EDE3', shadow: [60, 40, 10], warm: 0, nh: 225, mid: .42, meta: '#F3EDE3',
+    name: 'Chiaro', paper: '#F3EDE3', shadow: [60, 40, 10], warm: 0, nh: 225, mid: .42, meta: '#F3EDE3', sand: [33, .53, .48],
     bg: function (l) { return thHex(l < .06 ? '#F3EDE3' : l < .1 ? '#F8F3EB' : l < .15 ? '#EEE7DB' : l < .23 ? '#E2D8C8' : '#D3C6B2').slice(0, 3); },
     acc: function (l) { return [thRgb(225, .3, Math.min(.42, .14 + (l - .5) * .55)), .55]; },
     fix: {}
@@ -270,7 +271,7 @@ var THP = {
 (function () {
   var F = { '070b14': '#F3EDE3', '0b1220': '#F8F4ED', '0e1a30': '#EEE7DB', '0a1426': '#FBF8F2', '030612': '#F3EDE3', '1e2a42': '#E2D8C8', '2c3d5e': '#D3C6B2',
     'eaf3ff': '#1E2638', 'c6d6ea': '#4B5468', '8fa3c2': '#83848C', '06101f': '#F7F2EA', '3ba7ff': '#1E2638', '7ccaff': '#3A4458', '7cc4ff': '#3A4458', 'bdebff': '#5A6070',
-    'ffc94d': '#A8770A', 'd9b04a': '#9C7414', 'e0a81f': '#A8770A', '14120a': '#FBF1D9', 'fff4d6': '#6B4B05', 'ffffff': '#1E2638', '05060a': '#1E2638' };
+    'ffc94d': '#BC853A', 'd9b04a': '#B07A32', 'e0a81f': '#BC853A', '14120a': '#FAEFDC', 'fff4d6': '#6B4B05', 'ffffff': '#1E2638', '05060a': '#1E2638' };
   Object.keys(F).forEach(function (k) { THP.carta.fix[parseInt(k, 16).toString(16)] = F[k]; });
   var R = { '070b14': '#FADDE9', '0b1220': '#FFF3F8', '0e1a30': '#F8D2E2', '0a1426': '#FFF7FA', '030612': '#FADDE9', '1e2a42': '#F2BFD5', '2c3d5e': '#E8A6C4',
     'eaf3ff': '#4A0F33', 'c6d6ea': '#86365F', '8fa3c2': '#BC6E97', '06101f': '#FFFFFF', '3ba7ff': '#E3177E', '7cc4ff': '#D11F79', 'bdebff': '#C4407F',
@@ -292,8 +293,10 @@ function thApply() {
 }
 /* sul chiaro: niente bagliori neon, lampi morbidi al posto del negativo */
 /* sullo scuro, senza bagliori: profondità con ombre nere morbide */
-var THDARK = '.win{box-shadow:0 18px 50px rgba(0,0,0,.55)}';
+var THDARK = '.win{box-shadow:0 18px 50px rgba(0,0,0,.55)}.rk-beam,.rk-lk{display:none}';
 var THCSS = ':root{color-scheme:light}' +
+  '.sw::after{background:#FFFDF8;box-shadow:0 1px 3px rgba(60,40,10,.35)}' +
+  '.rk-beam,.rk-lk{display:none}' +
   '.win{box-shadow:0 18px 50px rgba(60,40,10,.16)}.card{box-shadow:0 1px 2px rgba(70,50,20,.05)}' +
   '.cell.sport{color:#1E2638}.cell.sport .hwi{stroke:#1E2638}' +
   '.mom-wo.on{animation:momwol .32s ease-out}@keyframes momwol{0%{opacity:.1}100%{opacity:0}}' +
@@ -1203,17 +1206,17 @@ function viewHome() {
       st = sp.length > 1 ? 'background:linear-gradient(135deg,' + SPORTS[sp[0]].c + ' 0 50%,' + SPORTS[sp[1]].c + ' 50% 100%)' : 'background:' + SPORTS[sp[0]].c + ';box-shadow:0 0 10px ' + SPORTS[sp[0]].c + '66';
     } else if (hasMark(k)) cls += ' hw';
     else if (age < 0) cls += ' fut';
-    if (!ss.length && k >= t) { var pl = planAt(k), gl = gloveOn(k); if (pl || gl.length) { var pcol = pl ? planCol(pl) : PGOLD; cls = cls.replace(' fut', '') + ' plan'; st = 'background:transparent;border:1.5px ' + (k === t ? 'solid' : 'dashed') + ' ' + pcol + ';color:' + pcol; pc = '<span class="pli">' + (pl ? '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="stroke:' + pcol + ';stroke-width:2.2">' + planIc(pl) + '</svg>' : svg(PI.glove, PGOLD)) + '</span>' + (pl && gl.length ? '<span class="pgl">' + svg(PI.glove, PGOLD) + '</span>' : ''); } }
+    if (!ss.length && k >= t) { var pl = planAt(k), gl = gloveOn(k); if (pl || gl.length) { var pcol = pl ? planCol(pl) : PGOLD; cls = cls.replace(' fut', '') + ' plan'; st = 'background:transparent;border:1.5px ' + (k === t ? 'solid' : 'dashed') + ' ' + pcol + ';color: ' + pcol; pc = '<span class="pli">' + (pl ? '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="stroke: ' + pcol + ';stroke-width:2.2">' + planIc(pl) + '</svg>' : svg(PI.glove, PGOLD)) + '</span>' + (pl && gl.length ? '<span class="pgl">' + svg(PI.glove, PGOLD) + '</span>' : ''); } }
     if (k === t) { cls += ' today'; if (!ss.length && !hasMark(k)) cls += ' wait'; }
     if (tap) cls += ' tap'; else if (age < 0) cls += ' off';
     var star = ss.some(function (s) { return s.star; });
-    h += '<button class="' + cls + '" style="' + st + '"' + (tap ? ' data-a="day" data-v="' + k + '"' : ' disabled') + ' aria-label="' + d + ' ' + MONTHS[m] + '">' + d + pc + (star ? STAR_MINI : '') + (ss.some(function (s) { return s.ph; }) ? '<i class="tri"></i>' : '') + (hasMark(k) ? '<svg class="i hwi" viewBox="0 0 24 24" aria-hidden="true">' + HW.ic + '</svg>' : '') + '</button>';
+    h += '<button class="' + cls + '" style="' + st + '"' + (tap ? ' data-a="day" data-v="' + k + '"' : ' disabled') + ' aria-label="' + d + ' ' + MONTHS[m] + '">' + d + pc + (star ? STAR_MINI : '') + (ss.some(function (s) { return s.ph && !s.ph.po; }) ? '<i class="tri"></i>' : '') + (hasMark(k) ? '<svg class="i hwi" viewBox="0 0 24 24" aria-hidden="true">' + HW.ic + '</svg>' : '') + '</button>';
   }
   var rowEnd = addDays(mondayOf(keyOf(new Date(y, m + 1, 0))), 6), tailEnd = planEnd() < rowEnd ? planEnd() : rowEnd;
   if (isCur && tailEnd > keyOf(new Date(y, m + 1, 0))) {
     for (var nk = keyOf(new Date(y, m + 1, 1)); nk <= tailEnd; nk = addDays(nk, 1)) {
       var npl = planAt(nk), ngl = gloveOn(nk), nst = '', nc = 'cell fut nxt', npc = '';
-      if (npl || ngl.length) { var ncol = npl ? planCol(npl) : PGOLD; nc = 'cell plan nxt'; nst = 'background:transparent;border:1.5px dashed ' + ncol + ';color:' + ncol; npc = '<span class="pli">' + (npl ? '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="stroke:' + ncol + ';stroke-width:2.2">' + planIc(npl) + '</svg>' : svg(PI.glove, PGOLD)) + '</span>' + (npl && ngl.length ? '<span class="pgl">' + svg(PI.glove, PGOLD) + '</span>' : ''); }
+      if (npl || ngl.length) { var ncol = npl ? planCol(npl) : PGOLD; nc = 'cell plan nxt'; nst = 'background:transparent;border:1.5px dashed ' + ncol + ';color: ' + ncol; npc = '<span class="pli">' + (npl ? '<svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="stroke: ' + ncol + ';stroke-width:2.2">' + planIc(npl) + '</svg>' : svg(PI.glove, PGOLD)) + '</span>' + (npl && ngl.length ? '<span class="pgl">' + svg(PI.glove, PGOLD) + '</span>' : ''); }
       h += '<button class="' + nc + ' tap" style="' + nst + '" data-a="day" data-v="' + nk + '" aria-label="' + parseKey(nk).getDate() + ' ' + MONTHS[parseKey(nk).getMonth()] + '">' + parseKey(nk).getDate() + npc + '<span class="nxm">' + MSHORT[parseKey(nk).getMonth()] + '</span></button>';
     }
   }
@@ -1285,7 +1288,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.19.1</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.20.0</span>';
   return h;
 }
 
@@ -1348,7 +1351,7 @@ function viewOverlay() {
     var list = sessions(o.k);
     h = '<div class="' + cls + '">' + whead(DAYS_SHORT[parseKey(o.k).getDay()] + ' ' + niceDate(o.k), true) + '<div class="wbody">';
     list.forEach(function (s) {
-      var phx = s.ph ? '<button class="phthumb" data-a="phOpen" data-v="' + o.k + '|' + s.id + '" aria-label="Apri la foto"><img alt="" ' + (phURL[s.id] ? 'src="' + phURL[s.id] + '"' : 'data-phs="' + s.id + '"') + '></button>' : '<label class="phadd" aria-label="Aggiungi foto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7CC4FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*"' + (o.k === todayKey() ? '' : '') + ' data-ph="1" data-k="' + o.k + '" data-sid="' + s.id + '" hidden></label>';
+      var phx = s.ph && !s.ph.po ? '<button class="phthumb" data-a="phOpen" data-v="' + o.k + '|' + s.id + '" aria-label="Apri la foto"><img alt="" ' + (phURL[s.id] ? 'src="' + phURL[s.id] + '"' : 'data-phs="' + s.id + '"') + '></button>' : '<label class="phadd" aria-label="Aggiungi foto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7CC4FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*"' + (o.k === todayKey() ? '' : '') + ' data-ph="1" data-k="' + o.k + '" data-sid="' + s.id + '" hidden></label>';
       if (o.ro) { h += '<div class="sess">' + sportIc(s.sport, 26, true) + '<div class="meta"><b>' + SPORTS[s.sport].name + (s.star ? ' ★' : '') + '</b><span>' + esc(sessSummary(s)) + '</span></div>' + phx + '</div>'; return; }
       h += '<div class="sess"><button class="sesst" data-a="edit" data-v="' + s.id + '" aria-label="Dettagli di ' + SPORTS[s.sport].name + '">' + sportIc(s.sport, 26, true) + '<div class="meta"><b>' + SPORTS[s.sport].name + (s.star ? ' ★' : '') + '</b><span>' + esc(sessSummary(s)) + '</span></div>' + svg(IC.right, 'var(--mut)', 16) + '</button>' + phx +
         (o.confirm === s.id ? '<button class="btn sm danger" data-a="remove" data-v="' + s.id + '">Rimuovi</button>' : '<button class="x" style="margin:0 -6px 0 0" data-a="askRemove" data-v="' + s.id + '" aria-label="Rimuovi sessione">' + svg(IC.close, '#8FA3C2', 18) + '</button>') + '</div>';
@@ -1601,7 +1604,7 @@ function viewDetails(o, cls) {
     h += '<div class="fld">' + (qt === 'bon' ? '<label class="hint" for="bname">Attività</label><input id="bname" class="inp" maxlength="40" placeholder="Squash, arrampicata in falesia, sup…" value="' + esc(f.name) + '" data-f="bname" autocomplete="off">' : '') + '<label class="hint" for="bnote">Nota' + (s === 'cfx' ? ' · il WOD di oggi' : '') + '</label><textarea id="bnote" class="inp" maxlength="280" data-f="bnote">' + esc(f.note) + '</textarea></div>';
   }
   h += '<div class="fld"><button class="toggle" style="min-height:40px;padding:0" data-a="star"><span style="display:flex;align-items:center;gap:10px;font:600 15px/20px var(--fd)">' + svg(IC.star, f.star ? '#FFC94D' : '#8FA3C2', 20) + (qt === 'focus' ? 'MVP' : 'Sessione top') + '</span><span class="sw' + (f.star ? ' on' : '') + '"></span></button><span class="hint">' + (qt === 'focus' ? 'Quando sei la stella della partita: una stella sul calendario. Per il rango S ne serve una al mese.' : 'Solo per le giornate davvero speciali: una stella sul calendario. Per il rango S ne serve una al mese.') + '</span></div>';
-  var sPh = findSession(o.k, o.id); if (sPh && !o.assess) h += sPh.ph ? '<button data-a="phOpen" data-v="' + o.k + '|' + o.id + '" class="phrow">' + '<span class="phthumb"><img alt="" ' + (phURL[o.id] ? 'src="' + phURL[o.id] + '"' : 'data-phs="' + o.id + '"') + '></span><span style="flex:1 1 auto;text-align:left;display:flex;flex-direction:column"><b style="font:600 14px/18px var(--fd)">Foto</b><span class="hint" style="font-size:11.5px">' + (sPh.ph.v ? '✓ Verificata' : 'Dalla galleria') + (sPh.ph.sh ? ' · la vedono gli amici' : ' · solo tu') + '</span></span>' + svg(IC.right, '#8FA3C2', 18) + '</button>' : phPick(o.k, o.id);
+  var sPh = findSession(o.k, o.id); if (sPh && !o.assess) h += sPh.ph && !sPh.ph.po ? '<button data-a="phOpen" data-v="' + o.k + '|' + o.id + '" class="phrow">' + '<span class="phthumb"><img alt="" ' + (phURL[o.id] ? 'src="' + phURL[o.id] + '"' : 'data-phs="' + o.id + '"') + '></span><span style="flex:1 1 auto;text-align:left;display:flex;flex-direction:column"><b style="font:600 14px/18px var(--fd)">Foto</b><span class="hint" style="font-size:11.5px">' + (sPh.ph.v ? '✓ Verificata' : 'Dalla galleria') + (sPh.ph.sh ? ' · la vedono gli amici' : ' · solo tu') + '</span></span>' + svg(IC.right, '#8FA3C2', 18) + '</button>' : phPick(o.k, o.id);
   h += '</div>' + (o.done ? '<span class="hint" style="text-align:center;margin-top:-4px">Già segnato sul calendario. Se non vuoi aggiungere niente, chiudi pure.</span>' : '') + '<button class="btn main" data-a="saveDetails">' + (o.assess ? 'Salva il punto di partenza' : 'Salva') + '</button></div>';
   return h;
 }
@@ -2741,6 +2744,7 @@ var PA = {
   fOpen: function (id) { ui.fid = id; ui.screen = 'friend'; var q = P().letters.filter(function (l) { return l.f === id && !l.rd; }).reverse(); q.forEach(function (l) { l.rd = true; }); if (q.length) { save(); ui.ov = { t: 'fnote', fid: id, list: q.map(function (l) { return l.id; }), i: 0 }; } ding('open'); render(); },
   lOpen: function (id) { var l = P().letters.filter(function (x) { return x.id === id; })[0]; if (!l) return; ui.ov = { t: 'fnote', fid: l.f && friend(l.f) ? l.f : null, list: [id], i: 0 }; ding('open'); render(); },
   fnNext: function () { var o = ui.ov; if (o.i + 1 < o.list.length) { o.i++; ding('tap'); render(); } else { ui.ov = null; render(); } },
+  gwPhs: function () { var o = ui.ov; if (!o) return; o.phs = o.phs === false; ding('tap'); render(); },
   gDel: function () {
     var o = ui.ov, c = o && chById(o.mod); if (!gModOk(c)) return;
     if (!o.del) { o.del = 1; ding('tap'); render(); return; }
@@ -2807,6 +2811,7 @@ var PA = {
     toast(sent ? (o.fid ? 'Guanto lanciato a ' + friend(o.fid).n + '.' : 'Guanto lanciato a ' + sent + (sent === 1 ? ' amico' : ' amici') + ' della Gang.') : 'Oggi con loro c’è già un guanto aperto.');
   },
   five: function (arg) { var a = String(arg).split('|'); if (a[1] && c5Open(a[0], a[1])) return; A.fDayLast(a[0]); },
+  fiveWon: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0], c = l && chById(l.cid), k = c && wonDay(c); if (!l || !l.f || !k) return; ui.ov = null; c5Open(l.f, k); if (ui.ov && ui.ov.t === 'fday') { ui.ov.rx = 1; render(); } },
   fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); ui.ov = null; A.fDayLast(l.f); if (ui.ov && ui.ov.t === 'fday') { ui.ov.rx = 1; render(); } },
   phOpen: function (arg) { var a = arg.split('|'), back = ui.ov && ui.ov.t !== 'photo' ? ui.ov : null; ui.ov = { t: 'photo', k: a[0], sid: a[1], back: back }; ding('open'); render(); },
   phSh: function (arg) { var a = arg.split('|'), s = phSess(a[0], a[1]); if (!s || !s.ph) return; phShare(a[0], a[1], !s.ph.sh); ding('tap'); render(); },
@@ -3233,7 +3238,9 @@ function viewGWin(o, cls) {
     '<p class="wtext">' + esc(chLabel(c)) + '.</p>' +
     '<div style="display:grid;grid-template-columns:1fr"><div class="fld" style="align-items:center"><span style="font:700 17px/22px var(--fd);color:var(--rew)">' + pts + '</span><span class="hint">Punto Rango</span></div></div>' +
     '<div class="row" style="padding:0 2px"><span class="hint">' + note + '</span>' + (!g && c.to === 'me' ? rkHex('S', 30, true) : '') + '</div>' +
-    '<div class="acts one"><button class="btn main" data-a="' + (o.then ? 'gwNext' : 'close') + '">Continua</button></div>' + (function () { if (g) return ''; var tk = todayKey(), ls = sessions(tk)[sessions(tk).length - 1]; if (!ls) return ''; if (ls.ph && ls.ph.g === c.id) return '<span class="hint" style="text-align:center;color:var(--rew)">Prova aggiunta: ' + esc(f.n) + ' la vede sotto il sigillo.</span>'; return '<label class="mlink" style="align-self:center;display:flex;align-items:center;gap:6px;color:var(--sysl);cursor:pointer">+ Aggiungi la prova per ' + esc(f.n) + '<input type="file" accept="image/*" capture="environment" data-ph="1" data-ver="1" data-k="' + tk + '" data-sid="' + ls.id + '" data-g="' + c.id + '" hidden></label>'; })() + '</div>';
+    '<div class="acts one"><button class="btn main" data-a="' + (o.then ? 'gwNext' : 'close') + '">Continua</button></div>' + (function () { if (g) return ''; var tk = todayKey(), ls = sessions(tk)[sessions(tk).length - 1]; if (!ls) return ''; if (ls.ph && ls.ph.g === c.id) return '<span class="hint" style="text-align:center;color:var(--rew)">Prova aggiunta: ' + esc(f.n) + ' la vede sotto il sigillo.</span>'; var po = o.phs === false ? ' data-po="1"' : '', dd = ' data-k="' + tk + '" data-sid="' + ls.id + '" data-g="' + c.id + '"' + po, cam = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>', gal = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9.5" r="1.4"/></svg>';
+      return '<div class="card" style="padding:12px;display:flex;flex-direction:column;gap:10px"><span class="lbl" style="color:var(--rew)">La prova per ' + esc(f.n) + '</span><div class="phpick"><label class="phbtn">' + cam + 'Scatta<input type="file" accept="image/*" capture="environment" data-ph="1" data-ver="1"' + dd + ' hidden></label><label class="phbtn">' + gal + 'Galleria<input type="file" accept="image/*" data-ph="1"' + dd + ' hidden></label></div>' +
+        '<button class="toggle" data-a="gwPhs" style="min-height:44px"><span style="display:flex;flex-direction:column;gap:2px;text-align:left"><span style="font:600 14px/18px var(--fb)">Anche come foto della sessione</span><span class="hint" style="font-size:11.5px">' + (o.phs === false ? 'Spento: la vede solo ' + esc(f.n) + ', come prova' : 'Finisce anche nel tuo calendario') + '</span></span><span class="sw' + (o.phs === false ? '' : ' on') + '"></span></button></div>'; })() + '</div>';
 }
 function viewGang() {
   var g = gangById(ui.gid); if (!g) { ui.screen = 'party'; return viewParty(); }
@@ -3350,11 +3357,11 @@ function stFetch(path, opt) { opt = opt || {}; var h = { apikey: CLOUD.key, Auth
 /* ridimensiona (lato lungo 1440) e ripulisce: niente posizione GPS né altri dati nascosti */
 function phShrink(file) { return new Promise(function (ok, ko) { var u = URL.createObjectURL(file), im = new Image(); im.onload = function () { var W = im.naturalWidth, H = im.naturalHeight, sc = Math.min(1, 1440 / Math.max(W, H)), c = document.createElement('canvas'); c.width = Math.round(W * sc); c.height = Math.round(H * sc); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(function (b) { b ? ok(b) : ko(new Error('foto')); }, 'image/jpeg', 0.82); }; im.onerror = function () { URL.revokeObjectURL(u); ko(new Error('foto')); }; im.src = u; }); }
 function phSess(k, sid) { return findSession(k, sid); }
-function phSave(k, sid, file, ver, glove) {
+function phSave(k, sid, file, ver, glove, po) {
   var s = phSess(k, sid); if (!s) return Promise.resolve();
   toast('Salvo la foto…');
   return phShrink(file).then(function (b) {
-    var old = s.ph; s.ph = { v: !!ver && k === todayKey(), sh: old ? !!old.sh : !!(S.party && S.party.set && S.party.set.ph !== false), n: phN(k), t: Date.now(), g: glove || (old && old.g) || null, up: 0 };
+    var old = s.ph; s.ph = { v: !!ver && k === todayKey(), sh: old ? !!old.sh : !!(S.party && S.party.set && S.party.set.ph !== false), n: phN(k), t: Date.now(), g: glove || (old && old.g) || null, up: 0 }; if (po) { s.ph.po = 1; s.ph.sh = false; }
     if (phURL[sid]) URL.revokeObjectURL(phURL[sid]); phURL[sid] = URL.createObjectURL(b);
     save(); render(); toast(glove ? 'Prova aggiunta.' : 'Foto salvata.');
     return phPut(sid, b).then(function () { return phUp(k, sid); });
@@ -3444,6 +3451,7 @@ function viewFNote(o, cls) {
   else if (l.k === 'gang') { icon = PI.party; }
   var col = gold ? PGOLD : '#7CC4FF', wk = mondayOf(todayKey());
   var bat = l.k === 'bat' || o.batl === l.id, canBat = l.k === 'five' && !bat && f.id && Date.now() - l.t < 7 * 864e5 && !!friend(f.id) && !!c5Last(friend(f.id));
+  var canWon = l.k === 'won' && cq && f.id && friend(f.id) && Date.now() - l.t < 7 * 864e5 && wonDay(cq) && !c5Given(f.id, wonDay(cq));
   if (bat) { gold = true; col = PGOLD; title = 'Cinque battuto'; body = 'Tu e ' + f.n + ', questa settimana.'; }
   if (l.k === 'won' && cq && o.proof === undefined) { o.proof = null; gloveProof(cq.id, function (x) { if (ui.ov === o) { o.proof = x || false; render(); } }); }
   var fx = bat ? fxFiveBat('lb' + l.id) : l.k === 'five' ? fxFiveUp('lf' + l.id) : l.k === 'won' ? fxSeal(!!(cq && cq.shared && cq.me && cq.done), 'lw' + l.id) : l.k === 'flost' ? fxDust('ld' + l.id) : (l.k === 'gang' && cq && cq.st === 'passed') ? fxGang(cq, 'lg' + l.id) : '';
@@ -3452,7 +3460,7 @@ function viewFNote(o, cls) {
     (fx || '<div style="display:flex;justify-content:center">' + svg(icon, col, 44) + '</div>') + (o.proof ? '<span class="lbl" style="font-size:10.5px;color:var(--rew);text-align:center">La prova</span>' + phView('data-php="' + esc(o.proof.path) + '"', o.proof.n || '', !!o.proof.verified) : '') + '<p class="wtitle">' + esc(title) + '</p>' + (body ? '<p class="wtext">' + esc(body) + '</p>' : '') + rv +
     (score ? '<div style="display:flex;align-items:baseline;justify-content:center;gap:12px;font:700 34px/1 var(--fd)"><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">TU</span><span>' + sc[0] + '</span><span style="color:var(--mut)">–</span><span>' + sc[1] + '</span><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">' + f.n.toUpperCase() + '</span></div>' : '') +
     (cq ? '<button class="mlink" data-a="gView" data-v="' + cq.id + '" style="display:flex;align-items:center;justify-content:center;gap:6px">' + svg(cq.gang ? PI.party : PI.glove, col, 14) + 'Vedi la quest ›</button>' : '') +
-    (canBat ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="fiveBack" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + 'Ricambia</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
+    (canBat || canWon ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="' + (canWon ? 'fiveWon' : 'fiveBack') + '" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + (canWon ? 'Cinque' : 'Ricambia') + '</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
 }
 function viewTrait(o, cls) {
   var n = new Date(), ms = monthStats(n.getFullYear(), n.getMonth()), mt = monthTraits(n.getFullYear(), n.getMonth()); if (!mt) return '';
@@ -4129,6 +4137,8 @@ var C5T = {
 };
 var C5HF = { base: [['#FFFFFF', 0], ['#CFE8FF', .6], ['#7CC4FF', 1]], oro: [['#FFF6CF', 0], ['#FFD34D', .45], ['#C98A0E', 1]], fuoco: [['#FFF1B0', 0], ['#FFA23D', .45], ['#E8402A', 1]], leg: [['#7CC4FF', 0], ['#B98CFF', .33], ['#FF5C8A', .66], ['#FFC94D', 1]], fulmine: [['#FFFFFF', 0], ['#9BF0FF', .4], ['#3B6BFF', 1]], nerd: [['#FFFFFF', 0], ['#E9FFE9', .5], ['#8EE6A8', 1]], ritorno: [['#FFF4DC', 0], ['#E8C38A', .5], ['#9C6B32', 1]] };
 var C5HG = { base: 'rgba(59,167,255,.9)', oro: 'rgba(255,201,77,.95)', fuoco: 'rgba(255,106,61,.95)', leg: 'rgba(185,140,255,.95)', fulmine: 'rgba(0,212,255,.95)', nerd: 'rgba(76,210,122,.9)', ritorno: 'rgba(232,195,138,.85)' };
+/* il giorno in cui l'amico ha chiuso il guanto: lì gli si dà il cinque */
+function wonDay(c) { var f = friend(c.to), k = c.day && c.day <= todayKey() ? c.day : todayKey(); return f && c5Can(f, k) ? k : null; }
 function c5Given(fid, k) { var p = P(); return p.fivesD && p.fivesD[fid] && p.fivesD[fid][k]; }
 function c5Can(f, k) { return !!f && k <= todayKey() && k >= addDays(todayKey(), -31) && (trainedOn(f, k) || fHwOn(f, k)); }
 /* che cinque esce: battuto se te l'aveva dato da poco; raro il leggendario; poi, a caso tra quelli che la giornata merita */
@@ -4835,7 +4845,7 @@ root.addEventListener('change', function (e) {
   var t = e.target; if (!t || !t.getAttribute || !t.getAttribute('data-ph')) return;
   var file = t.files && t.files[0]; if (!file) return;
   var k = t.getAttribute('data-k'), sid = t.getAttribute('data-sid'), g = t.getAttribute('data-g') || null;
-  phSave(k, sid, file, t.getAttribute('data-ver') === '1', g); t.value = '';
+  phSave(k, sid, file, t.getAttribute('data-ver') === '1', g, t.getAttribute('data-po') === '1'); t.value = '';
 });
 root.addEventListener('input', function (e) {
   var f = e.target.getAttribute('data-f'); if (!f) return;
@@ -4908,7 +4918,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.19.1';
+var APP_V = 'gesta-v4.20.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
