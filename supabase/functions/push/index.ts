@@ -33,6 +33,8 @@ async function messaggi(p: any): Promise<Msg[]> {
       if (!o.to_done && r.to_done) out.push({ to: r.from_id, kind: "won", title: (await nome(r.to_id)) + " ha chiuso la tua sfida", body: cap(r.quest), go: "letters", tag: "w" + r.id });
       if (r.shared && !o.from_done && r.from_done) out.push({ to: r.to_id, kind: "won", title: (await nome(r.from_id)) + " ha chiuso la quest condivisa", body: cap(r.quest), go: "letters", tag: "s" + r.id });
       if (o.status !== "countered" && r.status === "countered" && r.counter) out.push({ to: r.from_id, kind: "glove", title: (await nome(r.to_id)) + " ti propone una modifica", body: cap(r.counter.quest), go: "letters", tag: "c" + r.id });
+      // 4.18: chi ha lanciato il guanto lo modifica: torna da accettare
+      if (o.status !== "countered" && r.status === "pending" && (o.quest !== r.quest || o.day !== r.day || o.sport !== r.sport)) out.push({ to: r.to_id, kind: "glove", title: (await nome(r.from_id)) + " ha modificato il guanto", body: cap(r.quest) + (r.shared ? " · condivisa" : "") + quando(r.day) + (o.status === "accepted" ? " · da riaccettare" : ""), go: "letters", tag: "g" + r.id });
     }
   } else if (p.table === "friend_requests" && p.type === "INSERT") {
     out.push({ to: r.to_id, kind: "req", title: (await nome(r.from_id)) + " vuole essere tuo amico", body: "Rispondi in Novità", go: "letters", tag: "r" + r.id });
