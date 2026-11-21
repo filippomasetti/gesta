@@ -246,7 +246,7 @@ function thMap(str) {
   return str.replace(thRe, function (m, pre, hx, r, g, b, a, off, all) {
     if (pre) return m;
     /* lo stesso colore fa da fondo o da testo: per gli sport conta cosa colora */
-    var pre20 = all.slice(Math.max(0, off - 20), off), fill = /(background(-color)?:\s*|fill[=:]\s*"?)$/.test(pre20) ? 1 : /(dashed |solid |color: |stroke: )$/.test(pre20) ? 2 : 0, ck = fill + m;
+    var pre20 = all.slice(Math.max(0, off - 20), off), fill = /(background(-color)?:\s*|fill[=:]\s*"?|stroke:  )$/.test(pre20) ? 1 : /(dashed |solid |color: |stroke: )$/.test(pre20) ? 2 : 0, ck = fill + m;
     var c = thCache[ck]; if (c) return c; if (++thN > 4000) { thCache = {}; thN = 0; }
     var v = hx ? thHex(hx) : [+r, +g, +b, a == null ? 1 : (a.slice(-1) === '%' ? parseFloat(a) / 100 : +a)];
     return (thCache[ck] = thConv(v[0], v[1], v[2], v[3], fill));
@@ -1246,7 +1246,7 @@ function viewStato() {
     var sp = SPORTS[s], p = ms.sportPts[s] || 0, val, pct, nn = ms.counts[s] || 0;
     if (s === 'bon') { val = nn; pct = Math.min(100, val * 25); }
     else { val = rankOf(p, SPORT_RANKS); pct = Math.min(100, Math.round(p / SPORT_RANKS[0][1] * 100)); }
-    h += '<div class="tw" data-s="' + s + '"><button class="tile" data-a="sport" data-v="' + s + '">' + sportIc(s, 28, true) + '<span class="tname"' + (sp.name.length > 9 ? ' style="font-size:12px;letter-spacing:-.2px"' : '') + '>' + sp.name + '</span><span class="trank" style="' + (s === 'bon' ? 'font-size:20px;' : '') + 'text-shadow:0 0 12px ' + sp.c + '">' + val + '</span><span class="tbar"><i style="width:' + pct + '%;background:' + sp.c + '"></i></span><span class="tsub">' + (s === 'bon' ? (nn ? nn + ' questo mese' : 'Ancora nessuno') : nn ? nn + ' questo mese' : 'Ancora nessuna') + '</span></button></div>';
+    h += '<div class="tw" data-s="' + s + '"><button class="tile" data-a="sport" data-v="' + s + '">' + sportIc(s, 28, true).replace('stroke:', 'stroke:  ') + '<span class="tname"' + (sp.name.length > 9 ? ' style="font-size:12px;letter-spacing:-.2px"' : '') + '>' + sp.name + '</span><span class="trank" style="' + (s === 'bon' ? 'font-size:20px;' : '') + 'text-shadow:0 0 12px ' + sp.c + '">' + val + '</span><span class="tbar"><i style="width:' + pct + '%;background:' + sp.c + '"></i></span><span class="tsub">' + (s === 'bon' ? (nn ? nn + ' questo mese' : 'Ancora nessuno') : nn ? nn + ' questo mese' : 'Ancora nessuna') + '</span></button></div>';
   });
   h += '</div></div>';
   var mst = medalState(), mvis = MEDALS.filter(function (d) { return mvisible(d, 'mine'); }), mgot = mvis.filter(function (d) { return mst[d.id].t >= 0; }).length;
@@ -1288,7 +1288,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.20.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.21.0</span>';
   return h;
 }
 
@@ -1454,7 +1454,7 @@ function viewOverlay() {
       '<div class="fld"><span class="lbl" style="font-size:11px">Party e guanto di sfida</span><p>Un amico ti lancia il <b>guanto</b>: uno sport e una quest precisa. Puoi accettare, dire non oggi o modificarla e rimandarla. Chi lo lancia può <b>modificarlo</b> finché non è chiuso, dalle sfide in corso o dal calendario: se era già accettato, torna da accettare. Da lì può anche <b>ritirarlo</b>: all’amico arriva un avviso. Si accetta entro mezzanotte. A fine sessione lo chiudi con <b>Fatta?</b> sulla card in alto, oppure toccando oggi sul calendario: la prima cosa che vedi è com’è andata. Se lo completi vale <b>mezzo Punto Rango</b> per il rango del mese. Se chi lancia sceglie “lo devo fare anch’io”, diventa una <b>quest condivisa</b>: <b>mezzo Punto Rango a testa</b> a chi la completa, anche a chi l’ha lanciata. Se accetti un guanto e non lo chiudi entro mezzanotte, <b>−0,5 Punti Rango</b> (solo per i guanti, non per gli obiettivi Gang); nel punteggio tra amici nessuna penalità.</p><p>Ognuno può lanciare all’altro un guanto al giorno: se tu l’hai mandato a un amico, lui può mandarne uno a te. La quest condivisa vale già per tutti e due. Al massimo <b>3 guanti a settimana</b> per ogni amico.</p><p>Con <b>Per un altro giorno</b> scegli una data: per l’amico diventa la quest di quel giorno e scade a mezzanotte. Un guanto accettato si toglie senza costi <b>fino alle 12</b> di quel giorno.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Gang</span><p>Un membro <b>fissa l’obiettivo</b> della Gang, uno al giorno, uguale per tutti. Vale se almeno un altro membro accetta, ed è superato se lo completano almeno 2 membri su 3: mezzo Punto Rango a tutti, ogni volta. Se lo completi anche tu, conta per il + del rango. Il <b>rango della Gang</b> sale solo con gli obiettivi superati: D a 1, C a 2, B a 4, A a 6, S a 8.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Il + del rango</span><p>Ogni rango ha il suo +: C+, B+, fino a S+. Lo prendi vincendo una quest social quando sei già in quel rango: un guanto di un amico che hai completato, o un obiettivo Gang che hai completato tu e che almeno un altro membro ha accettato. Va per soglie: se da D+ sali in C sei C, e per il + ti serve una nuova quest social da C. Senza amici sali lo stesso, ma senza +.</p><p>Si sale di <b>un gradino al giorno</b> (un rango pieno o un +): se oggi sei già salito, il gradino dopo scatta domani alla prima sessione. Non vale l’ultimo giorno del mese, e A+, S e S+ scattano sempre.</p></div>' +
-      '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Nel calendario di un amico tocchi un giorno: si apre la sua giornata. <b>Tieni premuto</b> sulla foto (o sulla scheda) finché schiocca, e gli arriva il cinque. Uno per giornata. Che cinque esce lo decide Gesta: <b>d’oro</b> per una quest difficile, <b>di fuoco</b> dalla terza sessione della settimana, <b>fulmine</b> con cinque giorni su sette, <b>da secchione</b> per una giornata di Hard Study/Work, <b>il ritorno</b> dopo due settimane di pausa, <b>battuto</b> se te l’aveva dato da poco, e ogni tanto, per caso, <b>leggendario</b>. Qualcuno dice che ce n’è anche uno segreto. Non dà Punti Rango: fa solo piacere, e in Bacheca ci sono le medaglie apposta.</p></div>' +
+      '<div class="fld"><span class="lbl" style="font-size:11px">Cinque</span><p>Nel calendario di un amico tocchi un giorno: si apre la sua giornata. <b>Tieni premuto</b> sulla foto (o sulla scheda) finché schiocca, e gli arriva il cinque. Uno per giornata. Che cinque esce lo decide Gesta: <b>d’oro</b> per una quest difficile, <b>di fuoco</b> dalla terza sessione della settimana, <b>fulmine</b> con cinque giorni su sette, <b>da secchione</b> per una giornata di Hard Study/Work, <b>il ritorno</b> dopo due settimane di pausa, <b>battuto</b> se te l’aveva dato da poco, e ogni tanto, per caso, <b>leggendario</b>. Qualcuno dice che ce n’è anche uno segreto. I cinque che ricevi li vedi arrivare appena apri il calendario. Non dà Punti Rango: fa solo piacere, e in Bacheca ci sono le medaglie apposta.</p></div>' +
       (VAPID_PUB ? '<div class="fld"><span class="lbl" style="font-size:11px">Notifiche</span><p>Con Gesta aggiunta alla schermata Home possono arrivarti sul telefono guanti, sfide chiuse, richieste di amicizia, obiettivi della Gang e cinque. Scegli tu quali nelle impostazioni del Party. Una sola notifica per ogni cosa: pianificare non avvisa nessuno.</p></div>' : '') +
       '<div class="fld"><span class="lbl" style="font-size:11px">Foto</span><p>Una foto per sessione, se ti va: nei dettagli della sessione o toccando il giorno sul calendario, anche settimane dopo. Se la scatti da Gesta il giorno stesso è <b>verificata</b>; dalla galleria va benissimo lo stesso. La vedono gli amici (puoi spegnerlo in Party, impostazioni) e una singola la nascondi toccandola. Quando vinci un guanto puoi aggiungere la prova per chi te l’ha lanciato.</p></div>' +
       '<div class="fld"><span class="lbl" style="font-size:11px">Taverna</span><p>Ogni giorno, per ognuno dei tuoi sport: <b>due video di tecnica</b> (prima i nuovi, poi dall’archivio, che cambia ogni giorno), <b>un highlight</b> dei campioni, <b>una notizia</b> e, quando c’è, una <b>per te</b>: gare aperte, eventi, neve. Tocchi e si apre la fonte. Non dà punti: è il posto dove passare anche nei giorni senza sport.</p><p>Con l’<b>aeroplanino</b> mandi un contenuto a uno o più amici, con una riga se vuoi. Lo trovano in cima alla loro Taverna, in <b>Condivisi con te</b>: resta 7 giorni, oppure fino a fine giornata dopo che l’hanno aperto.</p><p><b>Scorri un contenuto verso sinistra</b>: compaiono <b>Salva</b> (lo ritrovi in «Salvati», in alto) e <b>Cambia</b> (sparisce e arriva il prossimo). Scorrendo ancora una volta, cambia subito. L’archivio dei video di tecnica va per visualizzazioni: ogni giorno il successivo tra i più visti di ogni canale.</p><p>Con il tasto in alto a destra apri <b>Le tue fonti</b>: nascondi quelle che non ti interessano e aggiungi fino a 10 canali YouTube o siti tuoi, che stanno in prima fila. Se la proponi a tutti e chi fa Gesta la approva, entra nella Taverna di chi fa quello sport.</p></div>' +
@@ -2313,7 +2313,7 @@ function chPull(force) {
     (res[1] || []).forEach(function (x) { var k = x.from_id + '|' + (x.day || x.week); if (p.fin[k] || (!x.kind && p.fin[x.from_id + '|' + x.week])) return; p.fin[k] = 1; dirty = true; var f = friend(x.from_id), nm = f ? f.n : 'Un amico', kd = C5T[x.kind] ? x.kind : 'base'; p.fiveIn = p.fiveIn || {}; p.fiveRx = p.fiveRx || {};
       if (x.day) { var rl = p.fiveRx[x.day] = p.fiveRx[x.day] || []; if (!rl.some(function (y) { return y[0] === x.from_id; })) rl.push([x.from_id, kd]); }
       if (kd === 'batt') { p.nbat = (p.nbat || 0) + 1; letter('bat', x.from_id, nm + ' ha battuto il tuo cinque', fiveSub(x.day, x.sport), null, x.week); }
-      else { p.fiveIn[x.from_id] = Date.now(); letter('five', x.from_id, nm + ' ' + C5T[kd].tx, fiveSub(x.day, x.sport), null, x.week); } });
+      else { p.fiveIn[x.from_id] = Date.now(); letter('five', x.from_id, nm + ' ' + C5T[kd].tx, fiveSub(x.day, x.sport), null, x.week); var l5 = p.letters[0]; l5.kd = kd; l5.day = x.day || null; l5.sp = x.sport || null; } });
     if (p.fiveRx) Object.keys(p.fiveRx).forEach(function (d) { if (d < addDays(todayKey(), -60)) delete p.fiveRx[d]; });
     patches.forEach(function (q) { chPatch(q[0], q[1]); });
     if (dirty) { save(); render(); }
@@ -3009,11 +3009,14 @@ function goBack() {
 function gStart(x, y, target) {
   gs = null;
   if (!S || drag || ui.arrange || !target || !target.closest) return;
-  if (target.closest('input,textarea,.story,.tw')) return;
+  if (target.closest('input,textarea,select,.tw')) return;
   if (ui.ov) {
-    if (ui.ov.t === 'story' || target.closest('[data-c5]')) return;
-    var win = target.closest('.veil .win'), cl = root.querySelector('.veil [data-a="close"]');
-    if (win && cl) gs = { k: 'ov', x: x, y: y, el: win, cl: cl, wb: target.closest('.wbody') };
+    /* 4.21: ogni finestra con la X si chiude anche tirandola giù (o a destra). Anche il resoconto e la foto del cinque */
+    var st0 = target.closest('.story');
+    if (st0) { var sc0 = root.querySelector('[data-a="storyClose"]'); if (sc0) gs = { k: 'ov', x: x, y: y, el: st0, cl: sc0, wb: null, yonly: true }; return; }
+    var veil = target.closest('.veil'); if (!veil) return;
+    var win = target.closest('.veil > *') || veil.firstElementChild, cl = veil.querySelector('[data-a="close"]') || veil.querySelector('[data-a="medalNext"]');
+    if (win && cl) gs = { k: 'ov', x: x, y: y, el: win, cl: cl, wb: scrollParent(target, win), c5: target.closest('[data-c5]') };
     return;
   }
   var q = target.closest('.qslot');
@@ -3023,6 +3026,10 @@ function gStart(x, y, target) {
   if (nw && !target.closest('.nact')) { gs = { k: 'n', x: x, y: y, el: nw.querySelector('.nitem'), wrap: nw, id: nw.getAttribute('data-nid'), base: nw.classList.contains('open') ? -(+nw.getAttribute('data-w')) : 0 }; return; }
   if (SECSCR.indexOf(ui.screen) >= 0) gs = { k: 'sc', x: x, y: y, el: root.querySelector('.scroller') };
 }
+function scrollParent(n, stop) {
+  for (; n && n !== stop && n !== document.body; n = n.parentElement) { var cs = getComputedStyle(n); if (/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 2) return n; }
+  return null;
+}
 function gMove(x, y, ev) {
   if (!gs || !gs.el) return;
   var dx = x - gs.x, dy = y - gs.y, ax = Math.abs(dx), ay = Math.abs(dy);
@@ -3030,7 +3037,7 @@ function gMove(x, y, ev) {
     if (gs.k === 'q' || gs.k === 'n') { if (ax > 10 && ax > ay * 1.2) gs.on = 'x'; else if (ay > 10) { gs = null; return; } }
     else {
       var top = gs.k === 'ov' ? (!gs.wb || gs.wb.scrollTop <= 0) : gs.el.scrollTop <= 0;
-      if (dx > 12 && dx > ay * 1.2) gs.on = 'x';
+      if (dx > 12 && dx > ay * 1.2 && !gs.yonly) gs.on = 'x';
       else if (dy > 12 && dy > ax * 1.2 && top) gs.on = 'y';
       else if (ax > 12 || ay > 12) { gs = null; return; }
     }
@@ -3450,7 +3457,7 @@ function viewFNote(o, cls) {
   else if (l.k === 'medal' || l.k === 'rank') { icon = PI.medal; }
   else if (l.k === 'gang') { icon = PI.party; }
   var col = gold ? PGOLD : '#7CC4FF', wk = mondayOf(todayKey());
-  var bat = l.k === 'bat' || o.batl === l.id, canBat = l.k === 'five' && !bat && f.id && Date.now() - l.t < 7 * 864e5 && !!friend(f.id) && !!c5Last(friend(f.id));
+  var bat = l.k === 'bat' || o.batl === l.id, canBat = false;
   var canWon = l.k === 'won' && cq && f.id && friend(f.id) && Date.now() - l.t < 7 * 864e5 && wonDay(cq) && !c5Given(f.id, wonDay(cq));
   if (bat) { gold = true; col = PGOLD; title = 'Cinque battuto'; body = 'Tu e ' + f.n + ', questa settimana.'; }
   if (l.k === 'won' && cq && o.proof === undefined) { o.proof = null; gloveProof(cq.id, function (x) { if (ui.ov === o) { o.proof = x || false; render(); } }); }
@@ -3887,7 +3894,7 @@ function momWait(fn, delay, dur) { var w = Math.max(delay || 0, momUntil - Date.
 function momLayer() {
   if (momL && document.body.contains(momL.el)) return momL;
   var el = document.createElement('div'); el.className = 'mom'; el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = '<span class="mom-dim"></span><i class="mom-cine t"></i><i class="mom-cine b"></i><canvas class="mom-sm"></canvas><div class="mom-obj"></div><canvas class="mom-fx"></canvas><span class="mom-t"><span></span><small></small></span><span class="mom-wo"></span>';
+  el.innerHTML = '<span class="mom-dim"></span><i class="mom-cine t"></i><i class="mom-cine b"></i><canvas class="mom-sm"></canvas><div class="mom-obj"></div><canvas class="mom-fx"></canvas><span class="mom-t"><span></span><small></small><em></em></span><span class="mom-wo"></span>';
   document.body.appendChild(el);
   momL = { el: el, fx: C5FX(el.querySelector('.mom-fx')), sm: null, obj: el.querySelector('.mom-obj'), t: el.querySelector('.mom-t'), wo: el.querySelector('.mom-wo') };
   return momL;
@@ -3899,7 +3906,7 @@ function momKit() {
     L: L, W: W, H: H, fx: L.fx,
     impact: function (n) { if (!TH.light) root.classList.add('mom-imp'); L.wo.classList.remove('on'); void L.wo.offsetWidth; L.wo.classList.add('on'); setTimeout(function () { root.classList.remove('mom-imp'); }, n || 80); },
     shake: function (d) { root.style.setProperty('--sd', d + 's'); root.classList.remove('mom-shake'); void root.offsetWidth; root.classList.add('mom-shake'); setTimeout(function () { root.classList.remove('mom-shake'); }, d * 1000 + 50); },
-    say: function (tx, sub, tc, top, plain) { var t = L.t; t.classList.toggle('plain', !!plain); t.style.setProperty('--tc', thMap(tc)); t.style.top = top || ''; var s = t.querySelector('span'); s.textContent = tx; s.style.fontSize = tx.length > 17 ? '22px' : tx.length > 13 ? '25px' : ''; t.querySelector('small').textContent = sub || ''; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); },
+    say: function (tx, sub, tc, top, plain, more) { var t = L.t; t.classList.toggle('plain', !!plain); t.querySelector('em').textContent = more || ''; t.style.setProperty('--tc', thMap(tc)); t.style.top = top || ''; var s = t.querySelector('span'); s.textContent = tx; s.style.fontSize = tx.length > 17 ? '22px' : tx.length > 13 ? '25px' : ''; t.querySelector('small').textContent = sub || ''; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); },
     end: function (ms) { L.tm = setTimeout(function () { L.el.classList.remove('dim', 'cine'); setTimeout(function () { L.obj.innerHTML = ''; }, 400); }, ms); }
   };
 }
@@ -3931,6 +3938,39 @@ function momDone(sp, gn, gain, diff, newG) {
     else if (q) K.say('QUEST SUPERATA', DIFF[diff].label.toUpperCase() + pts, col, '38%');
     else K.say(spn, 'ANCORA OGGI' + pts, col, '38%');
   }, 120, 1900);
+}
+/* 4.21: i cinque ricevuti si vedono aprendo il calendario. Una scena sola: il più figo (o l'ultimo), gli altri nomi sotto in piccolo */
+var C5RANK = ['leg', 'beast', 'oro', 'fuoco', 'fulmine', 'ritorno', 'nerd', 'batt', 'base'];
+function momFiveCheck() {
+  if (!momOk() || !S || ui.screen !== 'home' || ui.ov || ui.coach || !S.party) return;
+  var L = (P().letters || []).filter(function (l) { return l.k === 'five' && !l.an && Date.now() - l.t < 7 * 864e5; });
+  if (!L.length) return;
+  L.forEach(function (l) { l.an = 1; l.rd = true; }); save();
+  L.sort(function (a, b) { var ra = C5RANK.indexOf(a.kd || 'base'), rb = C5RANK.indexOf(b.kd || 'base'); return ra - rb || b.t - a.t; });
+  var top = L[0], f = friend(top.f), nm = f ? f.n : 'Un amico', who = [];
+  L.slice(1).forEach(function (l) { var g = friend(l.f), n = g ? g.n : null; if (n && n !== nm && who.indexOf(n) < 0) who.push(n); });
+  var kd = C5T[top.kd] ? top.kd : 'base', sub = (top.sp && SPORTS[top.sp] ? SPORTS[top.sp].name.toUpperCase() + ' · ' : '') + (top.day ? (top.day === todayKey() ? 'OGGI' : DAYS_LONG[new Date(top.day + 'T12:00:00').getDay()].toUpperCase()) : '');
+  var more = who.length ? 'E ANCHE ' + (who.length > 2 ? who.slice(0, 2).join(', ').toUpperCase() + ' E ALTRI ' + (who.length - 2) : who.join(' E ').toUpperCase()) : '';
+  momFive(kd, (kd === 'base' ? 'CINQUE DA ' : C5T[kd].say + ' · ') + nm.toUpperCase(), sub, more);
+}
+function momFive(kd, title, sub, more) {
+  momWait(function () {
+    var K = momKit(), cx = K.W / 2, cy = K.H * .44, stops = (C5HF[kd] || C5HF.base), gid = 'm5' + Date.now();
+    var h = document.createElement('div'); h.className = 'mom-hand';
+    h.innerHTML = '<svg viewBox="0 0 24 24" width="100%" height="100%"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2=".6" y2="1">' + stops.map(function (s) { return '<stop offset="' + s[1] + '" stop-color="' + s[0] + '"/>'; }).join('') + '</linearGradient></defs><path d="' + PI.five.replace(/^<path d="|"\/>$/g, '') + '" fill="url(#' + gid + ')" stroke="#05060a" stroke-width=".8" stroke-linejoin="round"/></svg>';
+    h.style.left = cx + 'px'; h.style.top = cy + 'px'; K.L.obj.appendChild(h); void h.offsetWidth; h.classList.add('on');
+    var col = C5T[kd].tc;
+    setTimeout(function () {
+      K.impact(90); K.shake(.4); buzz([30, 40, 60]);
+      K.fx.ring(cx, cy, col, 14, 10); K.fx.ring(cx, cy, '#fff', 4, 7);
+      K.fx.sparks(cx, cy, 36, [col, '#FFC94D', '#fff'], 10, 'star', .05);
+      K.fx.setLines({ n: 80, x: cx, y: cy, r0: 70, a: .45, col: col, life: 14, mode: 'lighter' });
+      if (kd === 'leg' || kd === 'oro' || kd === 'beast') K.fx.rays(cx, cy);
+      K.say(title, sub, col, '62%', 0, more);
+    }, 330);
+    setTimeout(function () { h.classList.add('out'); }, 1900);
+    K.end(2400);
+  }, 350, 2500);
 }
 /* nuovo rango: bande da cinema, l'esagono al centro si carica, colpo, nuova lettera */
 function momRank(from, r, plus) {
@@ -4247,6 +4287,7 @@ function c5Wire(media) {
   }
   media.addEventListener('pointerdown', function (e) { e.preventDefault(); var r = media.getBoundingClientRect(); try { media.setPointerCapture(e.pointerId); } catch (er) {} start(e.clientX - r.left, e.clientY - r.top); });
   ['pointerup', 'pointercancel'].forEach(function (ev) { media.addEventListener(ev, function () { if (state === 'charge' || state === 'snap') end(); }); });
+  media.addEventListener('pointermove', function (e) { if (state !== 'charge') return; var r = media.getBoundingClientRect(), mx = e.clientX - r.left - px, my = e.clientY - r.top - py; if (mx * mx + my * my > 18 * 18) end(); });
   media.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   media.addEventListener('keydown', function (e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); start(media.clientWidth / 2, media.clientHeight / 2); } });
   media.addEventListener('keyup', function (e) { if ((e.key === ' ' || e.key === 'Enter') && (state === 'charge' || state === 'snap')) end(); });
@@ -4791,6 +4832,7 @@ function render() {
   var gcN = root.querySelector('.win.anim .gcount'); if (gcN && +gcN.getAttribute('data-from') < +gcN.getAttribute('data-to')) setTimeout(function () { gcN.textContent = gcN.getAttribute('data-to'); gcN.classList.add('gbump'); }, 950);
   if (S) phHydrate();
   if (S) momNote();
+  if (S) setTimeout(momFiveCheck, 500);
   if (S) { guideStart(); if (!ui.coach && (!GUIDE[ui.screen] || guideSeen(ui.screen))) tipStart(); guideDraw(); }
   var k2 = root.querySelector('[data-keep]'); if (k2 && keep) k2.scrollTop = keepTop;
   var m2 = root.querySelector('.scroller'); if (m2 && main) m2.scrollTop = mainTop;
@@ -4918,7 +4960,7 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.20.0';
+var APP_V = 'gesta-v4.21.0';
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;
@@ -4935,5 +4977,5 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     swPending = true;
   });
 }
-window.__sistema = { get state() { return S; }, ui: ui, A: A, rkHex: rkHex, perf: { gloveT: gloveT, perfFrom: perfFrom }, mom: { done: momDone, rank: momRank, rocket: momRocket, seal: momSeal, drop: momDrop }, render: function () { render(); } };
+window.__sistema = { get state() { return S; }, ui: ui, A: A, rkHex: rkHex, perf: { gloveT: gloveT, perfFrom: perfFrom }, mom: { five: momFiveCheck, done: momDone, rank: momRank, rocket: momRocket, seal: momSeal, drop: momDrop }, render: function () { render(); } };
 }, 0); });
