@@ -347,8 +347,6 @@ function startupNotice() {
 function sessions(k) { return (S.days[k] || []); }
 function allKeysSorted() { return Object.keys(S.days).filter(function (k) { return S.days[k].length; }).sort(); }
 function sessXp(s) { return 10 + (s.quest && s.quest.done === true ? DIFF[s.quest.diff].bonus : 0) + (s.star ? 5 : 0); }
-function sessPts(s) { return s.quest && s.quest.done === true ? DIFF[s.quest.diff].pts : 1; }
-function dayPts(k) { var m = 0; sessions(k).forEach(function (s) { m = Math.max(m, sessPts(s)); }); return m; }
 function totalXp() { var x = 0; Object.keys(S.days).forEach(function (k) { S.days[k].forEach(function (s) { x += sessXp(s); }); }); return x + (S.party ? gloveXp() : 0); }
 function levelInfo(xp) { var lv = 1, need = 100; while (xp >= need) { xp -= need; lv++; need = 100 + 50 * (lv - 1); } return { lv: lv, inLv: xp, need: need }; }
 function levelOf(xp) { return levelInfo(xp).lv; }
@@ -518,11 +516,9 @@ function canPlan(k) { return k > todayKey() && k <= planEnd(); }
 function planEarly(k, p) { return p.at < parseKey(k).getTime(); }
 /* 4.0.0: i piani non si bloccano più e non costano niente */
 function planFixed(k, p) { return false; }
-function planMissed(k, p) { return !!p && planEarly(k, p) && !sessions(k).length && (k < addDays(todayKey(), -1) || !!p.miss); }
 /* piano rispettato: deciso prima e fatto quel giorno. +¼ di Punto Rango, al massimo 4 volte al mese */
 var PLAN_B = 0.25, PLAN_MAX = 4;
 function planKept(y, m, cut) { if (!S || !S.plan) return 0; var pre = ymKey(y, m), n = 0; Object.keys(S.plan).forEach(function (k) { if (k.indexOf(pre) === 0 && (!cut || k <= cut.upto) && k <= todayKey() && planEarly(k, S.plan[k]) && sessions(k).length) n++; }); return Math.min(n, PLAN_MAX); }
-function planPen0(y, m, cut) { if (!S || !S.plan) return 0; var pre = ymKey(y, m), n = 0; Object.keys(S.plan).forEach(function (k) { if (k.indexOf(pre) === 0 && (!cut || k <= cut.upto) && planMissed(k, S.plan[k])) n++; }); return n * 0.5; }
 function planHasQ(sp, g) { var qt = qType(sp); if (['focus', 'ex', 'bld', 'dist'].indexOf(qt) < 0) return false; return !!questsFor(sp, g || (qt === 'ex' ? defGroup(sp) : null)); }
 /* il numero preciso della quest lo fissa Gesta la mattina del giorno, partendo dall'ultima volta */
 function planQ(k, p) {
@@ -678,7 +674,6 @@ function gloveT(sp, q) {
   return null;
 }
 function funds(sport) { return FUNDS[sport] || FUND; }
-function fundOf(sport, k) { var l = funds(sport); for (var i = 0; i < l.length; i++) if (l[i][0] === k) return l[i]; return l[0]; }
 function lastFund(sport, k) {
   var h = history(sport), out = { face: null, note: '' };
   for (var i = 0; i < h.length; i++) { var d = h[i].s.d; if (!d) continue; if (!out.face && d.f && d.f[k]) out.face = d.f[k]; if (!out.note && d.n && d.n[k]) out.note = d.n[k]; if (out.face && out.note) break; }
@@ -1164,8 +1159,6 @@ function weekCard(t) {
   }
   return h + '</div></div>';
 }
-function soundBtn() { return '<button class="icon-btn" data-a="sound" aria-label="' + (S.settings.sound ? 'Disattiva suoni' : 'Attiva suoni') + '">' + svg(S.settings.sound ? IC.snd : IC.mute) + '</button>'; }
-
 function viewHome() {
   var t = todayKey(), y = ui.vm.y, m = ui.vm.m, h = '';
   var nn = new Date(), msH = monthStats(nn.getFullYear(), nn.getMonth());
@@ -1288,7 +1281,7 @@ function viewSettings() {
   if (!cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Backup</span><span class="hint">I tuoi dati vivono solo su questo telefono. Fai un backup ogni tanto e salvalo su ' + BKCLOUD + ': se cambi telefono, lo ripristini qui.</span><span style="font:600 13px/18px var(--fb);color:' + (age === null || age > 14 ? '#FFC94D' : 'var(--soft)') + '">' + (lb ? 'Ultimo backup: ' + niceDate(lb) + (age > 14 ? ' · è ora di farne uno nuovo' : '') : 'Nessun backup ancora') + '</span><div class="acts"><button class="btn sm" data-a="importData">Ripristina</button><button class="btn sm main" data-a="exportData">Fai backup</button></div><input id="imp" type="file" accept="application/json,.json" hidden></div>';
   h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Ricomincia da zero</span>' + (ui.resetAsk ? '<span class="hint">Cancella profilo e tutti gli allenamenti da questo telefono. Non si può annullare: fai prima un backup se vuoi tenerli.</span><div class="acts"><button class="btn sm" data-a="askReset">Annulla</button><button class="btn sm danger" data-a="reset">Cancella tutto</button></div>' : '<button class="btn sm danger" data-a="askReset">Cancella i dati</button>') + '</div>';
   if (cauth) h += '<div class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Il tuo account</span><span class="hint">Cancella l’account e tutto quello che c’è nel cloud: sessioni, foto, amicizie, guanti. Anche da questo telefono.</span><button class="btn sm danger" data-a="delAsk">Cancella il mio account</button></div>';
-  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.21.0</span>';
+  h += '<span class="hint" style="text-align:center;padding-bottom:8px">Gesta · versione 4.22.0</span>';
   return h;
 }
 
@@ -1478,7 +1471,6 @@ function viewOverlay() {
   } else if (o.t === 'photo') { h = viewPhoto(o, cls);
   } else if (o.t === 'fphoto') { h = viewFPhoto(o, cls);
   } else if (o.t === 'addf') { h = viewAddF(o, cls);
-  } else if (o.t === 'trait') { h = viewTrait(o, cls);
   } else if (o.t === 'gobj') { h = viewGObj(o, cls);
   } else if (o.t === 'fcal') { h = viewFCal(o, cls);
   } else if (o.t === 'fch') { h = viewFCh(o, cls);
@@ -2479,16 +2471,6 @@ function gloveQueue() {
   if (c) { c.seen = true; save(); ui.ov = { t: 'glove', id: c.id }; setTimeout(medalSound, 30); }
 }
 /* equilibrio del mese tra me e un amico: sfide mie accettate da lui (o ancora in attesa) meno sfide sue accettate da me. Le condivise accettate contano 1 per entrambi. */
-function sendGap(fid) {
-  var ym = ymKey(new Date().getFullYear(), new Date().getMonth()), mine = 0, his = 0;
-  myCh().forEach(function (c) {
-    if (c.gang || c.day.indexOf(ym) !== 0) return;
-    var acc = c.done || c.me || ['accepted', 'over', 'won'].indexOf(c.st) >= 0;
-    if (c.from === 'me' && c.to === fid) { if (acc) { mine++; if (c.shared) his++; } else if (c.st === 'pending' || c.st === 'countered') mine++; }
-    else if (c.from === fid && c.to === 'me' && acc) { his++; if (c.shared) mine++; }
-  });
-  return mine - his;
-}
 function sendBlock(fid) { return sentWeek(fid) >= 3; }
 function chById(id) { var l = myCh(); for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
 /* esagono rango piccolo */
@@ -2537,13 +2519,6 @@ function friendRow(f, extra) {
     (inc ? '<span style="display:flex;flex-direction:column;align-items:center;gap:2px">' + svg(PI.glove, PGOLD, 22) + '<span style="font:600 9px/11px var(--fd);letter-spacing:1px;color:#D9B04A">SFIDA</span></span>' : '') +
     (!inc && unread ? '<span style="position:relative">' + svg(PI.letter, '#7CC4FF', 22) + '<i style="position:absolute;top:-2px;right:-3px;width:8px;height:8px;border-radius:4px;background:#7CC4FF;flex:0 0 auto"></i></span>' : '') + '</button>';
 }
-function gloveCard(c, action) {
-  var f = friend(c.from === 'me' ? c.to : c.from), mine = c.from === 'me';
-  var kick = mine ? 'Il tuo guanto a ' + f.n : 'Guanto di ' + f.n;
-  var sub = c.st === 'pending' ? (mine ? 'In attesa di risposta' : 'Tocca per rispondere') : c.st === 'countered' ? 'Modifica inviata, aspetta ' + f.n : (c.shared ? 'Quest condivisa · ' : '') + 'entro mezzanotte';
-  return '<button class="card" data-a="' + action + '" data-v="' + c.id + '" style="border-color:' + PGOLD + '8C;background:#14120A;box-shadow:0 0 18px rgba(255,201,77,.16);padding:10px 14px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink);width:100%">' + svg(PI.glove, PGOLD, 26) +
-    '<span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px"><span class="lbl" style="color:#D9B04A;font-size:11px">' + kick + '</span><span style="font:700 16px/20px var(--fd);letter-spacing:1px;text-transform:uppercase;color:var(--rew);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(chLabel(c)) + '</span><span class="hint" style="font-size:11.5px">' + sub + '</span></span>' + svg(IC.right, '#D9B04A', 18) + '</button>';
-}
 function viewParty() {
   partyInit();
   var p = P(), n = unreadLetters();
@@ -2572,12 +2547,6 @@ function viewParty() {
 }
 function ixF(fid) { var lim = Date.now() - 10 * 864e5; return myCh().filter(function (c) { return !c.gang && (c.from === fid || c.to === fid) && (c.t || 0) > lim; }).length * 2 + P().letters.filter(function (l) { return l.f === fid && l.t > lim; }).length; }
 function ixG(gid) { var lim = Date.now() - 10 * 864e5; return myCh().filter(function (c) { return c.gang === gid && (c.t || 0) > lim; }).length; }
-function miniFriend(f) {
-  var t = todayKey(), inc = myCh().filter(function (c) { return c.from === f.id && c.to === 'me' && c.day >= t && c.st === 'pending'; })[0], unread = P().letters.filter(function (l) { return !l.rd && l.f === f.id; })[0];
-  return '<button class="card" data-a="fOpen" data-v="' + f.id + '" style="display:flex;align-items:center;gap:9px;padding:8px 10px;min-height:52px;text-align:left;color:var(--ink);min-width:0' + (inc ? ';border-color:' + PGOLD + '8C;background:#14120A;box-shadow:0 0 12px rgba(255,201,77,.15)' : '') + '">' + rkHex(f.r, 30, f.plus) +
-    '<span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:6px;min-width:0"><span style="font:700 14px/18px var(--fd);letter-spacing:.8px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(f.n) + '</span>' + (trainedOn(f, t) ? pDot(SPORTS[fSportOn(f, t)].c) : '') + '</span><span style="font:600 10px/13px var(--fd);letter-spacing:.3px;color:var(--rew);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + fTitle(f) + '</span></span>' +
-    (inc ? svg(PI.glove, PGOLD, 18) : unread ? '<i style="display:block;width:8px;height:8px;border-radius:4px;background:#7CC4FF;flex:0 0 auto"></i>' : '') + '</button>';
-}
 function miniGang(g) {
   var t = todayKey(), on = g.mem.filter(function (id) { return weekTrained(friend(id)); }).length + (weekCount(t) ? 1 : 0);
   return '<button class="card" data-a="gangOpen" data-v="' + g.id + '" style="display:flex;align-items:center;gap:9px;padding:8px 10px;min-height:52px;text-align:left;color:var(--ink);min-width:0;border-color:' + g.col + '66">' + gangBadge(g, 30) + '<span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:700 13px/17px var(--fd);letter-spacing:.8px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(g.name) + '</span><span class="hint" style="font-size:10.5px;line-height:13px;white-space:nowrap">' + (g.mem.length + 1) + ' · ' + on + ' allenati</span></span>' + rkHex(gangRank(g.id, ymKey(new Date().getFullYear(), new Date().getMonth())), 24) + '</button>';
@@ -2604,7 +2573,6 @@ function fitParty() {
   while (freeSpace(sc) < 0 && guard++ < 40) { var big = null; ls.forEach(function (l) { if (!big || l.clientHeight > big.clientHeight) big = l; }); if (!big || big.clientHeight <= 52) break; big.style.maxHeight = (big.clientHeight - 12) + 'px'; }
   ls.forEach(function (l) { l.classList.toggle('more', l.scrollHeight > l.clientHeight + 2); });
 }
-function miniMore(scr, lbl, n) { return '<button class="card" data-a="go" data-v="' + scr + '" style="display:flex;align-items:center;justify-content:center;gap:6px;min-height:52px;color:var(--sysl);font:600 11px/15px var(--fd);letter-spacing:1.2px;text-transform:uppercase;text-align:center">' + lbl + ' · ' + n + svg(IC.right, 'var(--sysl)', 14) + '</button>'; }
 /* tutti gli amici / tutte le gang, con la ricerca quando sono tanti */
 function viewPList(kind) {
   var p = P(), FR = p.demo ? DEMO : RF, isF = kind === 'f', h = pBack('Party', isF ? 'Amici' : 'Gang', 'party');
@@ -2812,13 +2780,11 @@ var PA = {
   },
   five: function (arg) { var a = String(arg).split('|'); if (a[1] && c5Open(a[0], a[1])) return; A.fDayLast(a[0]); },
   fiveWon: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0], c = l && chById(l.cid), k = c && wonDay(c); if (!l || !l.f || !k) return; ui.ov = null; c5Open(l.f, k); if (ui.ov && ui.ov.t === 'fday') { ui.ov.rx = 1; render(); } },
-  fiveBack: function (lid) { var l = P().letters.filter(function (x) { return x.id === lid; })[0]; if (!l || !l.f) return; P().fiveIn = P().fiveIn || {}; P().fiveIn[l.f] = l.t || Date.now(); ui.ov = null; A.fDayLast(l.f); if (ui.ov && ui.ov.t === 'fday') { ui.ov.rx = 1; render(); } },
   phOpen: function (arg) { var a = arg.split('|'), back = ui.ov && ui.ov.t !== 'photo' ? ui.ov : null; ui.ov = { t: 'photo', k: a[0], sid: a[1], back: back }; ding('open'); render(); },
   phSh: function (arg) { var a = arg.split('|'), s = phSess(a[0], a[1]); if (!s || !s.ph) return; phShare(a[0], a[1], !s.ph.sh); ding('tap'); render(); },
   phDelAsk: function () { ui.ov.del = 1; render(); },
   phDelGo: function (arg) { var a = arg.split('|'); phRemove(a[0], a[1]); ding('tap'); toast('Foto tolta.'); A.phBack(); },
   phBack: function () { var o = ui.ov; ui.ov = o && o.back ? o.back : null; if (ui.ov) delete ui.ov.del; render(); },
-  fPhotoOpen: function (arg) { var a = arg.split('|'), x = fph[a[0]] && fph[a[0]][a[1]]; if (!x) return; if (c5Open(a[0], a[1])) return; var back = ui.ov; ui.ov = { t: 'fphoto', fid: a[0], x: x, back: back, five: P().fives[a[0]] !== mondayOf(todayKey()) }; ding('open'); render(); },
   rkBreak: function () { var o = ui.ov; if (!o || o.t !== 'rankup' || o.br) return; o.br = 1; rankSound(); buzz([40, 50, 40, 50, 140]); render(); },
   fAdd: function () { if (!cauth) { A.cLogin(); return; } ui.ov = { t: 'addf', code: '' }; ui.focusNext = 'fcode'; ding('open'); render(); },
   fAddGo: function () {
@@ -2837,7 +2803,6 @@ var PA = {
   },
   frAcc: function (id) { var q = (ui.inbox || []).filter(function (x) { return x.id === id; })[0]; authFresh().then(function () { return rpc('accept_friend', { req: id }); }).then(function () { ding('ok'); toast('Ora tu e ' + (q ? q.name : 'lui') + ' siete amici.'); ui.inbox = (ui.inbox || []).filter(function (x) { return x.id !== id; }); rfLoad(true); render(); }).catch(function () { toast('Non riesco ad accettare: riprova tra poco.'); }); },
   frDec: function (id) { authFresh().then(function () { return rpc('decline_friend', { req: id }); }).then(function () { ding('tap'); ui.inbox = (ui.inbox || []).filter(function (x) { return x.id !== id; }); render(); }).catch(function () { toast('Non riesco a rifiutare: riprova tra poco.'); }); },
-  traitOpen: function () { ui.ov = { t: 'trait' }; ding('open'); render(); },
   gangNoFr: function () { toast('Aggiungi prima un amico: poi crei la Gang con lui.'); },
   pInvite: function () {
     var code = P().demo ? P().code : cmeta.code, url = 'https://getgesta.app/' + (cmeta.inv && !P().demo ? '?invito=' + cmeta.inv : ''), txt = '🎮 Sfidiamoci su Gesta!\nApri il link ed entra con la tua email: diventiamo amici in automatico.\n👉 ' + url + ' 👈\n\n⚠️ Per averla come app sul telefono:\n• iPhone: apri il link in Safari, tocca Condividi (il quadrato con la freccia ⬆️) e poi «Aggiungi alla schermata Home»\n• Android: apri il link in Chrome, tocca i tre puntini ⋮ e poi «Aggiungi a schermata Home» o «Installa app»\nPoi aprila dall’icona ed entra con la stessa email: ritrovi tutto.\n\nHai già Gesta? Aggiungimi col codice ' + code;
@@ -2870,14 +2835,6 @@ var PA = {
     }).catch(function () { toast('Non riesco a uscire adesso: riprova tra poco.'); });
   }
 };
-function homeGloves() {
-  if (!partyLive()) return '';
-  return activeGloves().map(function (c) {
-    var f = friend(c.from === 'me' ? c.to : c.from);
-    return '<button class="card" data-a="gView" data-v="' + c.id + '" style="border-color:' + PGOLD + '8C;background:#14120A;box-shadow:0 0 14px rgba(255,201,77,.14);padding:8px 14px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink);width:100%">' + svg(PI.glove, PGOLD, 22) + '<span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column"><span class="lbl" style="color:#D9B04A;font-size:10.5px;letter-spacing:2px">Quest bonus · ' + (c.from === 'me' ? 'condivisa con ' : 'guanto di ') + f.n + '</span><span style="font:700 15px/20px var(--fd);letter-spacing:1px;text-transform:uppercase;color:var(--rew);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(chLabel(c)) + '</span></span>' + svg(IC.right, '#D9B04A', 18) + '</button>';
-  }).join('');
-}
-
 for (var pk in PA) A[pk] = PA[pk];
 /* ---------- 2.2: profilo amico, vetrina, slot quest, gesti ---------- */
 var FLAST = { giulia: ['t_A', 1], luca: ['s_ten', 0], marco: ['x_weekend', 0], sara: ['c_stars', 2] };
@@ -3201,7 +3158,6 @@ var PA44 = {
     if (!isMine(sp) || !planHasQ(sp, p.g)) { ui.ov = null; ding('tap'); toast(SPORTS[sp].name + ' non ha quest: buona sessione!'); return; }
     if (sp === 'gym' && !p.g) { ding('open'); open({ t: 'group', k: k }); return; }
     ding('open'); open({ t: 'quest', k: k, sport: sp, group: p.g || (qt === 'ex' ? defGroup(sp) : null), diff: null }); },
-  addSport: function () { ui.ov = { t: 'pick', k: todayKey(), noSoc: 1 }; ding('open'); render(); },
   gNoAsk: function (id) { ui.ov = { t: 'gno', id: id }; ding('open'); render(); },
   gOther: function () { var k = todayKey(); ui.ov = { t: 'past', k: k, mark: 1 }; ding('open'); render(); },
   gNoQ: function (id) { var c = chById(id); if (!c) return close(); var k = c.day, extra = S.profile.sports.indexOf(c.sp) < 0, b, s;
@@ -3312,28 +3268,8 @@ function viewFiveFx(o, cls) {
 }
 function fiveSub(k, sp) { if (!k || !SPORTS[sp]) return 'Per la tua settimana'; return 'Per la sessione di ' + SPORTS[sp].name.toLowerCase() + ' ' + (k === todayKey() ? 'di oggi' : 'di ' + DAYS_LONG[parseKey(k).getDay()].toLowerCase()); }
 /* l'ultima sessione dell'amico, per il cinque dato dal profilo */
-function fLastSess(f) { for (var i = 0; i < 31; i++) { var k = addDays(todayKey(), -i); if (trainedOn(f, k)) return { k: k, sp: fSportOn(f, k) }; } return { k: null, sp: null }; }
 var fxN = 0;
 /* dare il cinque: uno a settimana per amico. Se lui te l'aveva già dato, è battuto */
-function fiveGive(fid, k, inLetter) {
-  var f = friend(fid), p = P(), wk = mondayOf(todayKey()); if (!f) return false;
-  if (p.fives[fid] === wk) { toast('Il cinque a ' + f.n + ' l’hai già dato questa settimana.'); return false; }
-  var sp = null; if (k && trainedOn(f, k)) sp = fSportOn(f, k); else { var ls = fLastSess(f); k = ls.k; sp = ls.sp; }
-  p.fives[fid] = wk; p.nfive = (p.nfive || 0) + 1; p.fiveIn = p.fiveIn || {}; p.fiveOut = p.fiveOut || {};
-  /* battuto se lui te l'aveva dato negli ultimi 7 giorni */
-  var back = !!p.fiveIn[fid] && Date.now() - p.fiveIn[fid] < 7 * 864e5; if (back) { p.nbat = (p.nbat || 0) + 1; delete p.fiveIn[fid]; } else p.fiveOut[fid] = Date.now();
-  save(); ding('ok'); buzz(back ? [20, 40, 60] : [25]);
-  if (!inLetter) { fxN++; ui.ov = { t: 'fivefx', fid: fid, mode: back ? 'bat' : 'up', k: k, sp: sp, n: fxN }; }
-  render();
-  if (f.real) {
-    var body = { from_id: cauth.uid, to_id: fid, week: wk };
-    if (k && sp) { body.day = k; body.sport = sp; }
-    authFresh().then(function () { return sbFetch('/rest/v1/fives', { method: 'POST', prefer: 'return=minimal', body: body }); }).catch(function () {
-      if (body.day) { delete body.day; delete body.sport; return sbFetch('/rest/v1/fives', { method: 'POST', prefer: 'return=minimal', body: body }).catch(function () {}); }
-    });
-  }
-  return back;
-}
 /* il rango che si rompe al tocco: trema, si crepa, e quando tocchi esce il nuovo */
 function viewRankUp(o, cls) {
   var n = new Date(), ms = monthStats(n.getFullYear(), n.getMonth()), lab = o.r + (o.plus ? '+' : ''), gold = o.r === 'S' || o.plus;
@@ -3457,7 +3393,7 @@ function viewFNote(o, cls) {
   else if (l.k === 'medal' || l.k === 'rank') { icon = PI.medal; }
   else if (l.k === 'gang') { icon = PI.party; }
   var col = gold ? PGOLD : '#7CC4FF', wk = mondayOf(todayKey());
-  var bat = l.k === 'bat' || o.batl === l.id, canBat = false;
+  var bat = l.k === 'bat' || o.batl === l.id;
   var canWon = l.k === 'won' && cq && f.id && friend(f.id) && Date.now() - l.t < 7 * 864e5 && wonDay(cq) && !c5Given(f.id, wonDay(cq));
   if (bat) { gold = true; col = PGOLD; title = 'Cinque battuto'; body = 'Tu e ' + f.n + ', questa settimana.'; }
   if (l.k === 'won' && cq && o.proof === undefined) { o.proof = null; gloveProof(cq.id, function (x) { if (ui.ov === o) { o.proof = x || false; render(); } }); }
@@ -3467,18 +3403,7 @@ function viewFNote(o, cls) {
     (fx || '<div style="display:flex;justify-content:center">' + svg(icon, col, 44) + '</div>') + (o.proof ? '<span class="lbl" style="font-size:10.5px;color:var(--rew);text-align:center">La prova</span>' + phView('data-php="' + esc(o.proof.path) + '"', o.proof.n || '', !!o.proof.verified) : '') + '<p class="wtitle">' + esc(title) + '</p>' + (body ? '<p class="wtext">' + esc(body) + '</p>' : '') + rv +
     (score ? '<div style="display:flex;align-items:baseline;justify-content:center;gap:12px;font:700 34px/1 var(--fd)"><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">TU</span><span>' + sc[0] + '</span><span style="color:var(--mut)">–</span><span>' + sc[1] + '</span><span style="font:600 11px/14px var(--fd);letter-spacing:1px;color:var(--mut)">' + f.n.toUpperCase() + '</span></div>' : '') +
     (cq ? '<button class="mlink" data-a="gView" data-v="' + cq.id + '" style="display:flex;align-items:center;justify-content:center;gap:6px">' + svg(cq.gang ? PI.party : PI.glove, col, 14) + 'Vedi la quest ›</button>' : '') +
-    (canBat || canWon ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="' + (canWon ? 'fiveWon' : 'fiveBack') + '" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + (canWon ? 'Cinque' : 'Ricambia') + '</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
-}
-function viewTrait(o, cls) {
-  var n = new Date(), ms = monthStats(n.getFullYear(), n.getMonth()), mt = monthTraits(n.getFullYear(), n.getMonth()); if (!mt) return '';
-  var tc = TRAITS[mt.top].c, pm = MONTHS[prevMonth(n.getFullYear(), n.getMonth()).m].toLowerCase(), dv = mt.v[mt.top] - (mt.pv[mt.top] || 0), hasPrev = !!(mt.pv.F + mt.pv.A + mt.pv.R + mt.pv.E), trd = {};
-  TKEYS.forEach(function (k) { var d = mt.v[k] - (mt.pv[k] || 0); trd[k] = Math.abs(d) < 0.001 ? 'eq' : d > 0 ? 'up' : 'down'; });
-  var cmp = !(mt.pv.F + mt.pv.A + mt.pv.R + mt.pv.E) ? 'Il primo mese con un tratto: da qui si parte.' : Math.abs(dv) < 0.001 ? 'Tanta ' + TRAITS[mt.top].name + ' quanta a ' + pm + '.' : dv > 0 ? '<span style="color:#9BE15D">▲</span> Più ' + TRAITS[mt.top].name + ' che a ' + pm + '.' : '<span style="color:#FFB27A">▼</span> Meno ' + TRAITS[mt.top].name + ' che a ' + pm + ': il mese è ancora lungo.';
-  return '<div class="' + cls + '" style="text-align:center;align-items:stretch">' + whead('Tratto di ' + MONTHS[n.getMonth()].toLowerCase(), true) +
-    '<span style="display:flex;align-items:center;justify-content:center;gap:10px">' + svg(TRAITS[mt.top].ic, tc, 26) + '<span style="font:700 26px/30px var(--fd);letter-spacing:2px;text-transform:uppercase;color:' + tc + ';text-shadow:0 0 12px ' + tc + '73">' + TRAITS[mt.top].name + '</span></span>' +
-    '<p class="wtext" style="text-align:center">' + traitPhrase(mt, true) + '</p><div style="align-self:center">' + rombo(mt.v, ms.rank, 220, true, hasPrev ? trd : null) + '</div>' +
-    (hasPrev ? '<p class="hint" style="text-align:center;margin:0;font-size:12px"><span style="color:#9BE15D">▲</span> più di ' + pm + ' · <span style="color:#8FA3C2">=</span> uguale · <span style="color:#FFB27A">▼</span> meno</p>' : '') +
-    '<p class="hint" style="text-align:center;margin:0">' + cmp + (mt.grow && mt.grow !== mt.top ? ' Quello cresciuto di più: <span style="color:' + TRAITS[mt.grow].c + '">' + TRAITS[mt.grow].name + '</span>.' : '') + '</p></div>';
+    (canWon ? '<div class="acts"><button class="btn" data-a="fnNext">' + (n > 1 && o.i + 1 < n ? 'Avanti' : 'Dopo') + '</button><button class="btn main" data-a="' + 'fiveWon' + '" data-v="' + l.id + '" style="display:flex;align-items:center;justify-content:center;gap:8px">' + svg(PI.five, null, 18) + 'Cinque' + '</button></div></div>' : '<div class="acts' + (n > 1 && o.i + 1 < n ? '' : ' one') + '">' + (n > 1 && o.i + 1 < n ? '<button class="btn" data-a="close">Salta</button><button class="btn main" data-a="fnNext">Avanti</button>' : '<button class="btn main" data-a="fnNext">Ok</button>') + '</div></div>');
 }
 function viewAddF(o, cls) {
   return '<div class="' + cls + '">' + whead('Aggiungi un amico', true) +
@@ -4577,7 +4502,7 @@ function viewNumeri() {
   var tipR = !rtot ? '' : (rk.S || 0) / rtot > 0.3 ? 'Tanti in S: forse la scala è troppo facile.' : (rk.E || 0) / rtot > 0.4 ? 'Tanti in E: forse la scala è troppo dura.' : !rk.S && !rk.E ? 'Nessuno in E e nessuno in S: la scala sembra tarata bene.' : '';
   var rank = sec('Il rango di ' + MONTHS[new Date().getMonth()].toLowerCase(), '<div class="numrk">' + rl.map(function (r) { var c = rk[r] || 0; return '<div><span>' + c + '</span><i style="height:' + (c ? c / rmax * 80 : 3) + 'px;background:' + (c ? 'var(--sys)' : 'var(--line)') + '"></i><b>' + r + '</b></div>'; }).join('') + '</div>', tipR);
   var fbl = ui.numFb || [], fbs = fbl.length ? sec('Segnalazioni · ' + fbl.length, '<div style="display:flex;flex-direction:column;gap:8px">' + fbl.slice(0, ui.numFbAll ? 50 : 3).map(function (f) { var dt = new Date(f.at); return '<div class="numt" style="gap:4px"><span style="font:500 14px/20px var(--fb);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere">' + esc(f.msg) + '</span><span>' + esc(f.name) + ' · ' + dt.getDate() + ' ' + MSHORT[dt.getMonth()] + ' · v' + esc(f.ver || '') + ' · ' + esc(f.device || '') + '</span></div>'; }).join('') + (fbl.length > 3 && !ui.numFbAll ? '<button class="mlink" data-a="numFbAll" style="color:var(--sysl)">Vedi tutte</button>' : '') + '</div>', '') : '';
-  return h + '<div class="numgrid">' + fbs + who + viewVers(sec, row) + how + use + rank + viewYt(sec, tile, row) + '</div></div>';
+  return h + '<div class="numgrid">' + fbs + who + viewVers(sec, row) + viewErr(sec) + how + use + rank + viewYt(sec, tile, row) + '</div></div>';
 }
 /* 4.13: chi è rimasto su una versione vecchia (es. icona installata dal vecchio indirizzo) */
 function viewVers(sec, row) {
@@ -4590,6 +4515,18 @@ function viewVers(sec, row) {
     var ok = x.ver && cmp(x.ver) >= 0; return row(x.ver ? x.ver : 'prima 4.13', ok ? '#9BE15D' : '#FFB27A', Math.round(x.n / mx * 100), x.n + (x.n === 1 ? ' utente' : ' utenti')); }).join('');
   return sec('Versioni · ultimi 30 giorni', '<div style="display:flex;flex-direction:column;gap:8px"><span class="hint">L’ultima versione che ognuno ha aperto · ora è la ' + cur + '</span>' + rows + '</div>',
     old ? old + (old === 1 ? ' utente su ' : ' utenti su ') + tot + ' non si aggiorna: se dura da giorni, reinstallare l’icona da getgesta.app' : '');
+}
+/* 4.22: gli errori arrivati dai telefoni negli ultimi 7 giorni, raggruppati */
+function viewErr(sec) {
+  if (ui.numErrL === undefined) { ui.numErrL = null; authFresh().then(function () { return sbFetch('/rest/v1/app_errors?select=created_at,ver,screen,msg,src,user_id&created_at=gte.' + new Date(Date.now() - 7 * 864e5).toISOString() + '&order=created_at.desc&limit=300'); }).then(function (r) { ui.numErrL = Array.isArray(r) ? r : []; render(); }).catch(function () { ui.numErrL = false; render(); }); }
+  var L = ui.numErrL; if (L === null || L === false) return '';
+  if (!L.length) return sec('Errori · ultimi 7 giorni', '<span class="hint">Nessun errore arrivato dai telefoni. Bene così.</span>');
+  var G = {}; L.forEach(function (e) { var k = e.msg + '|' + (e.src || '').replace(/\?v=[\d.]+/, ''); var g = G[k] || (G[k] = { msg: e.msg, src: e.src, n: 0, who: {}, ver: e.ver, at: e.created_at, scr: e.screen }); g.n++; g.who[e.user_id || 'anon'] = 1; });
+  var rows = Object.keys(G).map(function (k) { return G[k]; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 8).map(function (g) {
+    var u = Object.keys(g.who).length;
+    return '<div style="display:flex;flex-direction:column;gap:3px;padding:8px 0;border-top:1px solid var(--line)"><span style="font:600 13px/17px var(--fb);color:var(--ink);word-break:break-word">' + esc(g.msg) + '</span><span class="hint" style="font-size:11.5px">' + g.n + (g.n === 1 ? ' volta' : ' volte') + ' · ' + u + (u === 1 ? ' persona' : ' persone') + ' · ' + esc(g.ver || '?') + (g.scr ? ' · ' + esc(g.scr) : '') + '</span></div>';
+  }).join('');
+  return sec('Errori · ultimi 7 giorni', '<div style="display:flex;flex-direction:column">' + rows + '</div>', L.length + ' in tutto. I dettagli li legge Claude da Supabase.');
 }
 /* 4.12: quanto usiamo la chiave YouTube (quota gratuita: 10.000 unità al giorno; ogni canale di tecnica ne costa 101 a settimana) */
 function viewYt(sec, tile, row) {
@@ -4960,7 +4897,24 @@ render();
 if (cauth && cloudOn()) cloudPull(true);
 try { document.fonts.ready.then(function () { fitTitles(); }); } catch (e) {}
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-var APP_V = 'gesta-v4.21.0';
+var APP_V = 'gesta-v4.22.0';
+/* 4.22: se qualcosa si rompe sul telefono di qualcuno, l'errore arriva su Supabase (app_errors), senza dati personali.
+   Un errore uguale si manda una volta sola; al massimo 8 a sessione */
+var errSent = {}, errN = 0;
+function errReport(msg, src, stack) {
+  try {
+    msg = String(msg || '').slice(0, 480); if (!msg || /^Script error\.?$/i.test(msg) || /ResizeObserver loop/.test(msg)) return;
+    if (src && !/getgesta\.app|localhost|github\.io|app\.js/.test(src)) return;
+    var key = msg + '|' + (src || ''); if (errSent[key] || errN >= 8 || typeof CLOUD === 'undefined' || !CLOUD.url) return; errSent[key] = 1; errN++;
+    var h = { apikey: CLOUD.key, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+    if (typeof cauth !== 'undefined' && cauth && cauth.at) h.Authorization = 'Bearer ' + cauth.at; else if (!/^sb_/.test(CLOUD.key)) h.Authorization = 'Bearer ' + CLOUD.key;
+    var body = { ver: APP_V.replace('gesta-v', ''), screen: (typeof ui !== 'undefined' && ui ? (ui.screen || '') + (ui.ov ? '/' + ui.ov.t : '') : '').slice(0, 40), msg: msg, src: String(src || '').slice(0, 300), stack: String(stack || '').slice(0, 2000), ua: navigator.userAgent.slice(0, 200) };
+    fetch(CLOUD.url.replace(/\/$/, '') + '/rest/v1/app_errors', { method: 'POST', headers: h, body: JSON.stringify(body), keepalive: true }).catch(function () {});
+  } catch (e) {}
+}
+window.addEventListener('error', function (e) { errReport(e.message, (e.filename || '') + (e.lineno ? ':' + e.lineno + ':' + e.colno : ''), e.error && e.error.stack); });
+window.addEventListener('unhandledrejection', function (e) { var r = e.reason; if (r && (r.status || /Failed to fetch|NetworkError|Load failed|aborted/i.test(String(r.message || r)))) return; errReport('Promessa: ' + (r && r.message || r), '', r && r.stack); });
+try { (window.__gErr || []).forEach(function (x) { errReport(x[0], x[1], x[2]); }); window.__gErr = null; } catch (e) {}
 /* aggiornamenti: controlla a ogni riapertura; quando arriva la versione nuova ricarica da sola, ma mai mentre stai scrivendo o hai una finestra aperta */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   var swReg = null, swReload = false, hadCtl = !!navigator.serviceWorker.controller;

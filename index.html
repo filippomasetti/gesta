@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <meta name="color-scheme" content="dark">
+<script>/* 4.22: errori dei primi istanti, prima che parta l'app */window.__gErr=[];addEventListener('error',function(e){try{if(window.__gErr)window.__gErr.push([e.message,(e.filename||'')+(e.lineno?':'+e.lineno+':'+e.colno:''),e.error&&e.error.stack]);}catch(x){}});</script>
 <script>/* 4.17: il tema chiaro già dalla splash, prima che parta l'app */try{var gt=localStorage.getItem('gesta.th');if(gt&&gt!=='dark'){var de=document.documentElement;de.setAttribute('data-th',gt);de.style.background=gt==='rosa'?'#FADDE9':'#F3EDE3';var sm=document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]');if(sm)sm.setAttribute('content','default');var tc=document.querySelector('meta[name=theme-color]');if(tc)tc.setAttribute('content',gt==='rosa'?'#FADDE9':'#F3EDE3');}}catch(e){}</script>
 <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/launch2-1290x2796.jpg">
 <link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/launch2-1179x2556.jpg">
@@ -695,6 +696,6 @@ html[data-th=rosa] .sp-line .sp-gw{color:#E3177E}
 })();
 </script>
 <div id="app"></div>
-<script src="app.js?v=4.21.0" defer></script>
+<script src="app.js?v=4.22.0" defer></script>
 </body>
 </html>
